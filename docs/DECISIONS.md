@@ -19,6 +19,8 @@
 15. **Concepttoken is een capability.** Het token wordt server-side met een geheim afgeleid van de willekeurige idempotentiesleutel, alleen aan de browser getoond en uitsluitend gehasht opgeslagen. Daardoor geven gelijktijdige retries hetzelfde token en verbreekt een IP-wijziging de aanvraag niet; het IP-HMAC dient alleen voor misbruiklimieten.
 16. **Biedingen via één PostgreSQL-functie.** De functie vergrendelt de biedronde, gebruikt `now()` van de database, bepaalt het bedrijf uit de sessie, controleert publicatie en deadline en schrijft bod, auditlog en outbox in dezelfde transactie.
 17. **Geen zichtbaar hoogste bod.** Dealers zien alleen biedingen van het eigen bedrijf. Beheer ziet alle biedingen, maar er vindt geen automatische gunning plaats.
+18. **Afhandeling blijft gescheiden.** Het sluiten van een biedronde wijzigt de verkoopstatus niet. Beheer kiest een bod expliciet en doorloopt gecontroleerde stappen naar akkoord en voltooiing.
+19. **Materiële wijzigingen trekken aanbod in.** Een wijziging aan kilometerstand, schade, techniek of onderhoud trekt een gepubliceerde listing in en annuleert de ronde. Oude revisies en biedingen blijven onveranderd; herpublicatie maakt een nieuwe revisie en ronde.
 
 ## Veilige tijdelijke keuzes
 

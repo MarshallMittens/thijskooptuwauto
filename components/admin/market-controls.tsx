@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 
 type MarketState = {
   listingId: string | null;
+  listingStatus: string | null;
   roundId: string | null;
   roundStatus: string | null;
   startsAt: string | null;
@@ -43,7 +44,7 @@ export function MarketControls({ applicationId, applicationStatus, market }: { a
   return (
     <section className="rounded-2xl border border-slate-200 p-6">
       <h2 className="text-xl font-black">Publicatie en biedronde</h2>
-      {market.listingId ? (
+      {market.listingId && market.listingStatus === "published" ? (
         <div className="mt-4 space-y-3">
           <p><strong>Status:</strong> {market.roundStatus}</p>
           <p className="text-sm text-slate-600">De getoonde tijden worden elders altijd als Europe/Amsterdam weergegeven.</p>

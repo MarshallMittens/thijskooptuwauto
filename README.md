@@ -4,7 +4,7 @@ Eén Next.js-applicatie voor de publieke website, het besloten dealerportaal en 
 
 ## Huidige status
 
-Fase 1, fase 2 en fase 3 zijn lokaal ingericht:
+Fase 1 tot en met fase 4 zijn lokaal ingericht:
 
 - standaard Next.js 16 App Router-basis;
 - Supabase SSR-sessieadapter;
@@ -22,6 +22,9 @@ Fase 1, fase 2 en fase 3 zijn lokaal ingericht:
 - besloten dealer-aanbod met filters, gecontroleerde foto’s en eigen biedhistorie;
 - transactionele, append-only biedingen met deadline-, rechten- en idempotentiecontrole;
 - beheerweergave van alle biedingen zonder automatische gunning.
+- gescheiden registratie van contactmomenten, akkoord en afhandeling;
+- gecontroleerde materiële voertuigwijzigingen met intrekking van de oude ronde;
+- onveranderlijke versie- en biedhistorie met auditregistratie.
 
 De publieke pagina’s en RDW-terugval zijn zonder lokale database te bekijken. Definitief versturen, foto-opslag, inloggen en beheer vereisen lokale Supabase. Er is geen gesimuleerde productieopslag of authenticatie.
 

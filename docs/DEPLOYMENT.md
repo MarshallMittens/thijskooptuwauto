@@ -46,6 +46,7 @@ Zet geheimen nooit in Git, browsercode of chat. Gebruik aparte waarden voor deve
 - Herstel minimaal één volledige fictieve aanvraag met foto’s in een geïsoleerde omgeving.
 - Noteer hersteltijd, gegevensverliesvenster en afwijkingen.
 - Livegang is geblokkeerd totdat deze hersteltest aantoonbaar is geslaagd.
+- De concrete proefstappen en het vast te leggen bewijs staan in `docs/RECOVERY.md`.
 
 ## Onderhoud private uploads
 

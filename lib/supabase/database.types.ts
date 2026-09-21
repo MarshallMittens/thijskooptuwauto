@@ -104,6 +104,32 @@ export type Database = {
         Args: { p_bid_round_id: string; p_amount_cents: number; p_idempotency_key: string };
         Returns: Json;
       };
+      admin_add_contact_event: {
+        Args: { p_application_id: string; p_channel: string; p_summary: string; p_occurred_at: string };
+        Returns: string;
+      };
+      admin_update_deal_case: {
+        Args: { p_application_id: string; p_status: "not_started" | "discussing" | "agreement_pending" | "agreed" | "completed" | "not_sold" | "withdrawn"; p_selected_bid_id: string | null };
+        Returns: Json;
+      };
+      admin_record_material_change: {
+        Args: {
+          p_application_id: string;
+          p_expected_revision_id: string | null;
+          p_mileage_km: number | null;
+          p_damage_description: string;
+          p_technical_issues: string;
+          p_maintenance_description: string;
+          p_key_count: number | null;
+          p_remarks: string;
+          p_reason: string;
+        };
+        Returns: Json;
+      };
+      get_admin_case_state: {
+        Args: { p_application_id: string };
+        Returns: Json;
+      };
     };
     Enums: {
       company_status: "pending" | "approved" | "blocked";

@@ -16,6 +16,8 @@
 | Gepubliceerd aanbod | Nee | Nee | Ja | Ja |
 | Verkopersgegevens | Nee | Nee | Nee | Ja |
 | Interne notities/audit | Nee | Nee | Nee | Ja |
+| Contactmomenten/afhandeling | Nee | Nee | Nee | Ja |
+| Materiële voertuigwijziging | Nee | Nee | Nee | Ja, gecontroleerde RPC |
 | Bedrijfsstatus wijzigen | Nee | Nee | Nee | Alleen admin |
 | Bieden | Nee | Nee | Alleen via gecontroleerde bied-RPC | Alle biedingen inzien |
 
@@ -34,7 +36,9 @@
 - **Dubbele verzoeken:** expliciete idempotentiesleutels voor aanvraag, bod en e-mail.
 - **Racecondities:** biedcontrole en insert staan in één PostgreSQL-transactie. Een lock op de biedronde serialiseert gelijktijdige biedingen; deadline en start worden met `now()` van PostgreSQL gecontroleerd.
 - **Append-only biedingen:** browserrollen hebben geen insert/update/delete-grants; alleen de biedfunctie kan invoegen en een trigger weigert updates en deletes, ook bij bevoorrechte rechtstreekse wijzigingen.
-- **Logging:** geen wachtwoorden, tokens, volledige vrije tekst of onnodige persoonsgegevens.
+- **Materiële wijzigingen:** de database vergrendelt de aanvraag en controleert de verwachte revisie. Een actieve publicatie wordt ingetrokken en de ronde geannuleerd; een stale browser kan geen nieuwere versie overschrijven.
+- **Afhandeling:** een bod wordt uitsluitend handmatig geselecteerd, moet aantoonbaar bij de aanvraag horen en wordt na akkoord vergrendeld. Terminale verkoopstatussen kunnen niet stilzwijgend worden heropend.
+- **Logging:** technische logs bevatten geen wachtwoorden, tokens, volledige formulierinhoud of onnodige persoonsgegevens. Zakelijke contactnotities en wijzigingsredenen zijn afgeschermde dossiergegevens, geen technische logs.
 
 ## Herstel beheeraccount
 

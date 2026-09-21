@@ -5,6 +5,7 @@ import { z } from "zod";
 
 import { addInternalNote, reviewPhoto, updateApplicationStatus } from "@/app/beheer/aanvragen/actions";
 import { MarketControls } from "@/components/admin/market-controls";
+import { PhaseFourControls } from "@/components/admin/phase-four-controls";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { requireAdmin } from "@/lib/auth/dal";
@@ -26,20 +27,37 @@ const marketSchema = z.object({
   bids: z.array(z.object({ id: z.string().uuid(), companyId: z.string().uuid(), companyName: z.string(), amountCents: z.number(), createdAt: z.string() })),
 });
 
+const caseSchema = z.object({
+  deal: z.object({
+    id: z.string().uuid().nullable(),
+    status: z.enum(["not_started", "discussing", "agreement_pending", "agreed", "completed", "not_sold", "withdrawn"]),
+    selectedBidId: z.string().uuid().nullable(),
+    agreedAt: z.string().nullable(),
+    completedAt: z.string().nullable(),
+  }),
+  contacts: z.array(z.object({ id: z.string().uuid(), channel: z.string(), summary: z.string(), occurredAt: z.string(), createdAt: z.string(), actor: z.string() })),
+  revisions: z.array(z.object({ id: z.string().uuid(), revisionNumber: z.number(), createdAt: z.string() })),
+  currentPublishedRevisionId: z.string().uuid().nullable(),
+  history: z.array(z.object({ id: z.number(), action: z.string(), createdAt: z.string() })),
+});
+
 export default async function ApplicationDetailPage({ params }: { params: Promise<{ id: string }> }) {
   await requireAdmin();
   const { id } = await params;
   if (!z.string().uuid().safeParse(id).success) notFound();
   const supabase = await createClient();
-  const [{ data, error }, { data: marketData, error: marketError }] = await Promise.all([
+  const [{ data, error }, { data: marketData, error: marketError }, { data: caseData, error: caseError }] = await Promise.all([
     supabase.rpc("get_admin_application", { p_application_id: id }),
     supabase.rpc("get_admin_market_state", { p_application_id: id }),
+    supabase.rpc("get_admin_case_state", { p_application_id: id }),
   ]);
   const parsed = detailSchema.safeParse(data);
   const parsedMarket = marketSchema.safeParse(marketData);
-  if (error || marketError || !parsed.success || !parsedMarket.success) notFound();
+  const parsedCase = caseSchema.safeParse(caseData);
+  if (error || marketError || caseError || !parsed.success || !parsedMarket.success || !parsedCase.success) notFound();
   const application = parsed.data;
   const market = parsedMarket.data;
+  const caseState = parsedCase.data;
 
   const photos = await Promise.all(application.photos.map(async (photo) => {
     const { data: signed } = await supabase.storage.from("vehicle-photos").createSignedUrl(photo.storagePath, 300);
@@ -53,6 +71,7 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
     <section className="mt-8"><h2 className="text-2xl font-black">Foto’s controleren</h2><p className="mt-2 text-sm text-slate-600">Controleer expliciet op gezichten, documenten, kentekenbewijzen, adressen en andere persoonsgegevens voordat een foto wordt goedgekeurd.</p><div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{photos.map((photo) => <article key={photo.id} className="overflow-hidden rounded-xl border border-slate-200">{photo.signedUrl ? <Image src={photo.signedUrl} alt="Voertuigfoto ter controle" width={800} height={600} unoptimized className="aspect-[4/3] w-full object-cover" /> : <div className="grid aspect-[4/3] place-items-center bg-slate-100 text-sm text-slate-500">Foto niet beschikbaar</div>}<div className="p-4"><p className="font-bold">{photo.reviewStatus}</p><form action={reviewPhoto} className="mt-3 flex gap-2"><input type="hidden" name="applicationId" value={application.id} /><input type="hidden" name="photoId" value={photo.id} /><Button size="sm" name="status" value="approved">Goedkeuren</Button><Button size="sm" variant="destructive" name="status" value="rejected">Afwijzen</Button></form></div></article>)}</div></section>
     <div className="mt-8 grid gap-6 lg:grid-cols-2"><Panel title="Status wijzigen"><form action={updateApplicationStatus} className="flex flex-wrap gap-2"><input type="hidden" name="applicationId" value={application.id} />{[["in_review","In controle"],["needs_information","Informatie nodig"],["ready","Gereed"],["withdrawn","Ingetrokken"],["closed","Gesloten"]].map(([value,label]) => <Button key={value} size="sm" variant="outline" name="status" value={value}>{label}</Button>)}</form></Panel><Panel title="Interne notitie"><form action={addInternalNote}><input type="hidden" name="applicationId" value={application.id} /><Textarea name="body" required maxLength={2000} aria-label="Interne notitie" /><Button className="mt-3" size="sm">Notitie opslaan</Button></form><div className="mt-5 space-y-3">{application.notes.map((note) => <article key={note.id} className="rounded-lg bg-slate-50 p-3"><p className="whitespace-pre-wrap text-sm">{note.body}</p><p className="mt-2 text-xs text-slate-500">{note.author} · {formatAmsterdamDateTime(note.createdAt)}</p></article>)}</div></Panel></div>
     <div className="mt-8"><MarketControls applicationId={application.id} applicationStatus={application.status} market={market} /></div>
+    <PhaseFourControls applicationId={application.id} caseState={caseState} bids={market.bids} condition={application.condition} />
     {market.listingId && <section className="mt-8 rounded-2xl border border-slate-200 p-6"><h2 className="text-xl font-black">Alle biedingen</h2><p className="mt-2 text-sm text-slate-600">De hoogste bieder wordt niet automatisch als koper aangewezen.</p>{market.bids.length ? <div className="mt-4 overflow-x-auto"><table className="w-full text-left text-sm"><thead><tr><th className="py-2">Bedrijf</th><th className="py-2">Bedrag</th><th className="py-2">Tijdstip</th></tr></thead><tbody>{market.bids.map((bid) => <tr key={bid.id} className="border-t border-slate-200"><td className="py-3">{bid.companyName}</td><td className="py-3 font-bold">{formatEuroCents(bid.amountCents)}</td><td className="py-3">{formatAmsterdamDateTime(bid.createdAt)}</td></tr>)}</tbody></table></div> : <p className="mt-4 text-slate-500">Er zijn nog geen biedingen.</p>}</section>}
   </section></main>;
 }

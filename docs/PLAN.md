@@ -35,9 +35,9 @@ Legenda: `[x]` gebouwd en lokaal geverifieerd, `[~]` gebouwd maar nog niet volle
 
 ## Fase 4 — afhandeling en kwaliteitscontrole
 
-- [ ] Contactmomenten, akkoord, niet-verkocht en voltooid.
-- [ ] Gecontroleerde voertuigversies en procedure voor materiële wijzigingen.
-- [ ] Privacy-, toegankelijkheids-, logging- en herstelcontrole.
+- [x] Contactmomenten, handmatige bodselectie, akkoord, niet-verkocht en voltooid met gecontroleerde statusovergangen.
+- [x] Materiële wijzigingen trekken de publicatie in, annuleren de ronde en bewaren versie- en biedhistorie; herpublicatie maakt een nieuwe versie.
+- [~] Privacyregister, loggingregels en herstelprocedure zijn gedocumenteerd; juridische bewaartermijnen, browser-E2E, externe beveiligingsreview en daadwerkelijke herstelproef blijven vóór livegang verplicht.
 
 ## Fase 5 — besloten proef
 

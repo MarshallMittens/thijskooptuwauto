@@ -40,8 +40,18 @@
 - Beheer ziet alle biedingen zonder dat de hoogste bieder automatisch koper wordt.
 - Gelijktijdige verhogingen worden door de biedrondelock in geldige volgorde verwerkt; dit wordt met twee databaseverbindingen getest zodra de lokale runtime beschikbaar is.
 
-## Latere kritieke scenario’s
+## Fase 4
+
+- Contactmomenten zijn alleen zichtbaar en schrijfbaar voor staff met `aal2` en krijgen een auditregel zonder de volledige samenvatting te kopiëren.
+- Afhandelingsstatus kan niet buiten de toegestane volgorde worden gewijzigd.
+- `agreement_pending`, `agreed` en `completed` vereisen een bewust gekozen bod dat bij dezelfde aanvraag hoort.
+- De hoogste bieder wordt niet automatisch geselecteerd en het sluiten van de biedronde wijzigt de afhandeling niet.
+- Een materiële wijziging vanaf een verouderde revisie wordt geweigerd.
+- Een materiële wijziging trekt gepubliceerd aanbod in, annuleert de ronde en bewaart oude voertuigversies en biedingen onveranderd.
+- Herpublicatie na een materiële wijziging maakt een nieuwe revisie en biedronde.
+- Dealers kunnen contactmomenten, afhandeling en beheerworkflow-RPC’s niet lezen of aanroepen.
+
+## Nog vóór livegang
 
 - E-mailuitval verwijdert of rolt geen aanvraag of bod terug.
-- Materiële wijzigingen starten een controleerbare nieuwe voertuigversie en zo nodig nieuwe ronde.
 - Database- en fotoherstel worden daadwerkelijk proefgedraaid vóór livegang.
