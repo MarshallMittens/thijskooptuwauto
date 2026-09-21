@@ -77,7 +77,10 @@ select results_eq(
 );
 select lives_ok($$ select public.place_bid((select round_id from phase3_state limit 1), 1100000, '70000000-0000-0000-0000-000000000003') $$, 'dealer kan het eigen bod verhogen');
 select results_eq($$ select jsonb_array_length(public.get_dealer_listing((select listing_id from phase3_state limit 1))->'ownBids') $$, $$ values (2) $$, 'eigen biedhistorie bevat beide append-only biedingen');
+reset role;
 select results_eq($$ select count(*)::bigint from public.notification_outbox where event_type = 'bid.placed' $$, $$ values (2::bigint) $$, 'ieder opgeslagen bod krijgt een duurzame notificatie');
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000d1","role":"authenticated","aal":"aal1"}', true);
 select throws_ok(
   $$ insert into public.bids (bid_round_id, company_id, placed_by, amount_cents, idempotency_key) values ((select round_id from phase3_state limit 1), '10000000-0000-0000-0000-0000000000d1', '00000000-0000-0000-0000-0000000000d1', 1200000, '70000000-0000-0000-0000-000000000004') $$,
   '42501', null, 'dealer kan de gecontroleerde biedfunctie niet omzeilen met een directe insert'

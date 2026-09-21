@@ -26,10 +26,10 @@ insert into public.companies (
   ('10000000-0000-0000-0000-0000000000d1', 'Ander Bedrijf', '10000003', 'Teststraat', '3', '1234AB', 'Testdam', 'A. Nder', 'other@example.test', '0633333333', 'approved'),
   ('10000000-0000-0000-0000-0000000000e1', 'Voormalig Bedrijf', '10000004', 'Teststraat', '4', '1234AB', 'Testdam', 'V. Oormalig', 'removed@example.test', '0644444444', 'approved');
 
-insert into public.company_memberships (company_id, user_id, role) values
-  ('10000000-0000-0000-0000-0000000000b1', '00000000-0000-0000-0000-0000000000b1', 'owner'),
-  ('10000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000c1', 'owner'),
-  ('10000000-0000-0000-0000-0000000000d1', '00000000-0000-0000-0000-0000000000d1', 'owner'),
+insert into public.company_memberships (company_id, user_id, role, status) values
+  ('10000000-0000-0000-0000-0000000000b1', '00000000-0000-0000-0000-0000000000b1', 'owner', 'active'),
+  ('10000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000c1', 'owner', 'active'),
+  ('10000000-0000-0000-0000-0000000000d1', '00000000-0000-0000-0000-0000000000d1', 'owner', 'active'),
   ('10000000-0000-0000-0000-0000000000e1', '00000000-0000-0000-0000-0000000000e1', 'owner', 'removed');
 
 insert into public.seller_contacts (id, full_name, email, phone, postal_code) values
@@ -57,10 +57,10 @@ insert into public.vehicle_photos (id, application_id, vehicle_revision_id, stor
   ('70000000-0000-0000-0000-0000000000a2', '40000000-0000-0000-0000-0000000000a2', '50000000-0000-0000-0000-0000000000a2', 'test/draft.jpg', 'image/jpeg', 100, repeat('b', 64), 'approved');
 
 set local role anon;
-select results_eq(
+select throws_ok(
   $$ select count(*)::bigint from public.companies $$,
-  $$ values (0::bigint) $$,
-  'anonieme bezoekers kunnen geen bedrijven lezen'
+  '42501', null,
+  'anonieme bezoekers krijgen geen tabeltoegang tot bedrijven'
 );
 reset role;
 

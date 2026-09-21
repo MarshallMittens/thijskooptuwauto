@@ -4,7 +4,7 @@ Eén Next.js-applicatie voor de publieke website, het besloten dealerportaal en 
 
 ## Huidige status
 
-Fase 1 en de code voor fase 2 zijn ingericht:
+Fase 1, fase 2 en fase 3 zijn lokaal ingericht:
 
 - standaard Next.js 16 App Router-basis;
 - Supabase SSR-sessieadapter;

@@ -17,7 +17,7 @@ insert into public.staff_memberships (user_id, role)
 values ('00000000-0000-0000-0000-0000000000f1', 'admin');
 
 create temporary table phase2_state (draft_result jsonb, final_result jsonb);
-grant all on table phase2_state to service_role;
+grant all on table phase2_state to service_role, authenticated;
 
 set local role service_role;
 select set_config('request.jwt.claims', '{"role":"service_role"}', true);
@@ -124,10 +124,10 @@ select results_eq(
 reset role;
 
 set local role anon;
-select results_eq(
+select throws_ok(
   $$ select count(*)::bigint from public.applications $$,
-  $$ values (0::bigint) $$,
-  'anonieme Data API-aanroep kan aanvragen niet lezen'
+  '42501', null,
+  'anonieme Data API-aanroep krijgt geen tabeltoegang tot aanvragen'
 );
 reset role;
 

@@ -1,6 +1,6 @@
 # Bouwplan en voortgang
 
-Legenda: `[x]` gebouwd, `[~]` gebouwd maar nog lokaal te verifiëren, `[ ]` nog niet gebouwd.
+Legenda: `[x]` gebouwd en lokaal geverifieerd, `[~]` gebouwd maar nog niet volledig end-to-end of extern gekoppeld, `[ ]` nog niet gebouwd.
 
 ## Fase 1 — ontwerp en fundament
 
@@ -12,24 +12,24 @@ Legenda: `[x]` gebouwd, `[~]` gebouwd maar nog lokaal te verifiëren, `[ ]` nog 
 - [x] Beheerrol, TOTP/MFA-poort en bedrijfsgoedkeuring/blokkering.
 - [x] Default-deny grants, RLS en gecontroleerde databasefuncties.
 - [x] Unit-tests voor toegangsregels.
-- [~] PostgreSQL/RLS-tests geschreven; uitvoeren zodra Docker beschikbaar is.
+- [x] PostgreSQL/RLS-tests draaien tegen de lokale Supabase/PostgreSQL-runtime.
 
 ## Fase 2 — publieke website en aanvragen
 
 - [x] Publieke pagina’s, metadata, sitemap en navigatie met herkenbare conceptteksten.
-- [~] Zesstaps aanvraagformulier met tijdelijk concepttoken en idempotentie; databasepad wacht op lokale Supabase-verificatie.
+- [~] Zesstaps aanvraagformulier met tijdelijk concepttoken en idempotentie; databasepad is geverifieerd, browser-E2E volgt nog.
 - [x] RDW-opvraag via de officiële openbare kentekendataset met handmatige terugval.
-- [~] Private signed upload, serverinspectie, hercodering zonder metadata en fotoreview; end-to-endtest wacht op lokale Supabase.
-- [~] Onvoorspelbare referentie en duurzame notificatie-outbox; Resend is optioneel en nog niet ingesteld.
-- [~] Beheeroverzicht, statusovergangen, interne notities en fotocontrole; databasepad wacht op lokale Supabase-verificatie.
+- [~] Private signed upload, serverinspectie, hercodering zonder metadata en fotoreview; geautomatiseerde browser-E2E volgt nog.
+- [~] Onvoorspelbare referentie en duurzame notificatie-outbox zijn lokaal geverifieerd; Resend is optioneel en nog niet ingesteld.
+- [~] Beheeroverzicht, statusovergangen, interne notities en fotocontrole; databasefuncties zijn geverifieerd, browser-E2E volgt nog.
 
 ## Fase 3 — dealerportaal en biedingen
 
-- [~] Gepubliceerd aanbod, filters, private gecontroleerde foto’s en detailpagina; databasepad wacht op lokale Supabase-verificatie.
-- [~] Actieve biedrondes en besloten eigen biedhistorie; databasepad wacht op lokale Supabase-verificatie.
-- [~] Transactionele append-only biedfunctie met rijvergrendeling, databasetijd en idempotentie; migratie is geschreven maar nog niet lokaal uitgevoerd.
-- [~] Negatieve rechten-, deadline-, verhogings- en idempotentietests zijn geschreven; echte gelijktijdigheidstest vereist de lokale PostgreSQL-runtime.
-- [~] Ieder opgeslagen bod krijgt transactioneel een outboxnotificatie; Resend-verzending is optioneel en nog niet ingesteld.
+- [~] Gepubliceerd aanbod, filters, private gecontroleerde foto’s en detailpagina; databasepad is geverifieerd, browser-E2E volgt nog.
+- [~] Actieve biedrondes en besloten eigen biedhistorie; databasepad is geverifieerd, browser-E2E volgt nog.
+- [x] Transactionele append-only biedfunctie met rijvergrendeling, databasetijd en idempotentie is lokaal gemigreerd en getest.
+- [~] Negatieve rechten-, deadline-, verhogings- en idempotentietests slagen; een afzonderlijke gelijktijdige verzoektest volgt nog.
+- [~] Ieder opgeslagen bod krijgt transactioneel een geverifieerde outboxnotificatie; Resend-verzending is optioneel en nog niet ingesteld.
 - [x] Reviewfix: tijdelijke uploadpaden zijn gescheiden van definitieve, alleen server-schrijfbare fotopaden.
 - [x] Reviewfix: rate limiting gebruikt geen wijzigbare User-Agent en concepttokens blijven geldig bij een netwerkovergang.
 
