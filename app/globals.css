@@ -4,23 +4,23 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #071327;
+  --foreground: #111111;
   --card: #ffffff;
-  --card-foreground: #071327;
+  --card-foreground: #111111;
   --popover: #ffffff;
-  --popover-foreground: #071327;
-  --primary: #1554d1;
-  --primary-foreground: #ffffff;
-  --secondary: #edf4ff;
-  --secondary-foreground: #071327;
+  --popover-foreground: #111111;
+  --primary: #f7941e;
+  --primary-foreground: #090909;
+  --secondary: #fff1df;
+  --secondary-foreground: #111111;
   --muted: #f1f5f9;
   --muted-foreground: #5a687c;
-  --accent: #ffd400;
-  --accent-foreground: #071327;
+  --accent: #f7941e;
+  --accent-foreground: #090909;
   --destructive: #b91c1c;
   --border: #dbe3ee;
   --input: #cbd5e1;
-  --ring: #1554d1;
+  --ring: #a64b00;
   --radius: 0.75rem;
 }
 
@@ -73,16 +73,16 @@ input {
 }
 
 ::selection {
-  background: #ffd400;
-  color: #071327;
+  background: #f7941e;
+  color: #090909;
 }
 
 .hero-shell {
-  background: #071327;
+  background: #090909;
 }
 
 .eyebrow {
-  color: #1554d1;
+  color: #a64b00;
   font-size: 0.78rem;
   font-weight: 800;
   letter-spacing: 0.15em;
@@ -94,8 +94,8 @@ input {
   min-height: 100vh;
   padding: clamp(1.25rem, 4vw, 4rem);
   background:
-    radial-gradient(circle at 85% 8%, rgba(21, 84, 209, 0.14), transparent 28rem),
-    #f4f7fb;
+    radial-gradient(circle at 85% 8%, rgba(247, 148, 30, 0.16), transparent 28rem),
+    #f8f6f2;
 }
 
 .auth-page {

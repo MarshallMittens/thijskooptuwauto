@@ -50,7 +50,7 @@ export function CredentialsForm({
           {state.error}
         </p>
       ) : null}
-      <Button type="submit" disabled={pending} className="h-12 w-full bg-[#1554d1] text-base font-bold hover:bg-[#0f42aa]">
+      <Button type="submit" disabled={pending} className="h-12 w-full bg-[#f7941e] text-base font-bold text-[#090909] hover:bg-[#ffad45]">
         {pending ? "Even geduld…" : mode === "sign-in" ? "Inloggen" : "Account maken"}
       </Button>
     </form>

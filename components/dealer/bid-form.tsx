@@ -27,7 +27,7 @@ export function BidForm({ listingId, roundId }: { listingId: string; roundId: st
   }
 
   return (
-    <form onSubmit={submit} className="rounded-2xl border border-blue-200 bg-blue-50 p-5">
+    <form onSubmit={submit} className="rounded-2xl border border-orange-200 bg-orange-50 p-5">
       <h2 className="text-xl font-black">Plaats of verhoog je bod</h2>
       <p className="mt-2 text-sm leading-6 text-slate-600">Je bod is besloten. Een eenmaal opgeslagen bod kan niet worden verlaagd of verwijderd.</p>
       <div className="mt-4 max-w-sm">

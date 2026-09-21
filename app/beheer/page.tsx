@@ -24,7 +24,7 @@ export default async function AdminPage() {
             <h1 className="mt-3 text-4xl font-black tracking-[-0.05em]">Autobedrijven</h1>
             <p className="mt-3 leading-7 text-slate-600">Alleen beheerders met tweestapsverificatie kunnen bedrijven goedkeuren of blokkeren.</p>
           </div>
-          <div className="flex gap-3"><Link href="/beheer/aanvragen" className="inline-flex items-center rounded-md bg-[#1554d1] px-4 py-2 text-sm font-bold text-white">Autoaanvragen</Link><form action={signOut}><Button variant="outline">Uitloggen</Button></form></div>
+          <div className="flex gap-3"><Link href="/beheer/aanvragen" className="inline-flex items-center rounded-md bg-[#a64b00] px-4 py-2 text-sm font-bold text-white">Autoaanvragen</Link><form action={signOut}><Button variant="outline">Uitloggen</Button></form></div>
         </div>
 
         <div className="mt-6 inline-flex rounded-full bg-emerald-50 px-3 py-1 text-sm font-bold text-emerald-800">

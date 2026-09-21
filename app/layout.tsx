@@ -5,8 +5,9 @@ export const metadata: Metadata = {
   title: "Thijs koopt uw auto | Meld je auto aan",
   description: "Meld je auto zorgvuldig aan met voertuiggegevens en foto’s. Thijskooptuauto controleert de aanvraag en bespreekt mogelijke vervolgstappen.",
   icons: {
-    icon: "/favicon.svg",
-    shortcut: "/favicon.svg",
+    icon: "/tkua-logo.png",
+    shortcut: "/tkua-logo.png",
+    apple: "/tkua-logo.png",
   },
 };
 
