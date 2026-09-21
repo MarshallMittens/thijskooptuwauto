@@ -22,9 +22,12 @@
 
 ## Bieden en afhandeling
 
-- `listings` publiceert één voertuigversie.
-- `bid_rounds` bewaart afzonderlijk status en UTC-deadline.
-- `bids` is append-only, in eurocenten en uniek op gebruiker plus idempotentiesleutel.
+- `vehicle_revisions` bevat de onveranderlijke momentopname die dealers zien; verkopersgegevens maken daar nooit deel van uit.
+- `listings` koppelt één gepubliceerde voertuigversie aan het besloten aanbod.
+- `bid_rounds` bewaart start, einde en administratieve status; de geldigheid van een bod wordt altijd opnieuw tegen de databasetijd gecontroleerd.
+- `bids` is append-only, bevat gehele eurocenten, het bedrijf, de plaatser, een vorige-bodverwijzing en een idempotentiesleutel.
+- Een `bid.placed`-regel in `notification_outbox` ontstaat in dezelfde transactie als het bod.
+
 - `deal_cases` scheidt akkoord en afhandeling van de biedrondestatus.
 - `contact_events` en `internal_notes` zijn uitsluitend beheerinformatie.
 

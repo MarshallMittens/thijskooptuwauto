@@ -4,7 +4,7 @@ import { z } from "zod";
 import { applicationPayloadSchema, MAX_PHOTOS } from "@/lib/applications/schema";
 import { trySendApplicationConfirmation } from "@/lib/email/application-confirmation";
 import { lookupRdwVehicle } from "@/lib/rdw/client";
-import { createActorKey, createDraftToken, hashDraftToken, tokensMatch } from "@/lib/security/public-request";
+import { createRateLimitActorKey, hashDraftToken } from "@/lib/security/public-request";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { inspectAndNormalizePhoto } from "@/lib/uploads/image";
 
@@ -31,13 +31,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Controleer de ingevulde gegevens." }, { status: 400 });
   }
 
-  const actorKey = createActorKey(request);
-  const expectedToken = createDraftToken(actorKey, parsed.data.idempotencyKey);
-  if (!tokensMatch(parsed.data.draftToken, expectedToken)) {
-    return NextResponse.json({ error: "De uploadsessie is ongeldig of verlopen." }, { status: 403 });
-  }
+  const actorKey = createRateLimitActorKey(request);
 
-  const expectedPaths = parsed.data.photoPaths.map((_, index) => `${parsed.data.draftId}/${index}.jpg`);
+  const expectedPaths = parsed.data.photoPaths.map((_, index) => `temporary/${parsed.data.draftId}/${index}.jpg`);
   if (parsed.data.photoPaths.some((path, index) => path !== expectedPaths[index])) {
     return NextResponse.json({ error: "Ongeldige fotolijst." }, { status: 400 });
   }
@@ -48,7 +44,6 @@ export async function POST(request: Request) {
       .from("application_drafts")
       .select("id, actor_key, token_hash, photo_count, expires_at, finalized_application_id")
       .eq("id", parsed.data.draftId)
-      .eq("actor_key", actorKey)
       .eq("token_hash", hashDraftToken(parsed.data.draftToken))
       .single();
     if (draftError || !draft || new Date(draft.expires_at).getTime() <= Date.now()) {
@@ -77,9 +72,10 @@ export async function POST(request: Request) {
       if (downloadError) throw new Error("photo_download_failed");
 
       const normalized = await inspectAndNormalizePhoto(await stored.arrayBuffer(), "image/jpeg");
+      const permanentPath = `applications/${parsed.data.draftId}/${index}-${normalized.sha256}.jpg`;
       const { error: uploadError } = await admin.storage
         .from("vehicle-photos")
-        .upload(path, normalized.data, {
+        .upload(permanentPath, normalized.data, {
           contentType: normalized.mediaType,
           cacheControl: "3600",
           upsert: true,
@@ -87,7 +83,7 @@ export async function POST(request: Request) {
       if (uploadError) throw new Error("photo_normalization_failed");
 
       photoMetadata.push({
-        storage_path: path,
+        storage_path: permanentPath,
         media_type: normalized.mediaType,
         size_bytes: normalized.sizeBytes,
         sha256: normalized.sha256,
@@ -129,6 +125,7 @@ export async function POST(request: Request) {
     if (error) throw error;
     const result = resultSchema.parse(data);
 
+    await admin.storage.from("vehicle-photos").remove(parsed.data.photoPaths);
     await trySendApplicationConfirmation(admin, result.application_id);
     return NextResponse.json({ reference: result.reference, duplicate: !result.created });
   } catch (error) {

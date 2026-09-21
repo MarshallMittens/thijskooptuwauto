@@ -15,7 +15,8 @@ Gebruik per omgeving afzonderlijke sleutels. Kies bij inrichting nabijgelegen on
 - `APP_URL`: publieke origin zonder pad.
 - `NEXT_PUBLIC_SUPABASE_URL` en `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`: publieke projectconfiguratie.
 - `SUPABASE_SERVICE_ROLE_KEY`: alleen server-side voor afgebakende concept-, upload- en notificatieroutes.
-- `REQUEST_FINGERPRINT_SECRET` en `DRAFT_TOKEN_SECRET`: verschillende willekeurige waarden van minimaal 32 tekens per omgeving.
+- `REQUEST_FINGERPRINT_SECRET`: een willekeurige waarde van minimaal 32 tekens per omgeving voor gehashte rate-limitidentifiers.
+- `DRAFT_TOKEN_SECRET`: een afzonderlijke willekeurige waarde van minimaal 32 tekens waarmee stabiele, IP-onafhankelijke conceptcapabilities worden afgeleid.
 - `RDW_APP_TOKEN`: optioneel; openbare RDW-opvragen werken zonder token binnen de actuele limieten.
 - `RESEND_API_KEY` en `RESEND_FROM_EMAIL`: pas instellen na eigen account- en domeinverificatie.
 

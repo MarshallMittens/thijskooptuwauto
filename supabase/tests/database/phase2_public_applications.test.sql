@@ -65,7 +65,7 @@ update phase2_state set final_result = public.finalize_public_application(
   }
   $$::jsonb,
   jsonb_build_array(jsonb_build_object(
-    'storage_path', (draft_result->>'draft_id') || '/0.jpg',
+    'storage_path', 'applications/' || (draft_result->>'draft_id') || '/0-' || repeat('c', 64) || '.jpg',
     'media_type', 'image/jpeg',
     'size_bytes', 1024,
     'sha256', repeat('c', 64),

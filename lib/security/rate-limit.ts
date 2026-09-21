@@ -1,6 +1,6 @@
 import "server-only";
 
-import { createActorKey } from "@/lib/security/public-request";
+import { createRateLimitActorKey } from "@/lib/security/public-request";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function consumePublicRateLimit(
@@ -11,7 +11,7 @@ export async function consumePublicRateLimit(
   try {
     const admin = createAdminClient();
     const { data, error } = await admin.rpc("consume_public_rate_limit", {
-      p_actor_key: createActorKey(request),
+      p_actor_key: createRateLimitActorKey(request),
       p_scope: scope,
       p_max_attempts: maximum,
     });

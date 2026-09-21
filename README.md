@@ -18,6 +18,10 @@ Fase 1 en de code voor fase 2 zijn ingericht:
 - private foto-upload met servercontrole en metadatareductie;
 - duurzame aanvraag- en e-mailoutboxopslag;
 - beheeroverzicht voor aanvragen, interne notities, statussen en fotoreview.
+- gecontroleerde publicatie van een onveranderlijke voertuigversie en biedronde;
+- besloten dealer-aanbod met filters, gecontroleerde foto’s en eigen biedhistorie;
+- transactionele, append-only biedingen met deadline-, rechten- en idempotentiecontrole;
+- beheerweergave van alle biedingen zonder automatische gunning.
 
 De publieke pagina’s en RDW-terugval zijn zonder lokale database te bekijken. Definitief versturen, foto-opslag, inloggen en beheer vereisen lokale Supabase. Er is geen gesimuleerde productieopslag of authenticatie.
 

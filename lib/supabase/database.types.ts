@@ -76,6 +76,34 @@ export type Database = {
         Args: { p_photo_id: string; p_status: "pending" | "approved" | "rejected" };
         Returns: undefined;
       };
+      admin_publish_application: {
+        Args: { p_application_id: string; p_starts_at: string; p_ends_at: string };
+        Returns: Json;
+      };
+      admin_close_bid_round: {
+        Args: { p_bid_round_id: string };
+        Returns: undefined;
+      };
+      get_admin_market_state: {
+        Args: { p_application_id: string };
+        Returns: Json;
+      };
+      list_dealer_listings: {
+        Args: { p_query: string | null; p_make: string | null; p_round_status: string | null };
+        Returns: Json;
+      };
+      get_dealer_listing: {
+        Args: { p_listing_id: string };
+        Returns: Json;
+      };
+      list_my_bids: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
+      place_bid: {
+        Args: { p_bid_round_id: string; p_amount_cents: number; p_idempotency_key: string };
+        Returns: Json;
+      };
     };
     Enums: {
       company_status: "pending" | "approved" | "blocked";

@@ -25,11 +25,13 @@ Legenda: `[x]` gebouwd, `[~]` gebouwd maar nog lokaal te verifiëren, `[ ]` nog 
 
 ## Fase 3 — dealerportaal en biedingen
 
-- [ ] Gepubliceerd aanbod, filters en detailpagina.
-- [ ] Actieve biedrondes en besloten eigen biedhistorie.
-- [ ] Transactionele append-only biedfunctie met locks en idempotentie.
-- [ ] Deadline- en gelijktijdigheidstests tegen PostgreSQL.
-- [ ] Transactionele notificaties na succesvolle opslag.
+- [~] Gepubliceerd aanbod, filters, private gecontroleerde foto’s en detailpagina; databasepad wacht op lokale Supabase-verificatie.
+- [~] Actieve biedrondes en besloten eigen biedhistorie; databasepad wacht op lokale Supabase-verificatie.
+- [~] Transactionele append-only biedfunctie met rijvergrendeling, databasetijd en idempotentie; migratie is geschreven maar nog niet lokaal uitgevoerd.
+- [~] Negatieve rechten-, deadline-, verhogings- en idempotentietests zijn geschreven; echte gelijktijdigheidstest vereist de lokale PostgreSQL-runtime.
+- [~] Ieder opgeslagen bod krijgt transactioneel een outboxnotificatie; Resend-verzending is optioneel en nog niet ingesteld.
+- [x] Reviewfix: tijdelijke uploadpaden zijn gescheiden van definitieve, alleen server-schrijfbare fotopaden.
+- [x] Reviewfix: rate limiting gebruikt geen wijzigbare User-Agent en concepttokens blijven geldig bij een netwerkovergang.
 
 ## Fase 4 — afhandeling en kwaliteitscontrole
 

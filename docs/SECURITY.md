@@ -17,7 +17,7 @@
 | Verkopersgegevens | Nee | Nee | Nee | Ja |
 | Interne notities/audit | Nee | Nee | Nee | Ja |
 | Bedrijfsstatus wijzigen | Nee | Nee | Nee | Alleen admin |
-| Bieden | Nee | Nee | Later via bied-RPC | Inzien |
+| Bieden | Nee | Nee | Alleen via gecontroleerde bied-RPC | Alle biedingen inzien |
 
 ## Belangrijkste risico’s en controles
 
@@ -28,11 +28,12 @@
 - **Ingetrokken toegang:** alleen actieve bedrijfslidmaatschappen geven inzage; negatieve RLS-tests dekken verwijderde leden en ongepubliceerde voertuigen af.
 - **Rechtstreekse RPC-aanroepen:** kritieke invoerregels staan ook in PostgreSQL-functies en tabelconstraints; browser- of servervalidatie is niet de laatste grens.
 - **Open redirects:** authenticatieroutes accepteren alleen geparseerde paden die binnen dezelfde origin blijven; backslashes en gecodeerde netwerkpaden worden geweigerd.
-- **Publieke foto-upload:** de browser codeert geselecteerde JPEG/PNG/WebP-bestanden eerst als JPEG en uploadt via kort geldige, padgebonden machtigingen. Bij afronding downloadt de server ieder object, controleert werkelijk formaat en pixelgrens, schaalt zo nodig en codeert opnieuw zonder metadata. Alleen daarna ontstaat een `vehicle_photos`-regel met status `pending`.
+- **Publieke foto-upload:** de browser codeert geselecteerde JPEG/PNG/WebP-bestanden eerst als JPEG en uploadt via kort geldige machtigingen uitsluitend naar `temporary/`. Bij afronding controleert en hercodeert de server ieder bestand en schrijft een hashgebonden versie naar `applications/`. De browsermachtiging kan dat definitieve object niet overschrijven.
 - **Foto-inzage:** Storage blijft privé. Beheer met `aal2` krijgt een signed URL van vijf minuten; dealers krijgen in fase 3 uitsluitend gecontroleerde foto’s via een afzonderlijke machtiging.
-- **Misbruikbeperking:** een honeypot, afzonderlijke uurlimieten voor RDW-opvragen, formulierstarts en nieuwe uploadconcepten, maximaal twaalf foto’s en korte conceptverval beperken geautomatiseerd misbruik. Alleen een HMAC van technisch verzoeksignaal wordt tijdelijk gebruikt; ruwe IP-adressen en user-agents worden niet opgeslagen.
+- **Misbruikbeperking:** een honeypot, afzonderlijke uurlimieten voor RDW-opvragen, formulierstarts en nieuwe uploadconcepten, maximaal twaalf foto’s en korte conceptverval beperken geautomatiseerd misbruik. De identifier is een HMAC van het door Vercel vastgestelde adres; de wijzigbare User-Agent telt niet mee en ruwe adressen worden niet opgeslagen.
 - **Dubbele verzoeken:** expliciete idempotentiesleutels voor aanvraag, bod en e-mail.
-- **Racecondities:** biedcontrole en insert komen later in één PostgreSQL-transactie met rijvergrendeling en `now()` van de database.
+- **Racecondities:** biedcontrole en insert staan in één PostgreSQL-transactie. Een lock op de biedronde serialiseert gelijktijdige biedingen; deadline en start worden met `now()` van PostgreSQL gecontroleerd.
+- **Append-only biedingen:** browserrollen hebben geen insert/update/delete-grants; alleen de biedfunctie kan invoegen en een trigger weigert updates en deletes, ook bij bevoorrechte rechtstreekse wijzigingen.
 - **Logging:** geen wachtwoorden, tokens, volledige vrije tekst of onnodige persoonsgegevens.
 
 ## Herstel beheeraccount

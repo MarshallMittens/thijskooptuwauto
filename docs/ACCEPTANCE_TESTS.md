@@ -27,11 +27,21 @@
 - Ongeldige aanvraagstatusovergangen worden in PostgreSQL geweigerd en geldige wijzigingen staan in de auditlog.
 - Formulierstarts en afrondingen worden intern geteld zonder kenteken, contactgegevens of vrije tekst in de meetgebeurtenis.
 
+## Fase 3
+
+- Pending en geblokkeerde bedrijven kunnen aanbod noch biedfunctie gebruiken.
+- Dealers zien geen verkopersgegevens, interne notities of biedingen van andere bedrijven.
+- Alleen gepubliceerde, onveranderlijke voertuigversies en goedgekeurde foto’s zijn zichtbaar.
+- Een bod wordt als gehele eurocenten opgeslagen en kan alleen worden verhoogd.
+- Rechtstreekse inserts, updates en deletes op `bids` worden geweigerd.
+- Dezelfde idempotentiesleutel met dezelfde inhoud retourneert hetzelfde bod; andere inhoud wordt geweigerd.
+- Een bod na de databasetijd van de deadline wordt geweigerd, ongeacht een sluitingstaak.
+- Iedere succesvolle bieding schrijft een auditregel en notificatie-outboxregel in dezelfde transactie.
+- Beheer ziet alle biedingen zonder dat de hoogste bieder automatisch koper wordt.
+- Gelijktijdige verhogingen worden door de biedrondelock in geldige volgorde verwerkt; dit wordt met twee databaseverbindingen getest zodra de lokale runtime beschikbaar is.
+
 ## Latere kritieke scenario’s
 
-- Dealers zien geen verkopersgegevens, interne notities of biedingen van andere bedrijven.
-- Een bod na de databasetijd van de deadline wordt geweigerd, ongeacht een sluitingstaak.
-- Gelijktijdige verhogingen worden in geldige volgorde verwerkt.
 - E-mailuitval verwijdert of rolt geen aanvraag of bod terug.
 - Materiële wijzigingen starten een controleerbare nieuwe voertuigversie en zo nodig nieuwe ronde.
 - Database- en fotoherstel worden daadwerkelijk proefgedraaid vóór livegang.

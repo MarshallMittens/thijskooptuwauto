@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { MAX_PHOTOS } from "@/lib/applications/schema";
-import { createActorKey, createDraftToken, hashDraftToken } from "@/lib/security/public-request";
+import { createDraftToken, createRateLimitActorKey, hashDraftToken } from "@/lib/security/public-request";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export const runtime = "nodejs";
@@ -27,8 +27,8 @@ export async function POST(request: Request) {
   }
 
   try {
-    const actorKey = createActorKey(request);
-    const draftToken = createDraftToken(actorKey, parsed.data.idempotencyKey);
+    const actorKey = createRateLimitActorKey(request);
+    const draftToken = createDraftToken(parsed.data.idempotencyKey);
     const admin = createAdminClient();
     const { data, error } = await admin.rpc("create_public_application_draft", {
       p_actor_key: actorKey,
@@ -57,7 +57,7 @@ export async function POST(request: Request) {
 
     const uploads = [];
     for (let index = 0; index < parsed.data.photoCount; index += 1) {
-      const path = `${draft.draft_id}/${index}.jpg`;
+      const path = `temporary/${draft.draft_id}/${index}.jpg`;
       const { data: signed, error: signedError } = await admin.storage
         .from("vehicle-photos")
         .createSignedUploadUrl(path, { upsert: true });
