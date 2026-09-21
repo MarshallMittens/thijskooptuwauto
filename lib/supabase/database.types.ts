@@ -53,6 +53,29 @@ export type Database = {
         };
         Returns: undefined;
       };
+      list_admin_applications: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
+      get_admin_application: {
+        Args: { p_application_id: string };
+        Returns: Json;
+      };
+      admin_update_application_status: {
+        Args: {
+          p_application_id: string;
+          p_status: "draft" | "submitted" | "in_review" | "needs_information" | "ready" | "withdrawn" | "closed";
+        };
+        Returns: undefined;
+      };
+      admin_add_internal_note: {
+        Args: { p_application_id: string; p_body: string };
+        Returns: string;
+      };
+      admin_set_photo_review: {
+        Args: { p_photo_id: string; p_status: "pending" | "approved" | "rejected" };
+        Returns: undefined;
+      };
     };
     Enums: {
       company_status: "pending" | "approved" | "blocked";

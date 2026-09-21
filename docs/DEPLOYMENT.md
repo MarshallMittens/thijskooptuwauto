@@ -10,6 +10,17 @@ De applicatie is nog niet gepubliceerd. Geen van onderstaande stappen mag zonder
 
 Gebruik per omgeving afzonderlijke sleutels. Kies bij inrichting nabijgelegen ondersteunde EU-regio’s voor database en serverfuncties.
 
+## Benodigde fase-2-variabelen
+
+- `APP_URL`: publieke origin zonder pad.
+- `NEXT_PUBLIC_SUPABASE_URL` en `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`: publieke projectconfiguratie.
+- `SUPABASE_SERVICE_ROLE_KEY`: alleen server-side voor afgebakende concept-, upload- en notificatieroutes.
+- `REQUEST_FINGERPRINT_SECRET` en `DRAFT_TOKEN_SECRET`: verschillende willekeurige waarden van minimaal 32 tekens per omgeving.
+- `RDW_APP_TOKEN`: optioneel; openbare RDW-opvragen werken zonder token binnen de actuele limieten.
+- `RESEND_API_KEY` en `RESEND_FROM_EMAIL`: pas instellen na eigen account- en domeinverificatie.
+
+Zet geheimen nooit in Git, browsercode of chat. Gebruik aparte waarden voor development, preview en productie.
+
 ## Voor publicatie
 
 1. Bedrijfsaccounts onder eigendom van Thijskooptuauto maken en MFA activeren.
@@ -34,3 +45,7 @@ Gebruik per omgeving afzonderlijke sleutels. Kies bij inrichting nabijgelegen on
 - Herstel minimaal één volledige fictieve aanvraag met foto’s in een geïsoleerde omgeving.
 - Noteer hersteltijd, gegevensverliesvenster en afwijkingen.
 - Livegang is geblokkeerd totdat deze hersteltest aantoonbaar is geslaagd.
+
+## Onderhoud private uploads
+
+Niet-afgeronde concepten vervallen na dertig minuten. Vóór livegang moet een geplande servertaak objecten onder verlopen conceptpaden verwijderen en pas daarna de conceptregels opruimen. Test dit met fictieve foto’s; een databaseback-up bevat de Storage-objecten niet automatisch.

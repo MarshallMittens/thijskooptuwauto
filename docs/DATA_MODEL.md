@@ -16,6 +16,9 @@
 - `condition_reports` bevat kilometerstand, schade, gebreken, onderhoud, sleutels en opmerkingen.
 - `vehicle_revisions` bewaart de exacte, onveranderlijke publicatieversie.
 - `vehicle_photos` verwijst naar private Storage en bevat review- en metadata-status.
+- `application_drafts` bevat uitsluitend een gehashte tijdelijke uploadmachtiging, een gehashte misbruikidentifier, vervaltijd en idempotentiesleutel; geen contact- of voertuiggegevens.
+- `private.public_submission_limits` begrenst nieuwe uploadconcepten per gehashte technische identifier en uur.
+- `private.product_events` telt alleen formulierstart en afronding, zonder kenteken, contactgegevens of vrije tekst.
 
 ## Bieden en afhandeling
 

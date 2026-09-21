@@ -4,7 +4,7 @@ Eén Next.js-applicatie voor de publieke website, het besloten dealerportaal en 
 
 ## Huidige status
 
-Fase 1 is in code ingericht:
+Fase 1 en de code voor fase 2 zijn ingericht:
 
 - standaard Next.js 16 App Router-basis;
 - Supabase SSR-sessieadapter;
@@ -13,8 +13,13 @@ Fase 1 is in code ingericht:
 - verplichte TOTP/MFA voor beheer;
 - SQL-schema, default-deny RLS en auditlog;
 - unit- en databasebeveiligingstests.
+- publieke informatiepagina’s en SEO-basis;
+- zesstaps autoaanmelding met RDW-terugval en idempotentie;
+- private foto-upload met servercontrole en metadatareductie;
+- duurzame aanvraag- en e-mailoutboxopslag;
+- beheeroverzicht voor aanvragen, interne notities, statussen en fotoreview.
 
-Zonder lokale Supabase-omgeving toont de website bewust dat inloggen nog niet is ingericht. Er is geen gesimuleerde productie-authenticatie.
+De publieke pagina’s en RDW-terugval zijn zonder lokale database te bekijken. Definitief versturen, foto-opslag, inloggen en beheer vereisen lokale Supabase. Er is geen gesimuleerde productieopslag of authenticatie.
 
 ## Vereisten
 
@@ -33,7 +38,7 @@ Copy-Item .env.example .env.local
 npm run db:start
 ```
 
-Neem na `npm run db:start` de lokale URL en publishable key over in `.env.local`. Deel de service-role key nooit in chat of documentatie.
+Neem na `npm run db:start` de lokale URL, publishable key en lokale service-role key over in `.env.local`. Vul ook twee verschillende lokale geheimen van minimaal 32 willekeurige tekens in voor `REQUEST_FINGERPRINT_SECRET` en `DRAFT_TOKEN_SECRET`. Deel deze waarden nooit in chat of documentatie.
 
 Start daarna de applicatie:
 

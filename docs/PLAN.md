@@ -16,12 +16,12 @@ Legenda: `[x]` gebouwd, `[~]` gebouwd maar nog lokaal te verifiëren, `[ ]` nog 
 
 ## Fase 2 — publieke website en aanvragen
 
-- [ ] Publieke pagina’s en definitieve navigatie.
-- [ ] Zesstaps aanvraagformulier met concepttoken en idempotentie.
-- [ ] RDW-opvraag met handmatige terugval.
-- [ ] Private upload, bestandsinspectie, metadatareductie en fotoreview.
-- [ ] Bevestiging met onvoorspelbare referentie en notificatie-outbox.
-- [ ] Beheeroverzicht voor aanvragen.
+- [x] Publieke pagina’s, metadata, sitemap en navigatie met herkenbare conceptteksten.
+- [~] Zesstaps aanvraagformulier met tijdelijk concepttoken en idempotentie; databasepad wacht op lokale Supabase-verificatie.
+- [x] RDW-opvraag via de officiële openbare kentekendataset met handmatige terugval.
+- [~] Private signed upload, serverinspectie, hercodering zonder metadata en fotoreview; end-to-endtest wacht op lokale Supabase.
+- [~] Onvoorspelbare referentie en duurzame notificatie-outbox; Resend is optioneel en nog niet ingesteld.
+- [~] Beheeroverzicht, statusovergangen, interne notities en fotocontrole; databasepad wacht op lokale Supabase-verificatie.
 
 ## Fase 3 — dealerportaal en biedingen
 

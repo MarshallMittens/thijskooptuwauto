@@ -12,6 +12,9 @@
 8. **Append-only biedingen en auditlog.** Wijzigen of verwijderen wordt geen normale applicatiefunctie.
 9. **UTC in opslag, Europe/Amsterdam in presentatie.** Geldbedragen worden gehele eurocenten.
 10. **Foutbestendige e-mail.** Domeinhandelingen worden opgeslagen vóór een e-mailpoging; notificaties krijgen een duurzame outbox.
+11. **Directe private foto-upload.** De browser uploadt met kort geldige Supabase-machtigingen zodat grote foto’s niet door één Vercel-request hoeven. De server vertrouwt de browserbewerking niet en inspecteert en hercodeert elk bestand vóór afronding.
+12. **RDW aan de serverzijde.** Het kenteken gaat via een POST-route naar de officiële RDW-dataset `m9d7-ebf2`; de server herhaalt de controle bij definitieve opslag. Uitval blokkeert handmatige invoer niet.
+13. **Geen externe analysetracker.** Alleen start en afronding worden intern als inhoudsloze gebeurtenis geteld.
 
 ## Veilige tijdelijke keuzes
 

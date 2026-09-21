@@ -13,10 +13,22 @@
 - Iedere bedrijfsstatuswijziging levert een auditlogregel op.
 - Rechtstreekse Data API/databaseverzoeken omzeilen de regels niet.
 
-## Latere kritieke scenario’s
+## Fase 2
 
 - Volledige aanvraag werkt bij RDW-uitval via handmatige invoer.
 - Dubbel indienen geeft één aanvraag en dezelfde uitkomst.
+- Contactgegevens worden niet in de browsersessie opgeslagen.
+- Een anonieme gebruiker kan aanvragen, verkopersgegevens, fotometadata en concepten niet uitlezen.
+- Foto’s worden alleen met een kort geldige uploadmachtiging naar de private bucket geschreven.
+- De server controleert werkelijke foto-inhoud en bestandsgrootte en codeert geaccepteerde foto’s opnieuw als JPEG zonder metadata.
+- Een foto blijft `pending` totdat beheer deze na controle op zichtbare persoonsgegevens goedkeurt of afwijst.
+- Een e-mailstoring verwijdert de opgeslagen aanvraag niet; de notificatie blijft `pending` of `failed` in de outbox.
+- Alleen staff op `aal2` kan aanvragen, verkopersgegevens en interne notities lezen of wijzigen.
+- Ongeldige aanvraagstatusovergangen worden in PostgreSQL geweigerd en geldige wijzigingen staan in de auditlog.
+- Formulierstarts en afrondingen worden intern geteld zonder kenteken, contactgegevens of vrije tekst in de meetgebeurtenis.
+
+## Latere kritieke scenario’s
+
 - Dealers zien geen verkopersgegevens, interne notities of biedingen van andere bedrijven.
 - Een bod na de databasetijd van de deadline wordt geweigerd, ongeacht een sluitingstaak.
 - Gelijktijdige verhogingen worden in geldige volgorde verwerkt.
