@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/browser";
 
 type Factor = { id: string; status: string; friendly_name?: string };
+const managementFactorName = "Thijskooptuauto beheer";
 
 export function MfaSetup() {
   const router = useRouter();
@@ -33,9 +34,29 @@ export function MfaSetup() {
     setBusy(true);
     setError("");
     const supabase = createClient();
+
+    const { data: factors, error: listError } = await supabase.auth.mfa.listFactors();
+    if (listError) {
+      setError("MFA-status kon niet worden geladen.");
+      setBusy(false);
+      return;
+    }
+
+    const unfinishedFactor = factors.all.find(
+      (item) => item.factor_type === "totp" && item.status === "unverified" && item.friendly_name === managementFactorName,
+    );
+    if (unfinishedFactor) {
+      const { error: removeError } = await supabase.auth.mfa.unenroll({ factorId: unfinishedFactor.id });
+      if (removeError) {
+        setError("De onafgemaakte authenticator-instelling kon niet worden hersteld.");
+        setBusy(false);
+        return;
+      }
+    }
+
     const { data, error: enrollError } = await supabase.auth.mfa.enroll({
       factorType: "totp",
-      friendlyName: "Thijskooptuauto beheer",
+      friendlyName: managementFactorName,
     });
     if (enrollError) {
       setError("De authenticator kon niet worden ingesteld.");
