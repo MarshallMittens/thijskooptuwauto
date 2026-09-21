@@ -41,7 +41,10 @@ Legenda: `[x]` gebouwd en lokaal geverifieerd, `[~]` gebouwd maar nog niet volle
 
 ## Fase 5 — besloten proef
 
-- [ ] Fictieve volledige proef, daarna besloten proef met bekende dealers.
+- [~] Draaiboek, bewijsformulier en livegangchecklist zijn vastgelegd; één publieke lokale opslagproef is gecontroleerd. De volledige dealer- en afhandelingsproef volgt nog.
+- [x] Database- en RLS-tests zijn geïsoleerd van bestaande lokale proefdata en slagen met een opgeslagen aanvraag aanwezig.
+- [ ] Geautomatiseerde browser-E2E voor publiek, dealer en beheer tegen een geïsoleerde acceptatieomgeving.
+- [ ] Gelijktijdige biedtest met twee afzonderlijke databaseverbindingen.
 - [ ] Onafhankelijke controle van RLS en biedlogica.
 - [ ] Hersteltest voor database en Storage.
 - [ ] Juridische en commerciële beslissingen afgerond.

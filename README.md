@@ -86,5 +86,7 @@ Voor productie wordt deze bootstrap-procedure apart gecontroleerd en nooit met e
 - `docs/DATA_MODEL.md` — tabellen en statusmodellen
 - `docs/ACCEPTANCE_TESTS.md` — vereiste scenario’s
 - `docs/DEPLOYMENT.md` — toekomstige publicatie, migraties en herstel
+- `docs/PILOT.md` — draaiboek en bewijs voor de besloten proef
+- `docs/GO_LIVE_CHECKLIST.md` — verplichte beslis- en controlepunten voor publicatie
 
 Het slagen van een build maakt deze applicatie niet productieklaar. Juridische teksten, hersteltests, externe accounts en een onafhankelijke beveiligingscontrole ontbreken nog.

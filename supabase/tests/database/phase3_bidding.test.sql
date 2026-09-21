@@ -52,7 +52,7 @@ from (select public.admin_publish_application(
 reset role;
 
 select ok((select listing_id is not null and round_id is not null from phase3_state), 'beheer publiceert een vaste voertuigversie met biedronde');
-select results_eq($$ select count(*)::bigint from public.audit_log where action = 'listing.published' $$, $$ values (1::bigint) $$, 'publicatie staat in de auditlog');
+select results_eq($$ select count(*)::bigint from public.audit_log where entity_id = (select listing_id from phase3_state) and action = 'listing.published' $$, $$ values (1::bigint) $$, 'publicatie staat in de auditlog');
 
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000d3","role":"authenticated","aal":"aal1"}', true);
@@ -62,7 +62,11 @@ reset role;
 
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000d1","role":"authenticated","aal":"aal1"}', true);
-select results_eq($$ select jsonb_array_length(public.list_dealer_listings(null, null, 'active')) $$, $$ values (1) $$, 'goedgekeurde dealer ziet actief aanbod');
+select results_eq(
+  $$ select count(*)::bigint from jsonb_array_elements(public.list_dealer_listings(null, null, 'active')) item where (item->>'id')::uuid = (select listing_id from phase3_state) $$,
+  $$ values (1::bigint) $$,
+  'goedgekeurde dealer ziet actief aanbod'
+);
 select is((public.get_dealer_listing((select listing_id from phase3_state))#>>'{vehicle,registration}'), '12AB34', 'dealer ziet de gepubliceerde voertuigversie');
 select results_eq($$ select count(*)::bigint from public.seller_contacts $$, $$ values (0::bigint) $$, 'dealer kan verkopersgegevens niet rechtstreeks lezen');
 select results_eq($$ select count(*)::bigint from public.internal_notes $$, $$ values (0::bigint) $$, 'dealer kan interne notities niet lezen');
@@ -78,7 +82,11 @@ select results_eq(
 select lives_ok($$ select public.place_bid((select round_id from phase3_state limit 1), 1100000, '70000000-0000-0000-0000-000000000003') $$, 'dealer kan het eigen bod verhogen');
 select results_eq($$ select jsonb_array_length(public.get_dealer_listing((select listing_id from phase3_state limit 1))->'ownBids') $$, $$ values (2) $$, 'eigen biedhistorie bevat beide append-only biedingen');
 reset role;
-select results_eq($$ select count(*)::bigint from public.notification_outbox where event_type = 'bid.placed' $$, $$ values (2::bigint) $$, 'ieder opgeslagen bod krijgt een duurzame notificatie');
+select results_eq(
+  $$ select count(*)::bigint from public.notification_outbox where event_type = 'bid.placed' and entity_id in (select id from public.bids where bid_round_id = (select round_id from phase3_state)) $$,
+  $$ values (2::bigint) $$,
+  'ieder opgeslagen bod krijgt een duurzame notificatie'
+);
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000d1","role":"authenticated","aal":"aal1"}', true);
 select throws_ok(

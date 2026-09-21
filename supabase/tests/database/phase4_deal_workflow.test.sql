@@ -76,8 +76,8 @@ select lives_ok(
   $$ select public.admin_add_contact_event('40000000-0000-0000-0000-000000000401', 'phone', 'Particulier gesproken over het bod.', now()) $$,
   'beheer kan een contactmoment toevoegen'
 );
-select results_eq($$ select count(*)::bigint from public.contact_events $$, $$ values (1::bigint) $$, 'contactmoment is opgeslagen');
-select results_eq($$ select count(*)::bigint from public.audit_log where action = 'contact.recorded' $$, $$ values (1::bigint) $$, 'contactmoment is herleidbaar');
+select results_eq($$ select count(*)::bigint from public.contact_events where application_id = '40000000-0000-0000-0000-000000000401' $$, $$ values (1::bigint) $$, 'contactmoment is opgeslagen');
+select results_eq($$ select count(*)::bigint from public.audit_log where action = 'contact.recorded' and after_data->>'application_id' = '40000000-0000-0000-0000-000000000401' $$, $$ values (1::bigint) $$, 'contactmoment is herleidbaar');
 select throws_ok(
   $$ select public.admin_add_contact_event('40000000-0000-0000-0000-000000000401', 'phone', 'Toekomst', now() + interval '1 day') $$,
   'P0001', 'invalid_contact_time',
@@ -101,8 +101,8 @@ select lives_ok(
 );
 select lives_ok($$ select public.admin_update_deal_case('40000000-0000-0000-0000-000000000401', 'agreed', null) $$, 'akkoord kan worden geregistreerd');
 select lives_ok($$ select public.admin_update_deal_case('40000000-0000-0000-0000-000000000401', 'completed', null) $$, 'afhandeling kan worden voltooid');
-select results_eq($$ select status::text from public.deal_cases $$, $$ values ('completed'::text) $$, 'verkoopstatus staat op afgehandeld');
-select results_eq($$ select count(*)::bigint from public.audit_log where action = 'deal.status_changed' $$, $$ values (4::bigint) $$, 'alle afhandelingsstappen staan in de auditlog');
+select results_eq($$ select status::text from public.deal_cases where application_id = '40000000-0000-0000-0000-000000000401' $$, $$ values ('completed'::text) $$, 'verkoopstatus staat op afgehandeld');
+select results_eq($$ select count(*)::bigint from public.audit_log where action = 'deal.status_changed' and after_data->>'application_id' = '40000000-0000-0000-0000-000000000401' $$, $$ values (4::bigint) $$, 'alle afhandelingsstappen staan in de auditlog');
 select throws_ok(
   $$ select public.admin_update_deal_case('40000000-0000-0000-0000-000000000401', 'completed', '70000000-0000-0000-0000-000000000499') $$,
   'P0001', 'deal_case_terminal',
@@ -120,23 +120,23 @@ select lives_ok(
 );
 select results_eq($$ select status::text from public.listings where id = (select listing_id from phase4_state) $$, $$ values ('withdrawn'::text) $$, 'oude publicatie wordt ingetrokken');
 select results_eq($$ select status::text from public.bid_rounds where id = (select round_id from phase4_state) $$, $$ values ('cancelled'::text) $$, 'oude biedronde wordt geannuleerd');
-select results_eq($$ select count(*)::bigint from public.bids $$, $$ values (1::bigint) $$, 'bestaand bod blijft ongewijzigd bewaard');
+select results_eq($$ select count(*)::bigint from public.bids where bid_round_id = (select round_id from phase4_state limit 1) $$, $$ values (1::bigint) $$, 'bestaand bod blijft ongewijzigd bewaard');
 select results_eq(
   $$ select (snapshot#>>'{condition,mileageKm}')::integer from public.vehicle_revisions where id = (select revision_id from phase4_state) $$,
   $$ values (80000) $$,
   'oude voertuigversie blijft onveranderlijk'
 );
-select results_eq($$ select count(*)::bigint from public.audit_log where action = 'vehicle.material_change_recorded' $$, $$ values (1::bigint) $$, 'materiële wijziging staat in de auditlog');
+select results_eq($$ select count(*)::bigint from public.audit_log where entity_id = '40000000-0000-0000-0000-000000000401' and action = 'vehicle.material_change_recorded' $$, $$ values (1::bigint) $$, 'materiële wijziging staat in de auditlog');
 
 insert into phase4_state (listing_id, round_id, revision_id)
 select (result->>'listing_id')::uuid, (result->>'bid_round_id')::uuid, (result->>'vehicle_revision_id')::uuid
 from (select public.admin_publish_application(
   '40000000-0000-0000-0000-000000000401', now() - interval '1 minute', now() + interval '2 hours'
 ) result) republished;
-select results_eq($$ select count(*)::bigint from public.vehicle_revisions $$, $$ values (2::bigint) $$, 'opnieuw publiceren maakt een nieuwe voertuigversie');
-select results_eq($$ select count(*)::bigint from public.listings where status = 'published' $$, $$ values (1::bigint) $$, 'alleen de nieuwe publicatie staat actief');
+select results_eq($$ select count(*)::bigint from public.vehicle_revisions where vehicle_id = '30000000-0000-0000-0000-000000000401' $$, $$ values (2::bigint) $$, 'opnieuw publiceren maakt een nieuwe voertuigversie');
+select results_eq($$ select count(*)::bigint from public.listings where application_id = '40000000-0000-0000-0000-000000000401' and status = 'published' $$, $$ values (1::bigint) $$, 'alleen de nieuwe publicatie staat actief');
 select results_eq(
-  $$ select (snapshot#>>'{condition,mileageKm}')::integer from public.vehicle_revisions order by revision_number desc limit 1 $$,
+  $$ select (snapshot#>>'{condition,mileageKm}')::integer from public.vehicle_revisions where vehicle_id = '30000000-0000-0000-0000-000000000401' order by revision_number desc limit 1 $$,
   $$ values (80500) $$,
   'nieuwe versie bevat de gewijzigde gegevens'
 );

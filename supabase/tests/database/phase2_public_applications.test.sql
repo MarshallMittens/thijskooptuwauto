@@ -46,7 +46,7 @@ select results_eq(
 reset role;
 
 select results_eq(
-  $$ select count(*)::bigint from private.product_events where event_name = 'application_form_started' $$,
+  $$ select count(*)::bigint from private.product_events where event_name = 'application_form_started' and event_key = '80000000-0000-0000-0000-000000000001' $$,
   $$ values (1::bigint) $$,
   'formulierstart wordt eenmaal en zonder formulierinhoud gemeten'
 );
@@ -80,22 +80,22 @@ select matches(
   'definitieve aanvraag krijgt een onvoorspelbare referentie'
 );
 select results_eq(
-  $$ select count(*)::bigint from public.applications $$,
+  $$ select count(*)::bigint from public.applications where id = (select (final_result->>'application_id')::uuid from phase2_state) $$,
   $$ values (1::bigint) $$,
   'aanvraag wordt precies eenmaal opgeslagen'
 );
 select results_eq(
-  $$ select count(*)::bigint from public.vehicle_photos where metadata_removed_at is not null and review_status = 'pending' $$,
+  $$ select count(*)::bigint from public.vehicle_photos where application_id = (select (final_result->>'application_id')::uuid from phase2_state) and metadata_removed_at is not null and review_status = 'pending' $$,
   $$ values (1::bigint) $$,
   'gecontroleerde foto start in afwachting van beheerreview'
 );
 select results_eq(
-  $$ select count(*)::bigint from public.notification_outbox where event_type = 'application.received' and status = 'pending' $$,
+  $$ select count(*)::bigint from public.notification_outbox where entity_id = (select (final_result->>'application_id')::uuid from phase2_state) and event_type = 'application.received' and status = 'pending' $$,
   $$ values (1::bigint) $$,
   'bevestigingsmail staat duurzaam in de outbox'
 );
 select results_eq(
-  $$ select count(*)::bigint from private.product_events where event_name = 'application_completed' $$,
+  $$ select count(*)::bigint from private.product_events where event_name = 'application_completed' and event_key = '80000000-0000-0000-0000-000000000001' $$,
   $$ values (1::bigint) $$,
   'afgeronde aanvraag wordt zonder formulierinhoud gemeten'
 );
@@ -148,8 +148,8 @@ reset role;
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000f1","role":"authenticated","aal":"aal2"}', true);
 select results_eq(
-  $$ select jsonb_array_length(public.list_admin_applications()) $$,
-  $$ values (1) $$,
+  $$ select count(*)::bigint from jsonb_array_elements(public.list_admin_applications()) item where (item->>'id')::uuid = (select (final_result->>'application_id')::uuid from phase2_state) $$,
+  $$ values (1::bigint) $$,
   'beheer met MFA ziet de aanvraag'
 );
 select lives_ok(
@@ -157,12 +157,12 @@ select lives_ok(
   'beheer kan een toegestane statusovergang uitvoeren'
 );
 select results_eq(
-  $$ select status::text from public.applications $$,
+  $$ select status::text from public.applications where id = (select (final_result->>'application_id')::uuid from phase2_state) $$,
   $$ values ('in_review'::text) $$,
   'nieuwe aanvraagstatus is opgeslagen'
 );
 select results_eq(
-  $$ select count(*)::bigint from public.audit_log where action = 'application.status_changed' $$,
+  $$ select count(*)::bigint from public.audit_log where entity_id = (select (final_result->>'application_id')::uuid from phase2_state) and action = 'application.status_changed' $$,
   $$ values (1::bigint) $$,
   'statuswijziging is herleidbaar in de auditlog'
 );
@@ -181,11 +181,11 @@ select results_eq(
   'interne notitie is opgeslagen'
 );
 select lives_ok(
-  $$ select public.admin_set_photo_review((select id from public.vehicle_photos limit 1), 'approved') $$,
+  $$ select public.admin_set_photo_review((select id from public.vehicle_photos where application_id = (select (final_result->>'application_id')::uuid from phase2_state)), 'approved') $$,
   'beheer kan een foto goedkeuren'
 );
 select results_eq(
-  $$ select review_status::text from public.vehicle_photos limit 1 $$,
+  $$ select review_status::text from public.vehicle_photos where application_id = (select (final_result->>'application_id')::uuid from phase2_state) $$,
   $$ values ('approved'::text) $$,
   'fotoreviewstatus is opgeslagen'
 );

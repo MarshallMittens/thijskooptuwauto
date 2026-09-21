@@ -55,3 +55,6 @@
 
 - E-mailuitval verwijdert of rolt geen aanvraag of bod terug.
 - Database- en fotoherstel worden daadwerkelijk proefgedraaid vóór livegang.
+- Bestaande lokale of acceptatiedata beïnvloeden de uitslag van geautomatiseerde tests niet.
+- De volledige besloten proef en het bewijsformulier volgen `docs/PILOT.md`.
+- Alle verplichte punten in `docs/GO_LIVE_CHECKLIST.md` zijn afgevinkt en gecontroleerd.
