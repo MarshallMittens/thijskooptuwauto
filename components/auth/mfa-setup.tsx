@@ -62,7 +62,7 @@ export function MfaSetup() {
       setError("De authenticator kon niet worden ingesteld.");
     } else {
       setFactor({ id: data.id, status: "unverified" });
-      setQrCode(data.totp.qr_code);
+      setQrCode(data.totp.qr_code.trimEnd());
     }
     setBusy(false);
   }
