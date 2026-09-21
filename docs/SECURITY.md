@@ -25,6 +25,9 @@
 - **IDOR:** UUID’s zijn geen beveiliging; RLS beperkt ieder object op rol en bedrijf.
 - **Sessie-inbraak:** beheer vereist TOTP en databasebeleid controleert de `aal2`-claim.
 - **Gegevenslek tussen dealers:** biedingen worden op bedrijf gefilterd; verkopersgegevens hebben staff-onlybeleid.
+- **Ingetrokken toegang:** alleen actieve bedrijfslidmaatschappen geven inzage; negatieve RLS-tests dekken verwijderde leden en ongepubliceerde voertuigen af.
+- **Rechtstreekse RPC-aanroepen:** kritieke invoerregels staan ook in PostgreSQL-functies en tabelconstraints; browser- of servervalidatie is niet de laatste grens.
+- **Open redirects:** authenticatieroutes accepteren alleen geparseerde paden die binnen dezelfde origin blijven; backslashes en gecodeerde netwerkpaden worden geweigerd.
 - **Uploadmisbruik:** private bucket, korte uploadmachtiging, inhoudsinspectie, formaat-/grootte-/aantallimieten en throttling vóór fase 2.
 - **Dubbele verzoeken:** expliciete idempotentiesleutels voor aanvraag, bod en e-mail.
 - **Racecondities:** biedcontrole en insert komen later in één PostgreSQL-transactie met rijvergrendeling en `now()` van de database.

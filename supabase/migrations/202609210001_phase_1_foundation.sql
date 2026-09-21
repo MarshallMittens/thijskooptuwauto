@@ -30,15 +30,18 @@ create table public.staff_memberships (
 create table public.companies (
   id uuid primary key default gen_random_uuid(),
   legal_name text not null check (char_length(legal_name) between 2 and 160),
-  trade_name text,
+  trade_name text check (trade_name is null or char_length(trade_name) between 1 and 160),
   kvk_number text not null unique check (kvk_number ~ '^\d{8}$'),
-  street text not null,
-  house_number text not null,
+  street text not null check (char_length(street) between 2 and 120),
+  house_number text not null check (char_length(house_number) between 1 and 16),
   postal_code text not null check (postal_code ~ '^\d{4}[A-Z]{2}$'),
-  city text not null,
-  contact_name text not null,
-  email text not null,
-  phone text not null,
+  city text not null check (char_length(city) between 2 and 100),
+  contact_name text not null check (char_length(contact_name) between 2 and 120),
+  email text not null check (
+    char_length(email) between 3 and 254
+    and email ~ '^[^[:space:]@]+@[^[:space:]@]+\.[^[:space:]@]+$'
+  ),
+  phone text not null check (char_length(phone) between 8 and 30),
   status public.company_status not null default 'pending',
   approved_at timestamptz,
   approved_by uuid references public.profiles(id),
@@ -340,6 +343,16 @@ begin
   end if;
   if p_kvk_number !~ '^\d{8}$' then raise exception 'invalid_kvk_number'; end if;
   if upper(replace(p_postal_code, ' ', '')) !~ '^\d{4}[A-Z]{2}$' then raise exception 'invalid_postal_code'; end if;
+  if coalesce(char_length(trim(p_legal_name)) between 2 and 160, false) is not true then raise exception 'invalid_legal_name'; end if;
+  if p_trade_name is not null and char_length(trim(p_trade_name)) > 160 then raise exception 'invalid_trade_name'; end if;
+  if coalesce(char_length(trim(p_street)) between 2 and 120, false) is not true then raise exception 'invalid_street'; end if;
+  if coalesce(char_length(trim(p_house_number)) between 1 and 16, false) is not true then raise exception 'invalid_house_number'; end if;
+  if coalesce(char_length(trim(p_city)) between 2 and 100, false) is not true then raise exception 'invalid_city'; end if;
+  if coalesce(char_length(trim(p_contact_name)) between 2 and 120, false) is not true then raise exception 'invalid_contact_name'; end if;
+  if coalesce(char_length(trim(p_email)) between 3 and 254, false) is not true
+    or lower(trim(p_email)) !~ '^[^[:space:]@]+@[^[:space:]@]+\.[^[:space:]@]+$'
+  then raise exception 'invalid_email'; end if;
+  if coalesce(char_length(trim(p_phone)) between 8 and 30, false) is not true then raise exception 'invalid_phone'; end if;
   if exists(select 1 from public.company_memberships where user_id = v_user_id and status = 'active') then
     raise exception 'membership_already_exists';
   end if;
@@ -452,7 +465,7 @@ alter table public.request_idempotency enable row level security;
 create policy profiles_read_self on public.profiles for select to authenticated using (id = auth.uid() or (private.is_staff() and auth.jwt()->>'aal' = 'aal2'));
 create policy profiles_update_self on public.profiles for update to authenticated using (id = auth.uid()) with check (id = auth.uid());
 create policy staff_read_self on public.staff_memberships for select to authenticated using (user_id = auth.uid() or (private.is_staff(array['admin']::public.staff_role[]) and auth.jwt()->>'aal' = 'aal2'));
-create policy companies_read_member_or_staff on public.companies for select to authenticated using (private.has_approved_company(id) or exists(select 1 from public.company_memberships m where m.company_id = id and m.user_id = auth.uid()) or (private.is_staff() and auth.jwt()->>'aal' = 'aal2'));
+create policy companies_read_member_or_staff on public.companies for select to authenticated using (private.has_approved_company(id) or exists(select 1 from public.company_memberships m where m.company_id = id and m.user_id = auth.uid() and m.status = 'active') or (private.is_staff() and auth.jwt()->>'aal' = 'aal2'));
 create policy memberships_read_self_or_staff on public.company_memberships for select to authenticated using (user_id = auth.uid() or (private.is_staff() and auth.jwt()->>'aal' = 'aal2'));
 
 create policy seller_contacts_staff_only on public.seller_contacts for select to authenticated using (private.is_staff() and auth.jwt()->>'aal' = 'aal2');
@@ -461,7 +474,7 @@ create policy vehicles_staff_only on public.vehicles for select to authenticated
 create policy condition_reports_staff_only on public.condition_reports for select to authenticated using (private.is_staff() and auth.jwt()->>'aal' = 'aal2');
 
 create policy revisions_dealer_or_staff on public.vehicle_revisions for select to authenticated using (
-  (private.has_approved_company() and exists(select 1 from public.listings l where l.vehicle_revision_id = id and l.status = 'published'))
+  (private.has_approved_company() and exists(select 1 from public.listings l where l.vehicle_revision_id = public.vehicle_revisions.id and l.status = 'published'))
   or (private.is_staff() and auth.jwt()->>'aal' = 'aal2')
 );
 create policy listings_dealer_or_staff on public.listings for select to authenticated using (
@@ -469,7 +482,7 @@ create policy listings_dealer_or_staff on public.listings for select to authenti
   or (private.is_staff() and auth.jwt()->>'aal' = 'aal2')
 );
 create policy photos_dealer_or_staff on public.vehicle_photos for select to authenticated using (
-  (review_status = 'approved' and private.has_approved_company() and exists(select 1 from public.listings l where l.vehicle_revision_id = vehicle_revision_id and l.status = 'published'))
+  (review_status = 'approved' and private.has_approved_company() and exists(select 1 from public.listings l where l.vehicle_revision_id = public.vehicle_photos.vehicle_revision_id and l.status = 'published'))
   or (private.is_staff() and auth.jwt()->>'aal' = 'aal2')
 );
 create policy rounds_dealer_or_staff on public.bid_rounds for select to authenticated using (

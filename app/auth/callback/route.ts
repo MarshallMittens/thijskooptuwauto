@@ -1,15 +1,13 @@
 import { NextResponse } from "next/server";
 
+import { getSafeInternalPath } from "@/lib/auth/safe-redirect";
 import { createClient } from "@/lib/supabase/server";
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
   const requestedNext = url.searchParams.get("next") ?? "/dealer";
-  const next =
-    requestedNext.startsWith("/") && !requestedNext.startsWith("//")
-      ? requestedNext
-      : "/dealer";
+  const next = getSafeInternalPath(requestedNext, "/dealer");
 
   if (code) {
     const supabase = await createClient();

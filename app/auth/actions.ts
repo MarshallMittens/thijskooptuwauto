@@ -2,7 +2,9 @@
 
 import { redirect } from "next/navigation";
 
+import { getSafeInternalPath } from "@/lib/auth/safe-redirect";
 import { credentialsSchema } from "@/lib/auth/validation";
+import { getAppUrl } from "@/lib/config/app-url";
 import { createClient } from "@/lib/supabase/server";
 
 export type AuthActionState = { error?: string };
@@ -25,11 +27,7 @@ export async function signIn(
   if (error) return { error: "Inloggen is niet gelukt. Controleer je gegevens." };
 
   const returnTo = formData.get("returnTo");
-  redirect(
-    typeof returnTo === "string" && returnTo.startsWith("/") && !returnTo.startsWith("//")
-      ? returnTo
-      : "/dealer",
-  );
+  redirect(getSafeInternalPath(returnTo, "/dealer"));
 }
 
 export async function signUpDealer(
@@ -46,7 +44,7 @@ export async function signUpDealer(
   }
 
   const supabase = await createClient();
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://127.0.0.1:3000";
+  const appUrl = getAppUrl();
   const { error } = await supabase.auth.signUp({
     ...parsed.data,
     options: { emailRedirectTo: `${appUrl}/auth/callback?next=/dealer/registreren` },

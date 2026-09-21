@@ -20,6 +20,7 @@
 - KvK-controle is handmatig; er wordt geen extra commerciële API toegevoegd.
 - Er is geen realtime veilinginterface; verversen van eigen status is voldoende voor versie 1.
 - `@supabase/ssr` blijft achter de adapter in `lib/supabase` zodat een toekomstige API-wijziging lokaal blijft.
+- `APP_URL` is server-only en verplicht buiten development/test; er is in productie geen stille localhost-terugval voor bevestigingslinks.
 
 ## Open vóór livegang
 
