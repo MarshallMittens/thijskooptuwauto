@@ -1,0 +1,2 @@
+-- Alleen fictieve lokale gegevens. Productiebeheerders worden nooit via deze seed gemaakt.
+-- Testgebruikers worden in de database-RLS-tests transactioneel aangemaakt en weer verwijderd.

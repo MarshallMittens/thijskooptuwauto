@@ -89,6 +89,48 @@ input {
   text-transform: uppercase;
 }
 
+.auth-page,
+.portal-page {
+  min-height: 100vh;
+  padding: clamp(1.25rem, 4vw, 4rem);
+  background:
+    radial-gradient(circle at 85% 8%, rgba(21, 84, 209, 0.14), transparent 28rem),
+    #f4f7fb;
+}
+
+.auth-page {
+  display: grid;
+  place-items: center;
+}
+
+.auth-card,
+.portal-panel {
+  width: 100%;
+  border: 1px solid #dbe3ee;
+  border-radius: 1.5rem;
+  background: #ffffff;
+  box-shadow: 0 24px 80px rgba(7, 19, 39, 0.1);
+}
+
+.auth-card {
+  max-width: 34rem;
+  padding: clamp(1.5rem, 5vw, 3rem);
+}
+
+.portal-panel {
+  max-width: 70rem;
+  margin: 0 auto;
+  padding: clamp(1.5rem, 4vw, 3rem);
+}
+
+code {
+  border-radius: 0.25rem;
+  background: rgba(7, 19, 39, 0.08);
+  padding: 0.1rem 0.3rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.9em;
+}
+
 @media (max-width: 640px) {
   .hero-shell {
     min-height: auto;

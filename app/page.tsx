@@ -156,7 +156,7 @@ export default function Home() {
 
             <ul className="mt-7 flex flex-wrap gap-x-7 gap-y-3 text-sm font-medium text-white/75" aria-label="Voordelen">
               <li className="flex items-center gap-2"><Check className="size-4 text-[#ffd400]" /> Vrijblijvend bod</li>
-              <li className="flex items-center gap-2"><Check className="size-4 text-[#ffd400]" /> Geen verborgen kosten</li>
+              <li className="flex items-center gap-2"><Check className="size-4 text-[#ffd400]" /> Vooraf duidelijke afspraken</li>
               <li className="flex items-center gap-2"><Check className="size-4 text-[#ffd400]" /> Persoonlijk contact</li>
             </ul>
           </div>
@@ -193,7 +193,7 @@ export default function Home() {
           </div>
 
           <div className="mt-10 grid gap-4 rounded-[1.5rem] bg-[#071327] p-6 text-white sm:grid-cols-3 sm:p-8">
-            <div className="flex items-center gap-3"><Clock3 className="size-5 text-[#ffd400]" /><span className="font-semibold">Binnen één werkdag reactie</span></div>
+            <div className="flex items-center gap-3"><Clock3 className="size-5 text-[#ffd400]" /><span className="font-semibold">Persoonlijke reactie</span></div>
             <div className="flex items-center gap-3"><ShieldCheck className="size-5 text-[#ffd400]" /><span className="font-semibold">Veilig omgaan met gegevens</span></div>
             <div className="flex items-center gap-3"><BadgeCheck className="size-5 text-[#ffd400]" /><span className="font-semibold">Duidelijke afspraken</span></div>
           </div>
