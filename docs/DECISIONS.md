@@ -38,6 +38,6 @@
 - Moment van gebondenheid, geldigheidsduur en intrekking van biedingen.
 - Eventuele kosten, minimale bieding en minimumverhoging.
 - Bewaartermijnen en verwijderprocedure per gegevenscategorie.
-- Definitieve bedrijfs-, contact-, privacy- en voorwaardeninhoud.
+- Definitief KvK-nummer, juridische bedrijfsidentiteit, privacy- en voorwaardeninhoud. Het vestigingsadres, telefoonnummer en algemene e-mailadres zijn door de ondernemer aangeleverd voor de contactpagina.
 - Productiebeheerder(s), MFA-herstelprocedure en functiescheiding.
 - Bedrijfsdomein, e-mailafzenders en EU-regio’s voor Supabase en Vercel.
