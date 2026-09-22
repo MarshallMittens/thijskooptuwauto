@@ -6,7 +6,7 @@ import { ArrowRight } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { normalizeRegistration } from "@/lib/applications/schema";
+import { formatRegistration, normalizeRegistration } from "@/lib/applications/schema";
 
 export function LicensePlateStart() {
   const router = useRouter();
@@ -26,7 +26,7 @@ export function LicensePlateStart() {
       <div className="flex flex-col gap-2 sm:flex-row">
         <div className="flex min-h-14 flex-1 items-stretch overflow-hidden rounded-xl border-2 border-[#111111] bg-[#ffd400] focus-within:ring-4 focus-within:ring-orange-500/30">
           <span className="grid w-10 shrink-0 place-items-center bg-[#1554a1] text-[10px] font-black text-white" aria-hidden="true">NL</span>
-          <Input id="license-plate" value={registration} onChange={(event) => { setRegistration(normalizeRegistration(event.target.value)); setError(""); }} placeholder="12AB34" autoComplete="off" aria-describedby="plate-message" aria-invalid={Boolean(error)} className="h-14 rounded-none border-0 bg-transparent px-4 text-center font-mono text-2xl font-black uppercase tracking-[.13em] text-[#111111] shadow-none focus-visible:ring-0" />
+          <Input id="license-plate" value={formatRegistration(registration)} onChange={(event) => { setRegistration(normalizeRegistration(event.target.value)); setError(""); }} placeholder="12-AB-34" maxLength={10} autoComplete="off" autoCapitalize="characters" spellCheck={false} aria-describedby="plate-message" aria-invalid={Boolean(error)} className="h-14 rounded-none border-0 bg-transparent px-3 text-center text-[1.7rem] font-black uppercase tracking-[.08em] text-[#111111] shadow-none [font-family:Impact,'Arial_Narrow',sans-serif] placeholder:text-black/35 focus-visible:ring-0 sm:text-[1.9rem]" />
         </div>
         <Button type="submit" size="lg" className="h-14 rounded-xl px-6 text-base font-bold">Start je aanvraag <ArrowRight className="size-4" aria-hidden="true" /></Button>
       </div>

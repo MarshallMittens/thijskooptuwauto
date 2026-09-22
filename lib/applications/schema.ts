@@ -8,6 +8,24 @@ export function normalizeRegistration(value: string) {
   return value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8);
 }
 
+export function formatRegistration(value: string) {
+  const registration = normalizeRegistration(value);
+  if (registration.length !== 6) return registration;
+
+  const groups = registration.match(/[A-Z]+|\d+/g) ?? [];
+  if (groups.length === 3) return groups.join("-");
+  if (groups.length === 2 && groups[0].length === 4) {
+    return `${groups[0].slice(0, 2)}-${groups[0].slice(2)}-${groups[1]}`;
+  }
+  if (groups.length === 2 && groups[1].length === 4) {
+    return `${groups[0]}-${groups[1].slice(0, 2)}-${groups[1].slice(2)}`;
+  }
+  if (groups.length === 1) {
+    return `${registration.slice(0, 2)}-${registration.slice(2, 4)}-${registration.slice(4)}`;
+  }
+  return registration;
+}
+
 const optionalText = (maximum: number) =>
   z.string().trim().max(maximum).optional().default("");
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { applicationPayloadSchema } from "./schema";
+import { applicationPayloadSchema, formatRegistration } from "./schema";
 
 const validPayload = {
   vehicle: {
@@ -35,6 +35,13 @@ describe("applicationPayloadSchema", () => {
     const result = applicationPayloadSchema.parse(validPayload);
     expect(result.vehicle.registration).toBe("12AB34");
     expect(result.seller.postalCode).toBe("1234AB");
+  });
+
+  it("toont gangbare Nederlandse kentekens met streepjes", () => {
+    expect(formatRegistration("345435")).toBe("34-54-35");
+    expect(formatRegistration("K556TF")).toBe("K-556-TF");
+    expect(formatRegistration("12AB34")).toBe("12-AB-34");
+    expect(formatRegistration("AB1234")).toBe("AB-12-34");
   });
 
   it("accepteert handmatig ingevulde voertuiggegevens", () => {
