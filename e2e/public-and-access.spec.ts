@@ -1,5 +1,16 @@
 import { expect, test } from "@playwright/test";
 
+test("de openbare statuscontrole toont geen interne gegevens", async ({ request }) => {
+  const response = await request.get("/api/health");
+  expect(response.status()).toBe(200);
+  expect(await response.json()).toEqual({ status: "ok" });
+  expect(response.headers()["cache-control"]).toContain("no-store");
+
+  const deepResponse = await request.get("/api/health?deep=1");
+  expect(deepResponse.status()).toBe(401);
+  expect(await deepResponse.json()).toEqual({ status: "unauthorized" });
+});
+
 test("de kentekenactie opent de aanmeldwizard met genormaliseerd kenteken", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Je auto verkopen");

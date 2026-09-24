@@ -1,0 +1,39 @@
+name: Controleer releasecandidate
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches:
+      - main
+      - "codex/**"
+
+permissions:
+  contents: read
+
+jobs:
+  application:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      APP_URL: http://127.0.0.1:3000
+      NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ci-publishable-placeholder
+      SUPABASE_SERVICE_ROLE_KEY: ci-service-role-placeholder
+      DRAFT_TOKEN_SECRET: ci-draft-token-secret-12345678901234567890
+      REQUEST_FINGERPRINT_SECRET: ci-request-fingerprint-123456789012345
+      OPERATIONS_JOB_SECRET: ci-operations-job-secret-1234567890123456
+      PAYMENT_SIMULATOR_ENABLED: "false"
+      OUTBOX_DELIVERY_ENABLED: "false"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run check:repo
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run test
+      - run: npm run build

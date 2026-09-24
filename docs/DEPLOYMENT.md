@@ -23,8 +23,11 @@ Gebruik per omgeving afzonderlijke sleutels. Kies bij inrichting nabijgelegen on
 - `PAYMENT_SIMULATOR_WEBHOOK_SECRET`: afzonderlijk lokaal geheim van minimaal 32 tekens; nooit hergebruiken voor een echte provider.
 - `OPERATIONS_JOB_SECRET`: minimaal 32 willekeurige tekens, alleen server-naar-server voor operationele routes.
 - `OUTBOX_DELIVERY_ENABLED`: standaard `false`; pas `true` na afzenderverificatie, sjablooncontrole en planning van de worker.
+- `PRODUCTION_DEPLOYMENT_APPROVED`: blijft `false` voor lokaal en Preview. Een Vercel-productiebouw wordt zonder een later, expliciet livegangbesluit technisch geblokkeerd.
 
 Zet geheimen nooit in Git, browsercode of chat. Gebruik aparte waarden voor development, preview en productie.
+
+De concrete, niet-productieve eerste Vercel-proef staat in `docs/VERCEL_PREVIEW.md`. De build controleert op Vercel automatisch dat verplichte waarden aanwezig zijn, HTTPS gebruiken, geen localhost bevatten, afzonderlijke geheimen gebruiken en de betaalsimulator niet activeren.
 
 ## Voor publicatie
 

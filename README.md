@@ -51,7 +51,7 @@ De publieke pagina’s en RDW-terugval zijn zonder lokale database te bekijken. 
 
 ## Vereisten
 
-- Node.js 22 of nieuwer
+- Node.js 22.x
 - npm
 - Git
 - Docker Desktop of een compatibele Docker-runtime voor de lokale Supabase-tests
@@ -88,6 +88,7 @@ npm run typecheck
 npm run test
 npm run test:e2e
 npm run test:e2e:acceptance
+npm run test:e2e:preview
 npm run test:db
 npm run test:concurrency
 npm run test:recovery
@@ -96,9 +97,11 @@ npm run build
 
 `npm run test:db` gebruikt een echte lokale Supabase/PostgreSQL-database en vereist Docker. Mocks vervangen deze controle niet.
 
-`npm run test:e2e` gebruikt een geïnstalleerde Google Chrome en een draaiende lokale website op `http://127.0.0.1:3000` (start die apart met `npm run dev`). De vijf browserproeven controleren het publieke kentekenveld, handmatige invoer bij gesimuleerde RDW-uitval, mobiel gebruik en de loginpoort van dealer en beheer. Ze versturen bewust geen aanvraag en vervangen geen volledige acceptatieproef met ingelogde rollen. Voor een afwijkende lokale URL kun je `E2E_BASE_URL` instellen.
+`npm run test:e2e` gebruikt een geïnstalleerde Google Chrome en een draaiende lokale website op `http://127.0.0.1:3000` (start die apart met `npm run dev`). De browserproeven controleren daarnaast de minimale statusroute, het publieke kentekenveld, handmatige invoer bij gesimuleerde RDW-uitval, mobiel gebruik en de loginpoort van dealer en beheer. Ze versturen bewust geen aanvraag en vervangen geen volledige acceptatieproef met ingelogde rollen. Voor een afwijkende lokale URL kun je `E2E_BASE_URL` instellen.
 
 `npm run test:e2e:acceptance` is de schrijvende lokale acceptatieproef. Start eerst de actuele applicatie en Supabase inclusief Mailpit. De proef maakt unieke `example.test`-accounts en fictieve dossiers, gebruikt echte lokale MFA en de Mailpit-link en doorloopt aanmelding, twee dealerregistraties, goedkeuring, publicatie, twee biedingen, winnaar, afspraak, inspectie, dubbele bevestiging en klacht. Om 24 uur veilig te simuleren wijzigt het script uitsluitend de unieke testronde rechtstreeks in de lokale Docker-container `supabase_db_thijskooptuauto`. Voer dit commando daarom nooit tegen productie uit. De herkenbare testrecords blijven lokaal als proefbewijs staan totdat je bewust `npm run db:reset` uitvoert; die reset wist alle lokale gegevens.
+
+`npm run test:e2e:preview` voert uitsluitend de niet-schrijvende rookproeven tegen een externe HTTPS-preview uit. Stel daarvoor lokaal `E2E_BASE_URL` in op de Vercel Preview-URL. Het script weigert localhost en onbeveiligde HTTP-URL's. Zie `docs/VERCEL_PREVIEW.md`.
 
 ## Lokale beheerder maken
 
@@ -123,6 +126,7 @@ Particuliere verkopers gebruiken geen wachtwoord. Zij openen `/mijn-aanvraag`, v
 - `docs/DATA_MODEL.md` — tabellen en statusmodellen
 - `docs/ACCEPTANCE_TESTS.md` — vereiste scenario’s
 - `docs/DEPLOYMENT.md` — toekomstige publicatie, migraties en herstel
+- `docs/VERCEL_PREVIEW.md` — veilige inrichting en controle van de eerste Vercel Preview
 - `docs/PAYMENTS.md` — lokale fase-5-testsimulator, testvolgorde en productieblokkades
 - `docs/OPERATIONS.md` — klachten, outbox, monitoring, testdocumenten en herstel
 - `docs/PHASE7.md` — actueel vrijgavedossier, gebruikersproef en externe blokkades
