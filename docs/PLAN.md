@@ -100,3 +100,13 @@ De onderstaande oorspronkelijke voortgang blijft als technische historie behoude
 - [x] Een strikt lokaal script heeft een database-export naar een tijdelijke database en een private Storage-checksumherstel aantoonbaar doorlopen.
 - [~] Resend-bezorging, periodieke jobs en dagelijkse reconciliatie zijn voorbereid maar default-off tot hosting en afzender zijn goedgekeurd.
 - [ ] Productieback-upretentie, versleutelde opslag, externe uptimebewaking, storingscontact en onafhankelijke herstelcontrole blijven livegangblokkades.
+
+## Fase 7 — acceptatie en Vercel Preview
+
+- [x] Volledige lokale browserroute met verkoper, twee dealers en beheerder is geautomatiseerd doorlopen.
+- [x] Node.js is voor lokale ontwikkeling, CI en Vercel vastgezet op 22.x.
+- [x] Vercel-build weigert ontbrekende/onjuiste Preview-waarden, localhost, hergebruikte geheimen, de betaalsimulator en een niet-goedgekeurde productiedeployment.
+- [x] Niet-schrijvende Preview-smoketest, minimale statusroute, repositoryscan en GitHub-controle zijn voorbereid.
+- [x] Het draaiboek voor een afzonderlijke acceptatieomgeving staat in `docs/VERCEL_PREVIEW.md`.
+- [ ] Bedrijfsaccounts, privérepository, acceptatie-Supabase en afgeschermde Vercel Preview worden pas na afzonderlijke toestemming extern ingericht.
+- [ ] Gebruikersproef, onafhankelijke beveiligingsreview, provideracceptatie en juridische/commerciële keuzes blijven livegangblokkades.

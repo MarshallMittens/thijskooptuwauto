@@ -51,6 +51,8 @@
 47. **Klachten kunnen vanaf de winnaarreservering.** Een winnende garage mag een afspraak- of no-showprobleem melden zonder eerst een betaalorder te maken. De database leidt bedrijf en aanvraag uit de reservering af; een vreemd of geblokkeerd bedrijf wordt geweigerd.
 48. **Klachtbewijs vereist autorisatie vóór opslag.** De sessie vraagt eerst via een afgeschermde databasefunctie toegang tot een actief dossier. Registratie onder servicebevoegdheid controleert de actor en actieve status opnieuw onder rijvergrendeling. Een gesloten klacht blijft gesloten en de tweede beoordeling is eenmalig.
 49. **Fase 7 is geen automatische vrijgave.** Interne tests en een door Codex uitgevoerde codecontrole vervangen geen externe juridische/providergoedkeuring, onafhankelijke beveiligingsreview of gebruikersproef. Alle blijven expliciete blokkades in `docs/PHASE7.md`.
+50. **De eerste hostingstap is uitsluitend Preview.** Node blijft op 22.x; Preview gebruikt een eigen Supabase-project en afzonderlijke geheimen. De build weigert localhost, voorbeeldwaarden, hergebruikte private geheimen, een actieve betaalsimulator en productie zonder de afzonderlijke schakelaar `PRODUCTION_DEPLOYMENT_APPROVED=true`.
+51. **Statuscontrole is minimaal en gelaagd.** `/api/health` toont openbaar alleen dat de Next.js-app reageert. Databasecontrole vereist het server-only operationele geheim en geeft geen queryresultaten, foutdetails of configuratie terug.
 
 ## Veilige tijdelijke keuzes
 
