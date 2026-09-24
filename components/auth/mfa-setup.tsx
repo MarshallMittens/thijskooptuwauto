@@ -10,9 +10,9 @@ import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/browser";
 
 type Factor = { id: string; status: string; friendly_name?: string };
-const managementFactorName = "Thijskooptuauto beheer";
+const factorName = "Thijskooptuauto account";
 
-export function MfaSetup() {
+export function MfaSetup({ nextPath }: { nextPath: string }) {
   const router = useRouter();
   const [factor, setFactor] = useState<Factor | null>(null);
   const [qrCode, setQrCode] = useState<string | null>(null);
@@ -42,10 +42,10 @@ export function MfaSetup() {
       return;
     }
 
-    const unfinishedFactor = factors.all.find(
-      (item) => item.factor_type === "totp" && item.status === "unverified" && item.friendly_name === managementFactorName,
+    const unfinishedFactors = factors.all.filter(
+      (item) => item.factor_type === "totp" && item.status === "unverified",
     );
-    if (unfinishedFactor) {
+    for (const unfinishedFactor of unfinishedFactors) {
       const { error: removeError } = await supabase.auth.mfa.unenroll({ factorId: unfinishedFactor.id });
       if (removeError) {
         setError("De onafgemaakte authenticator-instelling kon niet worden hersteld.");
@@ -56,7 +56,7 @@ export function MfaSetup() {
 
     const { data, error: enrollError } = await supabase.auth.mfa.enroll({
       factorType: "totp",
-      friendlyName: managementFactorName,
+      friendlyName: factorName,
     });
     if (enrollError) {
       setError("De authenticator kon niet worden ingesteld.");
@@ -88,7 +88,7 @@ export function MfaSetup() {
       setBusy(false);
       return;
     }
-    router.push("/beheer");
+    router.push(nextPath);
     router.refresh();
   }
 

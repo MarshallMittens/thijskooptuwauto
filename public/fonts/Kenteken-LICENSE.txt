@@ -1,0 +1,11 @@
+Kenteken by LeFly Fonts
+Source: https://lefly.vepar.nl/ and https://www.dafont.com/kenteken.font
+
+The license text shipped with the downloaded font reads:
+
+This font is governed by the Creative Commons License: Attribution-ShareAlike 3.0 Unported (CC BY-SA 3.0) [http://creativecommons.org/licenses/by-sa/3.0/]
+
+This means: free to distribute and free to use for typesetting any work (including commercial) without an additional license. Please keep this Read Me file with the original fonts when redistributing.
+New fonts developed, derived or remixed from these designs can only be shared under the same license.
+
+The creator describes Kenteken as an interpretation of Dutch license-plate lettering, not as an official digital typeface.

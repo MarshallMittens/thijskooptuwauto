@@ -11,7 +11,7 @@ const steps = [
   ["01", "Meld je auto online aan", "Vul je kenteken in, controleer de voertuiggegevens en vertel ons eerlijk over de staat van je auto.", CarFront],
   ["02", "Voeg duidelijke foto’s toe", "Laat de buitenkant, binnenkant en eventuele schade zien. Zo kunnen wij je auto zorgvuldig beoordelen.", Camera],
   ["03", "Wij controleren je aanvraag", "We controleren je gegevens en foto’s. Ontbreekt er informatie, dan nemen we persoonlijk contact met je op.", BadgeCheck],
-  ["04", "Autobedrijven brengen een bod uit", "Na goedkeuring kunnen geselecteerde autobedrijven besloten bieden. Wij vergelijken de biedingen en bespreken de uitkomst met jou.", Building2],
+  ["04", "Garages bieden 24 uur", "Na goedkeuring bieden geselecteerde garages 24 uur. Zij zien de bedragen en kunnen elkaar overbieden; wij bespreken het hoogste bod persoonlijk met jou.", Building2],
 ] as const;
 
 export const metadata: Metadata = {

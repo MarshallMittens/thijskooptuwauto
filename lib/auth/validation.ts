@@ -8,6 +8,18 @@ export const credentialsSchema = z.object({
     .max(128, "Het wachtwoord is te lang."),
 });
 
+export const recoveryEmailSchema = credentialsSchema.pick({ email: true });
+
+export const passwordUpdateSchema = z
+  .object({
+    password: credentialsSchema.shape.password,
+    confirmation: z.string(),
+  })
+  .refine((value) => value.password === value.confirmation, {
+    message: "De wachtwoorden zijn niet gelijk.",
+    path: ["confirmation"],
+  });
+
 export const companyRegistrationSchema = z.object({
   legalName: z.string().trim().min(2).max(160),
   tradeName: z.string().trim().max(160).optional(),

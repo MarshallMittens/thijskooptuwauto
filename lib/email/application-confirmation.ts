@@ -2,6 +2,8 @@ import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import { getAppUrl } from "@/lib/config/app-url";
+
 function escapeHtml(value: string) {
   return value.replace(/[&<>'"]/g, (character) => ({
     "&": "&amp;",
@@ -31,6 +33,8 @@ export async function trySendApplicationConfirmation(
   const payload = notification.payload as { reference?: string; full_name?: string };
   const reference = payload.reference ?? "onbekend";
   const fullName = payload.full_name ?? "autoverkoper";
+  const dossierUrl = new URL("/mijn-aanvraag", getAppUrl());
+  if (/^[0-9a-f]{24}$/.test(reference)) dossierUrl.searchParams.set("referentie", reference);
 
   try {
     const response = await fetch("https://api.resend.com/emails", {
@@ -44,7 +48,7 @@ export async function trySendApplicationConfirmation(
         from,
         to: [notification.recipient],
         subject: `We hebben je autoaanmelding ontvangen (${reference})`,
-        html: `<p>Beste ${escapeHtml(fullName)},</p><p>We hebben je autoaanmelding ontvangen onder referentie <strong>${escapeHtml(reference)}</strong>.</p><p>We controleren de gegevens voordat de auto eventueel aan goedgekeurde autobedrijven wordt getoond. Een aanmelding garandeert geen bod of verkoop.</p>`,
+        html: `<p>Beste ${escapeHtml(fullName)},</p><p>We hebben je autoaanmelding ontvangen onder referentie <strong>${escapeHtml(reference)}</strong>.</p><p><a href="${escapeHtml(dossierUrl.toString())}">Verifieer je e-mailadres en open je beveiligde dossier</a>.</p><p>We controleren de gegevens voordat de auto eventueel aan goedgekeurde autobedrijven wordt getoond. Een aanmelding garandeert geen bod of verkoop.</p>`,
       }),
       signal: AbortSignal.timeout(8_000),
     });

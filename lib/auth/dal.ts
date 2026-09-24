@@ -47,10 +47,12 @@ export async function requireUser(returnTo: string) {
 export async function requireDealer() {
   const context = await requireUser("/dealer");
 
+  if (context.isStaff) redirect("/geen-toegang");
   if (!context.companyId) redirect("/dealer/registreren");
   if (context.companyStatus === "pending") redirect("/dealer/wachten");
   if (context.companyStatus === "blocked") redirect("/dealer/geblokkeerd");
   if (context.companyStatus !== "approved") redirect("/geen-toegang");
+  if (context.assuranceLevel !== "aal2") redirect("/auth/mfa?next=/dealer");
 
   return context;
 }

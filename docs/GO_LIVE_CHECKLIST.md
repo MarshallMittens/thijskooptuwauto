@@ -1,5 +1,7 @@
 # Livegangchecklist
 
+> Fase 7 blijft open. Zie [PHASE7.md](PHASE7.md) voor de actuele 24-uurs veiling, betaalprovider, onafhankelijke review en gebruikersproef. De oude formulering over besloten biedingen hieronder is historisch en mag niet als vrijgavecriterium gelden.
+
 Livegang blijft geblokkeerd totdat ieder verplicht punt aantoonbaar is afgerond. Een geslaagde build of lokale demonstratie is onvoldoende.
 
 ## Eigendom en accounts
@@ -25,9 +27,10 @@ Livegang blijft geblokkeerd totdat ieder verplicht punt aantoonbaar is afgerond.
 - [ ] Minimaal twee gecontroleerde beheeraccounts hebben TOTP; herstelprocedure is beproefd.
 - [ ] Productiebeheerder kan niet zonder `aal2` handelen.
 - [ ] Pending en blocked dealers zijn via UI, API en database geweigerd.
-- [ ] Dealers kunnen geen verkopersgegevens, interne notities of biedingen van anderen lezen.
+- [ ] Dealers kunnen geen verkopersgegevens, interne notities of identiteit van andere biedende bedrijven lezen; geautoriseerde biedbedragen en tijdstippen zijn voor alle goedgekeurde dealers gelijk zichtbaar.
 - [ ] Private foto’s zijn alleen tijdelijk en gecontroleerd toegankelijk.
 - [ ] Onafhankelijke beveiligingsreview van RLS, RPC’s, uploads en biedlogica is afgerond.
+- [ ] Een externe reviewer heeft de betalingstransities, klachtbewijsautorisatie en eigen biedregels van Thijs onafhankelijk gecontroleerd.
 - [ ] Bevindingen met hoge of kritieke ernst zijn opgelost en hertest.
 - [ ] Rate limits zijn tijdens de besloten proef met realistische belasting geëvalueerd.
 
@@ -42,7 +45,9 @@ Livegang blijft geblokkeerd totdat ieder verplicht punt aantoonbaar is afgerond.
 
 ## Functionele proef
 
-- [ ] Alle vijf proeven uit `docs/PILOT.md` zijn uitgevoerd met fictieve gegevens.
+- [ ] De actuele fase-7-proef uit `docs/PHASE7.md` is met vijf tot tien garages, een verkoper en beheer uitgevoerd en vastgelegd.
+- [ ] De provider heeft de specifieke auto-/particulier-/garagegeldstroom schriftelijk aanvaard en de echte sandboxscenario's zijn geslaagd.
+- [ ] Tarief, betalende partij, btw en contractvoorwaarden zijn expliciet vastgesteld en de productieconfiguratie bevat geen testwaarden.
 - [ ] Gelijktijdige en dubbele biedverzoeken zijn aantoonbaar getest.
 - [ ] RDW-uitval laat handmatige invoer toe.
 - [ ] E-mailuitval rolt aanvragen of biedingen niet terug.

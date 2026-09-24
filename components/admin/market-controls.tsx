@@ -1,12 +1,12 @@
 "use client";
 
-import { FormEvent, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { LoaderCircle } from "lucide-react";
 
 import { closeBidRoundAction, publishApplicationAction, type MarketActionResult } from "@/app/beheer/aanvragen/market-actions";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { formatEuroCents } from "@/lib/bids/amount";
+import { formatAmsterdamDateTime } from "@/lib/time/format";
 
 type MarketState = {
   listingId: string | null;
@@ -15,29 +15,25 @@ type MarketState = {
   roundStatus: string | null;
   startsAt: string | null;
   endsAt: string | null;
+  outcomeStatus: string | null;
+  needsFinalization: boolean;
+  policyStatus: string | null;
+  minimumIncrementCents: number | null;
+  feeConfigurationConfirmed: boolean;
 };
 
-export function MarketControls({ applicationId, applicationStatus, market }: { applicationId: string; applicationStatus: string; market: MarketState }) {
+export function MarketControls({ applicationId, applicationStatus, sellerVerified, market }: { applicationId: string; applicationStatus: string; sellerVerified: boolean; market: MarketState }) {
   const [result, setResult] = useState<MarketActionResult | null>(null);
   const [pending, startTransition] = useTransition();
 
-  function publish(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const formData = new FormData(event.currentTarget);
-    const startsLocal = String(formData.get("startsAt") ?? "");
-    const endsLocal = String(formData.get("endsAt") ?? "");
-    const starts = new Date(startsLocal);
-    const ends = new Date(endsLocal);
-    if (!startsLocal || !endsLocal || Number.isNaN(starts.getTime()) || Number.isNaN(ends.getTime())) {
-      setResult({ ok: false, message: "Vul een geldige begin- en eindtijd in." });
-      return;
-    }
-    startTransition(async () => setResult(await publishApplicationAction({ applicationId, startsAt: starts.toISOString(), endsAt: ends.toISOString() })));
+  function publish() {
+    if (!window.confirm("Publiceren opent direct een biedronde van exact 24 uur. Doorgaan?")) return;
+    startTransition(async () => setResult(await publishApplicationAction({ applicationId })));
   }
 
   function close() {
     if (!market.roundId) return;
-    if (!window.confirm("Weet je zeker dat je deze biedronde wilt sluiten? Er worden daarna geen nieuwe biedingen geaccepteerd.")) return;
+    if (!window.confirm("De 24 uur zijn verstreken. Wil je de hoogste bieding nu als winnaarreservering vastleggen? Dit is nog geen koop.")) return;
     startTransition(async () => setResult(await closeBidRoundAction({ applicationId, roundId: market.roundId! })));
   }
 
@@ -47,16 +43,19 @@ export function MarketControls({ applicationId, applicationStatus, market }: { a
       {market.listingId && market.listingStatus === "published" ? (
         <div className="mt-4 space-y-3">
           <p><strong>Status:</strong> {market.roundStatus}</p>
-          <p className="text-sm text-slate-600">De getoonde tijden worden elders altijd als Europe/Amsterdam weergegeven.</p>
-          {market.roundStatus !== "closed" && market.roundStatus !== "cancelled" && <Button type="button" variant="destructive" onClick={close} disabled={pending}>{pending && <LoaderCircle className="animate-spin" />}Biedronde sluiten</Button>}
+          {market.startsAt && <p><strong>Gestart:</strong> {formatAmsterdamDateTime(market.startsAt)}</p>}
+          {market.endsAt && <p><strong>Sluit:</strong> {formatAmsterdamDateTime(market.endsAt)}</p>}
+          {market.minimumIncrementCents !== null && <p><strong>Minimumverhoging:</strong> {formatEuroCents(market.minimumIncrementCents)}</p>}
+          {market.policyStatus === "test" && <p className="rounded-lg bg-amber-50 p-3 text-sm font-semibold text-amber-900">Testbeleid actief. Kosten en contractvoorwaarden zijn nog niet goedgekeurd; productielivegang blijft geblokkeerd.</p>}
+          {market.outcomeStatus && market.outcomeStatus !== "pending" && <p className="rounded-lg bg-emerald-50 p-3 text-sm font-semibold text-emerald-900">Uitslag: {market.outcomeStatus}. Een winnaarreservering is geen automatische verkoop.</p>}
+          {market.needsFinalization && <Button type="button" onClick={close} disabled={pending}>{pending && <LoaderCircle className="animate-spin" />}Uitslag vastleggen</Button>}
         </div>
       ) : (
-        <form onSubmit={publish} className="mt-4 space-y-4">
-          <p className="text-sm leading-6 text-slate-600">Publiceren legt een onveranderlijke voertuigversie vast. Minimaal één foto moet zijn goedgekeurd en de aanvraag moet de status ‘Gereed’ hebben.</p>
-          <div><Label htmlFor="startsAt">Begintijd volgens dit apparaat</Label><Input id="startsAt" name="startsAt" type="datetime-local" required className="mt-2" /></div>
-          <div><Label htmlFor="endsAt">Eindtijd volgens dit apparaat</Label><Input id="endsAt" name="endsAt" type="datetime-local" required className="mt-2" /></div>
-          <Button disabled={pending || applicationStatus !== "ready"}>{pending && <LoaderCircle className="animate-spin" />}Publiceren en biedronde openen</Button>
-        </form>
+        <div className="mt-4 space-y-4">
+          <p className="text-sm leading-6 text-slate-600">Publiceren legt een onveranderlijke voertuigversie vast en opent direct een biedronde van exact 24 uur. De verkoper moet geverifieerd zijn, minimaal één foto moet zijn goedgekeurd en de aanvraag moet de status ‘Gereed’ hebben.</p>
+          <p className={`rounded-lg p-3 text-sm font-semibold ${sellerVerified ? "bg-emerald-50 text-emerald-900" : "bg-red-50 text-red-900"}`}>E-mail verkoper: {sellerVerified ? "geverifieerd" : "nog niet geverifieerd"}</p>
+          <Button type="button" onClick={publish} disabled={pending || applicationStatus !== "ready" || !sellerVerified}>{pending && <LoaderCircle className="animate-spin" />}Publiceren en 24 uur openen</Button>
+        </div>
       )}
       {result && <p className={`mt-4 rounded-lg p-3 text-sm font-semibold ${result.ok ? "bg-emerald-50 text-emerald-900" : "bg-red-50 text-red-900"}`} role="status">{result.message}</p>}
     </section>

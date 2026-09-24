@@ -8,8 +8,6 @@ import { createClient } from "@/lib/supabase/server";
 
 const publishSchema = z.object({
   applicationId: z.string().uuid(),
-  startsAt: z.string().datetime(),
-  endsAt: z.string().datetime(),
 });
 
 export type MarketActionResult = { ok: boolean; message: string };
@@ -17,22 +15,19 @@ export type MarketActionResult = { ok: boolean; message: string };
 export async function publishApplicationAction(input: z.input<typeof publishSchema>): Promise<MarketActionResult> {
   await requireAdmin();
   const parsed = publishSchema.safeParse(input);
-  if (!parsed.success || new Date(parsed.data.endsAt) <= new Date(parsed.data.startsAt)) {
-    return { ok: false, message: "Controleer de begin- en eindtijd." };
-  }
+  if (!parsed.success) return { ok: false, message: "Ongeldige aanvraag." };
 
   const supabase = await createClient();
   const { error } = await supabase.rpc("admin_publish_application", {
     p_application_id: parsed.data.applicationId,
-    p_starts_at: parsed.data.startsAt,
-    p_ends_at: parsed.data.endsAt,
   });
   if (error) {
     const known = [
       ["application_not_ready", "Zet de aanvraag eerst op ‘Gereed’."],
       ["approved_photo_required", "Keur minimaal één foto goed voordat je publiceert."],
+      ["seller_verification_required", "De verkoper moet eerst het e-mailadres verifiëren."],
       ["listing_already_published", "Deze aanvraag is al gepubliceerd."],
-      ["invalid_bid_window", "De eindtijd moet na de begintijd en in de toekomst liggen."],
+      ["auction_policy_missing", "Er is nog geen veilingbeleid ingericht."],
     ] as const;
     const match = known.find(([key]) => error.message.includes(key));
     return { ok: false, message: match?.[1] ?? "Publiceren is veilig geweigerd." };
@@ -40,7 +35,7 @@ export async function publishApplicationAction(input: z.input<typeof publishSche
 
   revalidatePath(`/beheer/aanvragen/${parsed.data.applicationId}`);
   revalidatePath("/dealer");
-  return { ok: true, message: "De voertuigversie is vastgelegd en de biedronde is aangemaakt." };
+  return { ok: true, message: "De voertuigversie is vastgelegd. De biedronde is nu geopend en sluit exact 24 uur later." };
 }
 
 export async function closeBidRoundAction(input: { applicationId: string; roundId: string }): Promise<MarketActionResult> {
@@ -50,9 +45,14 @@ export async function closeBidRoundAction(input: { applicationId: string; roundI
 
   const supabase = await createClient();
   const { error } = await supabase.rpc("admin_close_bid_round", { p_bid_round_id: parsed.data.roundId });
-  if (error) return { ok: false, message: "De biedronde kon niet veilig worden gesloten." };
+  if (error) {
+    const message = error.message.includes("bid_round_still_active")
+      ? "De biedronde duurt exact 24 uur en kan nog niet worden afgerond."
+      : "De biedronde kon niet veilig worden afgerond.";
+    return { ok: false, message };
+  }
 
   revalidatePath(`/beheer/aanvragen/${parsed.data.applicationId}`);
   revalidatePath("/dealer");
-  return { ok: true, message: "De biedronde is gesloten. Er is niet automatisch een koper gekozen." };
+  return { ok: true, message: "De uitslag is vastgelegd. De hoogste bieder is gereserveerd; dit is nog geen koop." };
 }

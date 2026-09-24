@@ -8,7 +8,7 @@
 4. **Geen extra ORM.** De Supabase-client en gegenereerde databasetypen voorkomen een tweede schemasysteem.
 5. **Server én database controleren toegang.** De DAL bewaakt routes; grants, RLS en databasefuncties blijven de definitieve grens.
 6. **Handmatige bedrijfsgoedkeuring.** Een registratie is altijd `pending`; alleen een admin met MFA kan goedkeuren of blokkeren.
-7. **Beheer-MFA via TOTP.** Geen betaalde sms-afhankelijkheid.
+7. **MFA via TOTP voor gevoelige rollen.** Beheer en goedgekeurde dealers gebruiken `aal2`; geen betaalde sms-afhankelijkheid.
 8. **Append-only biedingen en auditlog.** Wijzigen of verwijderen wordt geen normale applicatiefunctie.
 9. **UTC in opslag, Europe/Amsterdam in presentatie.** Geldbedragen worden gehele eurocenten.
 10. **Foutbestendige e-mail.** Domeinhandelingen worden opgeslagen vóór een e-mailpoging; notificaties krijgen een duurzame outbox.
@@ -17,18 +17,50 @@
 13. **Geen externe analysetracker.** Alleen start en afronding worden intern als inhoudsloze gebeurtenis geteld.
 14. **Tijdelijke en definitieve fotopaden zijn gescheiden.** Een browsermachtiging kan uitsluitend onder `temporary/` schrijven; na inhoudscontrole schrijft de server een hashgebonden bestand onder `applications/` en verwijdert het tijdelijke object zo mogelijk.
 15. **Concepttoken is een capability.** Het token wordt server-side met een geheim afgeleid van de willekeurige idempotentiesleutel, alleen aan de browser getoond en uitsluitend gehasht opgeslagen. Daardoor geven gelijktijdige retries hetzelfde token en verbreekt een IP-wijziging de aanvraag niet; het IP-HMAC dient alleen voor misbruiklimieten.
-16. **Biedingen via één PostgreSQL-functie.** De functie vergrendelt de biedronde, gebruikt `now()` van de database, bepaalt het bedrijf uit de sessie, controleert publicatie en deadline en schrijft bod, auditlog en outbox in dezelfde transactie.
-17. **Geen zichtbaar hoogste bod.** Dealers zien alleen biedingen van het eigen bedrijf. Beheer ziet alle biedingen, maar er vindt geen automatische gunning plaats.
+16. **Biedingen via één PostgreSQL-functie.** De functie vergrendelt eerst de biedronde, leest daarna `clock_timestamp()`, bepaalt het bedrijf uit de sessie, controleert publicatie, deadline en globale minimumstap en schrijft bod, hoogste-bodverwijzing, auditlog en outbox in dezelfde transactie.
+17. **Biedbedragen zijn zichtbaar, identiteiten niet.** Alle goedgekeurde dealers zien dezelfde bedragen en tijdstippen en kunnen het hoogste bod verhogen. Zij zien niet welk concurrerend bedrijf achter een bod zit; verkopers- en interne gegevens blijven verborgen.
 18. **Afhandeling blijft gescheiden.** Het sluiten van een biedronde wijzigt de verkoopstatus niet. Beheer kiest een bod expliciet en doorloopt gecontroleerde stappen naar akkoord en voltooiing.
 19. **Materiële wijzigingen trekken aanbod in.** Een wijziging aan kilometerstand, schade, techniek of onderhoud trekt een gepubliceerde listing in en annuleert de ronde. Oude revisies en biedingen blijven onveranderd; herpublicatie maakt een nieuwe revisie en ronde.
+20. **Beheer en inkopen gebruiken gescheiden identiteiten.** Nieuwe staff/dealer-overlap wordt database-side geweigerd. Een eventueel bestaand gecombineerd lokaal account kan blijven beheren maar krijgt geen dealerdata of biedrechten.
+21. **Commerciële regels zijn versieerbaar en default-off.** Policyversie 1 is uitsluitend `test`, duurt 86400 seconden en gebruikt €50 als testminimumstap. Kostenbedrag en betaler blijven leeg; een policy kan niet `approved` worden zonder expliciete kostenconfiguratie, voorwaardenversie en goedkeuringsactor.
+22. **Verkopers gebruiken een wachtwoordloze Supabase-sessie.** De combinatie van onvoorspelbare aanvraagreferentie en overeenkomend e-mailadres mag uitsluitend een magic link voorbereiden. Na de e-mailklik koppelt een databasefunctie de geverifieerde Auth-identiteit aan precies één eigen aanvraag; staff- en dealeridentiteiten worden geweigerd.
+23. **Verificatie is een publicatievoorwaarde.** Een database-trigger weigert iedere gepubliceerde listing zonder geverifieerde verkoper, ook wanneer een browser of alternatieve API de beheerinterface probeert te omzeilen.
+24. **Een nieuwe ronde duurt exact 24 uur.** De database bepaalt start en einde tijdens dezelfde publicatietransactie; de browser kan geen tijden kiezen of meesturen.
+25. **Sluiten reserveert, maar verkoopt niet.** Een idempotente databasefunctie bevriest na de deadline maximaal één hoogste geldig bod in `winner_reservations`. `deal_cases` blijft onaangeraakt totdat een latere, gecontroleerde afspraak- en akkoordroute dit verwerkt.
+26. **Verlopen rondes zijn herstelbaar.** Bieden na de deadline wordt altijd door de biedfunctie geweigerd. `close_due_bid_rounds` verwerkt gemiste sluitingen later alsnog in batches; correcte biedgeldigheid hangt dus niet van een scheduler af.
+27. **De winnaar stelt de afspraak voor.** De winnaar kan één tot drie toekomstige momenten aanbieden. Alleen de geverifieerde verkoper kan exact een aangeboden moment bevestigen, een alternatief vragen of afwijzen.
+28. **Contactvrijgave volgt pas na afspraakbevestiging.** De winnende garage krijgt naam, e-mail, telefoon en postcode pas nadat de verkoper een moment heeft bevestigd; andere dealers krijgen deze gegevens nooit.
+29. **Inspectie en prijswijziging zijn aparte feiten.** Een inspectie bewaart kilometerstand, bevindingen, afwijkingen en private foto’s. Een voorgestelde prijswijziging is een nieuw voorstel en past het oorspronkelijke append-only bod niet aan.
+30. **Akkoord vereist twee identieke bevestigingen.** Na inspectie en eventuele geaccepteerde prijswijziging bevestigen dealer en verkoper elk hetzelfde voertuig, exacte bedrag en dezelfde voorwaardenversie. Eén bevestiging is onvoldoende.
+31. **Fase-4-voorwaarden blijven test-only.** De lokale versie `phase4-concept-v1` mag de workflow aantonen, maar activeert geen betaling en is geen goedgekeurd productiecontract.
+32. **Geen automatische tweede winnaar.** Een afwijzing, no-show of vastgelopen vervolgroute maakt een beheertaak; de tweede bieder wordt niet automatisch koper.
+33. **Betalingen zitten achter een adapter.** Fase 5 kent alleen de providernaam `simulated` in omgeving `test`. Een toekomstige echte provider krijgt een afzonderlijke adapter en goedkeuringspad; de simulator wordt nooit als operationele provider gepresenteerd.
+34. **Simulator is default-off en productieverboden.** De databasemigratie zet hem uit. Alleen beheer met MFA kan hem via servercode activeren wanneer lokale simulatorvariabelen aanwezig zijn; de server weigert dit in een productie-runtime.
+35. **Geen verzonnen behandelingskosten.** Zolang bedrag en betalende partij niet zijn vastgesteld, gebruikt de testsimulator €0 vergoeding en de blijvende markering `test_unconfigured`. Dit is geen commercieel besluit.
+36. **Providerbericht is de betaalautoriteit.** Een terugkeerpagina of browseractie bewijst geen betaling. Alleen een tijdgebonden HMAC-ondertekend bericht wordt verwerkt, waarna PostgreSQL bedrag, EUR-valuta, ontvanger en toegestane statusvolgorde opnieuw controleert.
+37. **Ontvangst, vrijgave en uitbetaling zijn verschillende feiten.** Volledig ontvangen geld krijgt `received_held`; vrijgave vereist dubbele overdrachtsbevestiging en beheercontrole; provideracceptatie en uiteindelijke uitbetaling blijven afzonderlijke events.
+38. **Uitbetaling verdwijnt niet bij een geschil.** Een geschil kan een reeds uitbetaalde transactie markeren en een opvolgtaak maken, maar `paid_out_at` blijft als historisch feit staan. Terugbetaling is een afzonderlijk, idempotent proces.
+39. **Reconciliatie vergelijkt twee administraties.** Een test-providerbeeld staat in een afgeschermde private tabel en wordt met de lokale administratie vergeleken. Verschillen worden als afzonderlijke reconciliatie-items bewaard; zij worden niet stilzwijgend gecorrigeerd.
+40. **Klachten zijn afzonderlijke dossiers.** Een klacht heeft een onvoorspelbare referentie, gekoppelde aanvraag/transactie, tijdlijn, privébewijs en eigen status. De klacht wist of herschrijft geen bod, akkoord, betaling of uitbetaling.
+41. **Platformkoper vereist functiescheiding.** Een admin kan een bedrijf expliciet als platformverbonden markeren. Nieuwe klachten over zo’n koper vereisen een geregistreerde beoordeling door één medewerker en afronding door een andere medewerker.
+42. **Bewijs blijft private Storage.** Alleen JPEG-afgeleiden zonder bronmetadata worden geregistreerd. De database controleert actor, bestaand object, hashgebonden pad en maximaal acht bewijsstukken.
+43. **Geen fictieve fiscale factuur.** Zolang vergoeding, betaler en btw-behandeling niet zijn vastgesteld, zijn documentrecords uitsluitend `test`, `draft_blocked`, €0 en `unconfigured`. Zij staan los van het koopbedrag.
+44. **Outboxbezorging is lease-gebaseerd.** Eén service-worker claimt met `FOR UPDATE SKIP LOCKED`; een andere worker kan die lease niet afmaken. Provider-idempotentie voorkomt dubbele verzending bij herstel na een onzekere respons.
+45. **Operationele taken zijn default-off.** De interne workerroute vereist een apart servergeheim en `OUTBOX_DELIVERY_ENABLED=true`. Zonder geverifieerde afzender en hostingplanning worden geen achtergrondmails verstuurd.
+46. **Lokale herstelproef is synthetisch en geïsoleerd.** Het script weigert niet-lokale Supabase, herstelt naar een tijdelijke database en tijdelijke private buckets, controleert checksums en ruimt die testmiddelen altijd op. Dit vervangt geen productieherstelproef.
+47. **Klachten kunnen vanaf de winnaarreservering.** Een winnende garage mag een afspraak- of no-showprobleem melden zonder eerst een betaalorder te maken. De database leidt bedrijf en aanvraag uit de reservering af; een vreemd of geblokkeerd bedrijf wordt geweigerd.
+48. **Klachtbewijs vereist autorisatie vóór opslag.** De sessie vraagt eerst via een afgeschermde databasefunctie toegang tot een actief dossier. Registratie onder servicebevoegdheid controleert de actor en actieve status opnieuw onder rijvergrendeling. Een gesloten klacht blijft gesloten en de tweede beoordeling is eenmalig.
+49. **Fase 7 is geen automatische vrijgave.** Interne tests en een door Codex uitgevoerde codecontrole vervangen geen externe juridische/providergoedkeuring, onafhankelijke beveiligingsreview of gebruikersproef. Alle blijven expliciete blokkades in `docs/PHASE7.md`.
 
 ## Veilige tijdelijke keuzes
 
 - npm is de enige package manager.
 - De eerste uploadversie accepteert JPEG, PNG en WebP, maximaal 12 bestanden van 10 MB.
 - KvK-controle is handmatig; er wordt geen extra commerciële API toegevoegd.
-- Er is geen realtime veilinginterface; verversen van eigen status is voldoende voor versie 1.
-- Zolang commerciële regels ontbreken geldt technisch alleen: een bod is positief, maximaal €100.000.000 en moet hoger zijn dan het vorige bod van hetzelfde bedrijf. Dit maximum is een veiligheidsgrens, geen commerciële afspraak.
+- Het dealerportaal ververst actieve biedingen iedere vijftien seconden en bij terugkeer naar het tabblad. Dit is doelbewuste polling; Supabase Realtime is niet nodig voor correcte biedverwerking.
+- Policyversie 1 blijft uitsluitend een lokale testconfiguratie. De werkende veilingtechniek activeert geen productiebeleid of livegang.
+- Een afspraakreactietermijn van 24 uur is voorlopig een operationeel signaal, geen automatische juridische vervaldatum of koopbinding.
+- Fictieve ontvanger-onboarding vraagt geen echte identiteits- of bankgegevens en bewijst niets over provideracceptatie.
 - `@supabase/ssr` blijft achter de adapter in `lib/supabase` zodat een toekomstige API-wijziging lokaal blijft.
 - `APP_URL` is server-only en verplicht buiten development/test; er is in productie geen stille localhost-terugval voor bevestigingslinks.
 

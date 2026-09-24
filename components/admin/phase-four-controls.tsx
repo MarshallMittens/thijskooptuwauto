@@ -6,21 +6,18 @@ import { LoaderCircle } from "lucide-react";
 import {
   addContactAction,
   recordMaterialChangeAction,
-  updateDealAction,
   type WorkflowActionResult,
 } from "@/app/beheer/aanvragen/workflow-actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { dealStatusLabels, getAllowedDealStatuses, type DealStatus } from "@/lib/deals/workflow";
-import { formatEuroCents } from "@/lib/bids/amount";
 import { formatAmsterdamDateTime } from "@/lib/time/format";
 
 type CaseState = {
   deal: {
     id: string | null;
-    status: DealStatus;
+    status: string;
     selectedBidId: string | null;
     agreedAt: string | null;
     completedAt: string | null;
@@ -30,8 +27,6 @@ type CaseState = {
   currentPublishedRevisionId: string | null;
   history: Array<{ id: number; action: string; createdAt: string }>;
 };
-
-type Bid = { id: string; companyName: string; amountCents: number; createdAt: string };
 
 type Condition = {
   mileageKm: number | null;
@@ -63,19 +58,15 @@ function ResultMessage({ result }: { result: WorkflowActionResult | null }) {
 export function PhaseFourControls({
   applicationId,
   caseState,
-  bids,
   condition,
 }: {
   applicationId: string;
   caseState: CaseState;
-  bids: Bid[];
   condition: Condition;
 }) {
   const [contactResult, setContactResult] = useState<WorkflowActionResult | null>(null);
-  const [dealResult, setDealResult] = useState<WorkflowActionResult | null>(null);
   const [changeResult, setChangeResult] = useState<WorkflowActionResult | null>(null);
   const [pending, startTransition] = useTransition();
-  const allowedStatuses = getAllowedDealStatuses(caseState.deal.status);
 
   function addContact(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -98,17 +89,6 @@ export function PhaseFourControls({
     });
   }
 
-  function updateDeal(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const data = new FormData(event.currentTarget);
-    const selectedBid = String(data.get("selectedBidId") ?? "");
-    startTransition(async () => setDealResult(await updateDealAction({
-      applicationId,
-      status: data.get("status"),
-      selectedBidId: selectedBid || null,
-    })));
-  }
-
   function recordChange(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (caseState.currentPublishedRevisionId && !window.confirm("Deze wijziging trekt het huidige aanbod in en annuleert de biedronde. Bestaande biedingen blijven in de historie. Doorgaan?")) return;
@@ -128,33 +108,6 @@ export function PhaseFourControls({
 
   return <div className="mt-8 grid gap-6 xl:grid-cols-2">
     <section className="rounded-2xl border border-slate-200 p-6">
-      <h2 className="text-xl font-black">Afhandeling</h2>
-      <p className="mt-2 text-sm text-slate-600">Een biedronde sluiten is geen verkoop. Kies een bod alleen wanneer je dit daadwerkelijk met de particulier bespreekt.</p>
-      <form onSubmit={updateDeal} className="mt-5 space-y-4">
-        <div>
-          <Label htmlFor="deal-status">Nieuwe status</Label>
-          <select id="deal-status" name="status" defaultValue={caseState.deal.status} className="mt-2 h-10 w-full rounded-md border border-slate-300 bg-white px-3 text-sm" disabled={pending || allowedStatuses.length === 1}>
-            {allowedStatuses.map((status) => <option key={status} value={status}>{dealStatusLabels[status]}</option>)}
-          </select>
-        </div>
-        <div>
-          <Label htmlFor="selected-bid">Bewust gekozen bod</Label>
-          <select id="selected-bid" name="selectedBidId" defaultValue={caseState.deal.selectedBidId ?? ""} className="mt-2 h-10 w-full rounded-md border border-slate-300 bg-white px-3 text-sm" disabled={pending || caseState.deal.status === "completed"}>
-            <option value="">Nog geen bod gekozen</option>
-            {bids.map((bid) => <option key={bid.id} value={bid.id}>{bid.companyName} — {formatEuroCents(bid.amountCents)}</option>)}
-          </select>
-        </div>
-        <Button disabled={pending || allowedStatuses.length === 1}>{pending && <LoaderCircle className="animate-spin" />}Afhandeling opslaan</Button>
-      </form>
-      <ResultMessage result={dealResult} />
-      <dl className="mt-5 grid gap-3 text-sm sm:grid-cols-2">
-        <div><dt className="font-bold text-slate-500">Huidige status</dt><dd>{dealStatusLabels[caseState.deal.status]}</dd></div>
-        <div><dt className="font-bold text-slate-500">Akkoord</dt><dd>{caseState.deal.agreedAt ? formatAmsterdamDateTime(caseState.deal.agreedAt) : "—"}</dd></div>
-        <div><dt className="font-bold text-slate-500">Afgerond</dt><dd>{caseState.deal.completedAt ? formatAmsterdamDateTime(caseState.deal.completedAt) : "—"}</dd></div>
-      </dl>
-    </section>
-
-    <section className="rounded-2xl border border-slate-200 p-6">
       <h2 className="text-xl font-black">Contactmoment vastleggen</h2>
       <form onSubmit={addContact} className="mt-5 space-y-4">
         <div className="grid gap-4 sm:grid-cols-2">
@@ -170,7 +123,7 @@ export function PhaseFourControls({
       </div>
     </section>
 
-    <section className="rounded-2xl border border-amber-300 bg-amber-50/40 p-6 xl:col-span-2">
+    <section className="rounded-2xl border border-amber-300 bg-amber-50/40 p-6">
       <h2 className="text-xl font-black">Materiële voertuigwijziging</h2>
       <p className="mt-2 text-sm leading-6 text-slate-700">Gebruik dit voor gewijzigde kilometerstand, schade, techniek of onderhoud. Bij gepubliceerd aanbod wordt de bestaande publicatie ingetrokken en de biedronde geannuleerd. Biedingen en de oude voertuigversie blijven bewaard.</p>
       <form onSubmit={recordChange} className="mt-5 grid gap-4 lg:grid-cols-2">

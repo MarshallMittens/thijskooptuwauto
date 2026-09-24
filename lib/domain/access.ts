@@ -11,7 +11,12 @@ export type AccessContext = {
 };
 
 export function canAccessDealerPortal(context: AccessContext) {
-  return context.companyStatus === "approved" && Boolean(context.companyId);
+  return (
+    !context.isStaff &&
+    context.assuranceLevel === "aal2" &&
+    context.companyStatus === "approved" &&
+    Boolean(context.companyId)
+  );
 }
 
 export function canManageCompanies(context: AccessContext) {

@@ -12,7 +12,8 @@ insert into auth.users (
   ('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-0000000000b1', 'authenticated', 'authenticated', 'pending@example.test', '', now(), '{}', '{}', now(), now(), '', '', '', ''),
   ('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-0000000000c1', 'authenticated', 'authenticated', 'approved@example.test', '', now(), '{}', '{}', now(), now(), '', '', '', ''),
   ('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-0000000000d1', 'authenticated', 'authenticated', 'other@example.test', '', now(), '{}', '{}', now(), now(), '', '', '', ''),
-  ('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-0000000000e1', 'authenticated', 'authenticated', 'removed@example.test', '', now(), '{}', '{}', now(), now(), '', '', '', '');
+  ('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-0000000000e1', 'authenticated', 'authenticated', 'removed@example.test', '', now(), '{}', '{}', now(), now(), '', '', '', ''),
+  ('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-0000000000f1', 'authenticated', 'authenticated', 'verkoper1@example.test', '', now(), '{}', '{}', now(), now(), '', '', '', '');
 
 insert into public.staff_memberships (user_id, role)
 values ('00000000-0000-0000-0000-0000000000a1', 'admin');
@@ -43,6 +44,9 @@ insert into public.vehicles (id, registration_normalized, make, model) values
 insert into public.applications (id, seller_contact_id, vehicle_id, status) values
   ('40000000-0000-0000-0000-0000000000a1', '20000000-0000-0000-0000-0000000000a1', '30000000-0000-0000-0000-0000000000a1', 'ready'),
   ('40000000-0000-0000-0000-0000000000a2', '20000000-0000-0000-0000-0000000000a2', '30000000-0000-0000-0000-0000000000a2', 'ready');
+
+insert into public.seller_application_access (application_id, user_id)
+values ('40000000-0000-0000-0000-0000000000a1', '00000000-0000-0000-0000-0000000000f1');
 
 insert into public.vehicle_revisions (id, vehicle_id, revision_number, snapshot) values
   ('50000000-0000-0000-0000-0000000000a1', '30000000-0000-0000-0000-0000000000a1', 1, '{"make":"Testmerk"}'),
@@ -111,7 +115,7 @@ select results_eq(
 reset role;
 
 set local role authenticated;
-select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000c1","role":"authenticated","aal":"aal1"}', true);
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000c1","role":"authenticated","aal":"aal2"}', true);
 select results_eq(
   $$ select count(*)::bigint from public.companies where id = '10000000-0000-0000-0000-0000000000d1' $$,
   $$ values (0::bigint) $$,

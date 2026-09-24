@@ -40,7 +40,7 @@ export async function placeBidAction(input: z.input<typeof bidSchema>): Promise<
       bid_round_closed: "Deze biedronde is gesloten; het bod is niet opgeslagen.",
       bid_round_not_active: "Op deze auto kan niet meer worden geboden.",
       listing_not_published: "Deze auto is niet meer beschikbaar.",
-      bid_must_increase: "Een nieuw bod moet hoger zijn dan het vorige bod van je bedrijf.",
+      bid_below_minimum_increment: "Je bod is te laag. Gebruik minimaal het bedrag dat boven het formulier staat.",
       idempotency_conflict: "Deze biedpoging is al met andere gegevens gebruikt. Vernieuw de pagina.",
     };
     const key = Object.keys(messages).find((candidate) => error.message.includes(candidate));
@@ -59,5 +59,5 @@ export async function placeBidAction(input: z.input<typeof bidSchema>): Promise<
   revalidatePath(`/dealer/aanbod/${parsed.data.listingId}`);
   revalidatePath("/dealer/biedingen");
   revalidatePath("/dealer");
-  return { ok: true, message: "Je bod is opgeslagen. Alleen jouw bedrijf en beheer kunnen dit bod zien.", amountCents };
+  return { ok: true, message: "Je bod is opgeslagen en het bedrag is anoniem zichtbaar voor andere goedgekeurde garages.", amountCents };
 }

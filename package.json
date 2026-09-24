@@ -12,8 +12,12 @@
     "lint": "eslint . --max-warnings=0",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --pool=threads --maxWorkers=1",
+    "test:e2e": "playwright test",
+    "test:e2e:acceptance": "node scripts/run-acceptance-e2e.mjs",
     "test:watch": "vitest",
     "test:db": "supabase test db",
+    "test:concurrency": "node scripts/test-bid-concurrency.mjs",
+    "test:recovery": "node --env-file=.env.local scripts/test-local-recovery.mjs",
     "db:start": "supabase start",
     "db:stop": "supabase stop",
     "db:reset": "supabase db reset",
@@ -49,6 +53,7 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@tailwindcss/postcss": "4.2.1",
     "@types/node": "22.19.19",
     "@types/react": "19.2.14",

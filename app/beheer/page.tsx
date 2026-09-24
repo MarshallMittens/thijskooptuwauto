@@ -1,4 +1,5 @@
 import { changeCompanyStatus } from "@/app/beheer/actions";
+import { setPlatformAffiliationAction } from "@/app/beheer/operatie/actions";
 import { signOut } from "@/app/auth/actions";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -12,7 +13,7 @@ export default async function AdminPage() {
   const supabase = await createClient();
   const { data: companies, error } = await supabase
     .from("companies")
-    .select("id, legal_name, trade_name, kvk_number, status, email, phone, created_at")
+    .select("id, legal_name, trade_name, kvk_number, status, email, phone, is_platform_affiliated, created_at")
     .order("created_at", { ascending: false });
 
   return (
@@ -24,7 +25,7 @@ export default async function AdminPage() {
             <h1 className="mt-3 text-4xl font-black tracking-[-0.05em]">Autobedrijven</h1>
             <p className="mt-3 leading-7 text-slate-600">Alleen beheerders met tweestapsverificatie kunnen bedrijven goedkeuren of blokkeren.</p>
           </div>
-          <div className="flex gap-3"><Link href="/beheer/aanvragen" className="inline-flex items-center rounded-md bg-[#a64b00] px-4 py-2 text-sm font-bold text-white">Autoaanvragen</Link><form action={signOut}><Button variant="outline">Uitloggen</Button></form></div>
+          <div className="flex flex-wrap gap-3"><Link href="/beheer/aanvragen" className="inline-flex items-center rounded-md bg-[#a64b00] px-4 py-2 text-sm font-bold text-white">Autoaanvragen</Link><Link href="/beheer/operatie" className="inline-flex items-center rounded-md border border-[#a64b00] px-4 py-2 text-sm font-bold text-[#a64b00]">Operatie</Link><form action={signOut}><Button variant="outline">Uitloggen</Button></form></div>
         </div>
 
         <div className="mt-6 inline-flex rounded-full bg-emerald-50 px-3 py-1 text-sm font-bold text-emerald-800">
@@ -37,7 +38,7 @@ export default async function AdminPage() {
           <div className="mt-8 overflow-x-auto rounded-2xl border border-slate-200">
             <table className="w-full min-w-[760px] text-left text-sm">
               <thead className="bg-slate-50 text-slate-600">
-                <tr><th className="p-4">Bedrijf</th><th className="p-4">KvK</th><th className="p-4">Contact</th><th className="p-4">Status</th><th className="p-4">Actie</th></tr>
+                <tr><th className="p-4">Bedrijf</th><th className="p-4">KvK</th><th className="p-4">Contact</th><th className="p-4">Status</th><th className="p-4">Platformkoper</th><th className="p-4">Actie</th></tr>
               </thead>
               <tbody>
                 {companies.map((company) => (
@@ -46,6 +47,7 @@ export default async function AdminPage() {
                     <td className="p-4 font-mono">{company.kvk_number}</td>
                     <td className="p-4">{company.email}<span className="mt-1 block text-slate-500">{company.phone}</span></td>
                     <td className="p-4 font-bold">{company.status}</td>
+                    <td className="p-4"><form action={async () => { "use server"; await setPlatformAffiliationAction({ companyId: company.id, affiliated: !company.is_platform_affiliated }); }}><Button size="sm" variant="outline" disabled={context.staffRole !== "admin"}>{company.is_platform_affiliated ? "Ja · uitschakelen" : "Nee · markeren"}</Button></form></td>
                     <td className="p-4">
                       <form action={changeCompanyStatus} className="flex gap-2">
                         <input type="hidden" name="companyId" value={company.id} />

@@ -1,5 +1,7 @@
 # Besloten proef — draaiboek en bewijs
 
+> Dit document beschrijft de vroegere besloten-biedingenproef en is niet het actuele fase-7-protocol. Gebruik voor de huidige 24-uurs zichtbare biedingen, winnaarreservering, afspraak, simulator en klachten uitsluitend [PHASE7.md](PHASE7.md). Onderstaande historische stappen zijn geen bewijs dat de nieuwe proef is uitgevoerd.
+
 Dit draaiboek gebruikt uitsluitend fictieve persoonsgegevens totdat de juridische teksten, bewaartermijnen en verwerkersafspraken zijn goedgekeurd. Een geslaagde lokale proef is geen toestemming om te publiceren.
 
 ## Rollen

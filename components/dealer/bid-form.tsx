@@ -7,8 +7,9 @@ import { placeBidAction, type BidActionResult } from "@/app/dealer/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { formatEuroCents } from "@/lib/bids/amount";
 
-export function BidForm({ listingId, roundId }: { listingId: string; roundId: string }) {
+export function BidForm({ listingId, roundId, highestBidCents, nextMinimumBidCents, minimumIncrementCents }: { listingId: string; roundId: string; highestBidCents: number | null; nextMinimumBidCents: number; minimumIncrementCents: number }) {
   const [amount, setAmount] = useState("");
   const [idempotencyKey, setIdempotencyKey] = useState(() => crypto.randomUUID());
   const [result, setResult] = useState<BidActionResult | null>(null);
@@ -29,12 +30,16 @@ export function BidForm({ listingId, roundId }: { listingId: string; roundId: st
   return (
     <form onSubmit={submit} className="rounded-2xl border border-orange-200 bg-orange-50 p-5">
       <h2 className="text-xl font-black">Plaats of verhoog je bod</h2>
-      <p className="mt-2 text-sm leading-6 text-slate-600">Je bod is besloten. Een eenmaal opgeslagen bod kan niet worden verlaagd of verwijderd.</p>
+      <p className="mt-2 text-sm leading-6 text-slate-600">Biedbedragen zijn zichtbaar voor alle goedgekeurde garages; de identiteit achter een bod niet. Een opgeslagen bod kan niet worden verlaagd of verwijderd.</p>
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        <div className="rounded-xl bg-white p-4"><p className="text-xs font-bold uppercase tracking-wide text-slate-500">Huidig hoogste bod</p><p className="mt-1 text-xl font-black">{highestBidCents === null ? "Nog geen bod" : formatEuroCents(highestBidCents)}</p></div>
+        <div className="rounded-xl bg-white p-4"><p className="text-xs font-bold uppercase tracking-wide text-slate-500">Jouw minimale nieuwe bod</p><p className="mt-1 text-xl font-black">{formatEuroCents(nextMinimumBidCents)}</p><p className="mt-1 text-xs text-slate-500">Minimumstap {formatEuroCents(minimumIncrementCents)}</p></div>
+      </div>
       <div className="mt-4 max-w-sm">
         <Label htmlFor="bid-amount">Bedrag in euro’s</Label>
         <div className="mt-2 flex gap-2">
           <span className="grid h-12 place-items-center rounded-l-md border border-r-0 border-slate-300 bg-white px-4 font-bold">€</span>
-          <Input id="bid-amount" value={amount} onChange={(event) => setAmount(event.target.value)} inputMode="decimal" placeholder="12500" required className="h-12 rounded-l-none bg-white" />
+          <Input id="bid-amount" value={amount} onChange={(event) => setAmount(event.target.value)} type="number" inputMode="decimal" min={(nextMinimumBidCents / 100).toFixed(2)} step="0.01" placeholder={(nextMinimumBidCents / 100).toFixed(2)} required className="h-12 rounded-l-none bg-white" />
           <Button type="submit" disabled={pending} className="h-12">{pending && <LoaderCircle className="animate-spin" />}Bod opslaan</Button>
         </div>
       </div>

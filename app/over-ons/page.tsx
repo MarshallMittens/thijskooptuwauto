@@ -6,14 +6,14 @@ import { PublicPage } from "@/components/public/public-page";
 
 export const metadata: Metadata = {
   title: "Over Thijskooptuauto | Persoonlijk je auto aanbieden",
-  description: "Maak kennis met Thijs en lees hoe Thijskooptuauto jouw autoaanmelding controleert, autobedrijven besloten laat bieden en de uitkomst persoonlijk met je bespreekt.",
+  description: "Maak kennis met Thijs en lees hoe Thijskooptuauto jouw autoaanmelding controleert, garages 24 uur laat bieden en de uitkomst persoonlijk met je bespreekt.",
 };
 
 const processSteps = [
   ["01", "Meld je auto online aan", "Je start met het kenteken en vult de voertuiggegevens en staat van je auto aan.", CarFront],
   ["02", "Voeg duidelijke foto’s toe", "Je laat de auto van meerdere kanten zien en brengt eventuele schade duidelijk in beeld.", Camera],
   ["03", "Wij controleren je aanvraag", "We controleren de informatie en nemen contact op wanneer er iets ontbreekt.", ClipboardCheck],
-  ["04", "Autobedrijven bieden besloten", "Na goedkeuring kunnen geselecteerde autobedrijven bieden. We vergelijken en bespreken de uitkomst met jou.", Building2],
+  ["04", "Garages bieden 24 uur", "Na goedkeuring zien geselecteerde garages de biedbedragen en kunnen zij elkaar 24 uur overbieden. Daarna bespreken we het hoogste bod met jou.", Building2],
 ] as const;
 
 export default function AboutPage() {
@@ -33,7 +33,7 @@ export default function AboutPage() {
           <h2 className="mt-3 text-3xl font-black tracking-[-0.04em] sm:text-4xl">Eén vast aanspreekpunt voor jouw aanvraag.</h2>
           <div className="mt-6 space-y-4 leading-7 text-slate-600">
             <p>Thijskooptuauto is opgezet om particuliere autobezitters op een overzichtelijke manier in contact te brengen met geselecteerde autobedrijven. Je meldt je auto online aan; daarna controleren we eerst of de informatie compleet en bruikbaar is.</p>
-            <p>Thijs begeleidt het proces persoonlijk. Hij bespreekt ontbrekende informatie met je, vergelijkt de ontvangen biedingen en legt de mogelijke vervolgstappen uit. De hoogste bieder wordt niet automatisch koper en jij zit door een aanmelding nergens aan vast.</p>
+            <p>Thijs begeleidt het proces persoonlijk. Hij bespreekt ontbrekende informatie met je en legt de mogelijke vervolgstappen uit. Na 24 uur start het hoogste bod de afspraakroute, maar de hoogste bieder is niet automatisch koper en jij zit door een aanmelding nergens aan vast.</p>
             <p>We doen geen belofte over een gegarandeerd bod, verkoopprijs of vaste doorlooptijd. We kiezen voor een controleerbaar proces met heldere communicatie.</p>
           </div>
           <div className="mt-7 flex flex-wrap gap-4">

@@ -9,6 +9,17 @@ type SupabaseAdminConfig = SupabasePublicConfig & {
   serviceRoleKey: string;
 };
 
+type PaymentSimulatorConfig = {
+  webhookSecret: string;
+};
+
+type OperationsConfig = {
+  jobSecret: string;
+  deliveryEnabled: boolean;
+  resendApiKey: string;
+  resendFromEmail: string;
+};
+
 export function getSupabasePublicConfig(): SupabasePublicConfig {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
@@ -38,4 +49,30 @@ export function getSupabaseAdminConfig(): SupabaseAdminConfig {
   }
 
   return { ...publicConfig, serviceRoleKey };
+}
+
+export function getPaymentSimulatorConfig(): PaymentSimulatorConfig {
+  if (process.env.PAYMENT_SIMULATOR_ENABLED !== "true") {
+    throw new Error("De lokale betaalsimulator is niet ingeschakeld.");
+  }
+  if (process.env.NODE_ENV === "production" || process.env.VERCEL_ENV === "production") {
+    throw new Error("De testbetaalsimulator is verboden in productie.");
+  }
+  const webhookSecret = process.env.PAYMENT_SIMULATOR_WEBHOOK_SECRET;
+  if (!webhookSecret || webhookSecret.length < 32) {
+    throw new Error("PAYMENT_SIMULATOR_WEBHOOK_SECRET moet lokaal minimaal 32 tekens bevatten.");
+  }
+  return { webhookSecret };
+}
+
+export function getOperationsConfig(): OperationsConfig {
+  const jobSecret = process.env.OPERATIONS_JOB_SECRET;
+  if (!jobSecret || jobSecret.length < 32) throw new Error("OPERATIONS_JOB_SECRET moet minimaal 32 tekens bevatten.");
+  const deliveryEnabled = process.env.OUTBOX_DELIVERY_ENABLED === "true";
+  const resendApiKey = process.env.RESEND_API_KEY ?? "";
+  const resendFromEmail = process.env.RESEND_FROM_EMAIL ?? "";
+  if (deliveryEnabled && (!resendApiKey || !resendFromEmail)) {
+    throw new Error("Outboxbezorging vereist RESEND_API_KEY en RESEND_FROM_EMAIL.");
+  }
+  return { jobSecret, deliveryEnabled, resendApiKey, resendFromEmail };
 }

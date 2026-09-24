@@ -72,6 +72,51 @@ input {
   font: inherit;
 }
 
+/* The plate font is scoped to its form; this rule also wins over the global
+   input font reset. Keep the original glyph weight instead of faux bold. */
+.license-plate-text {
+  font-family: var(--font-kenteken), Impact, "Arial Black", sans-serif;
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 400;
+  font-synthesis: none;
+  line-height: 1;
+  letter-spacing: 0;
+  font-variant-numeric: lining-nums;
+}
+
+.license-plate-submit {
+  border: 3px solid #111111;
+  border-radius: 0.6rem;
+  background: #111111;
+  color: #ffffff;
+  font-family: Arial, "Helvetica Neue", sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  white-space: nowrap;
+  transition: background-color 160ms ease, border-color 160ms ease;
+}
+
+.license-plate-submit:hover {
+  background: #292929;
+  border-color: #292929;
+}
+
+.license-plate-submit:focus-visible {
+  outline: 3px solid #f7941e;
+  outline-offset: 3px;
+}
+
+.license-plate-submit-icon {
+  border-radius: 0.35rem;
+  background: #f7941e;
+  color: #111111;
+  transition: transform 160ms ease;
+}
+
+.license-plate-submit:hover .license-plate-submit-icon {
+  transform: translateX(2px);
+}
+
 ::selection {
   background: #f7941e;
   color: #090909;

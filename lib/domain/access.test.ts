@@ -22,10 +22,27 @@ describe("toegangsregels", () => {
     expect(canBid({ ...base, companyStatus: "blocked" })).toBe(false);
   });
 
-  it("laat uitsluitend goedgekeurde bedrijven het dealerportaal gebruiken", () => {
-    expect(canAccessDealerPortal({ ...base, companyStatus: "approved" })).toBe(
-      true,
-    );
+  it("vereist een goedgekeurd bedrijf en MFA voor het dealerportaal", () => {
+    expect(canAccessDealerPortal({ ...base, companyStatus: "approved" })).toBe(false);
+    expect(
+      canAccessDealerPortal({
+        ...base,
+        companyStatus: "approved",
+        assuranceLevel: "aal2",
+      }),
+    ).toBe(true);
+  });
+
+  it("laat een beheeridentiteit nooit als dealer bieden", () => {
+    expect(
+      canBid({
+        ...base,
+        companyStatus: "approved",
+        assuranceLevel: "aal2",
+        isStaff: true,
+        staffRole: "admin",
+      }),
+    ).toBe(false);
   });
 
   it("vereist admin én aal2 voor bedrijfsgoedkeuring", () => {
