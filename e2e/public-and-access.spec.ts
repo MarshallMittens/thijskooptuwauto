@@ -69,6 +69,8 @@ test("publieke procespagina en mobiel kentekenveld blijven bruikbaar", async ({ 
   await expect(page.getByRole("button", { name: /Deutsch/ })).toBeDisabled();
   await expect(page.getByRole("button", { name: /English/ })).toBeDisabled();
   await expect(page.locator("#klantervaringen").getByText("“Top service!”")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Volg Thijskooptuauto op Facebook" })).toHaveAttribute("href", "https://www.facebook.com/thijskooptuwauto.nl");
+  await expect(page.getByLabel("Instagram-link nog instellen")).toContainText("Instagram");
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 
   await page.goto("/hoe-werkt-het");
