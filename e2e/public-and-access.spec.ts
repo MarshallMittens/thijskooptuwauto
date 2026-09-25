@@ -21,7 +21,7 @@ test("de kentekenactie opent de aanmeldwizard met genormaliseerd kenteken", asyn
   await page.goto("/");
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Je auto verkopen");
   await expect(page.getByText("Veilig en vrijblijvend aanmelden")).toBeVisible();
-  await expect(page.getByRole("link", { name: "Bekijk echte klantervaringen" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Google-beoordeling: 4,5 van 5 uit 28 reviews" })).toBeVisible();
 
   const registration = page.getByRole("textbox", { name: "Vul je kenteken in" });
   await registration.fill("zz-zz-zz");
@@ -60,6 +60,7 @@ test("publieke procespagina en mobiel kentekenveld blijven bruikbaar", async ({ 
   await expect(page.getByRole("textbox", { name: "Vul je kenteken in" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Start je aanvraag" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Voor bedrijven: inloggen" })).toHaveAttribute("href", "/inloggen?returnTo=%2Fdealer");
+  await expect(page.getByRole("link", { name: "Google-beoordeling: 4,5 van 5 uit 28 reviews" })).toContainText("4,5 / 5");
   await expect(page.getByRole("heading", { name: "Wil je meebieden op geselecteerd aanbod?" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Bedrijfsaccount aanvragen" })).toHaveAttribute("href", "/registreren");
   await expect(page.getByRole("link", { name: "Al een account? Inloggen" })).toHaveAttribute("href", "/inloggen?returnTo=%2Fdealer");

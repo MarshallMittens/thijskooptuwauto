@@ -2,6 +2,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { Building2, Check, CheckCircle2, ChevronDown, Languages, Star } from "lucide-react";
 
+import { googleReviewSummary } from "@/lib/public/google-reviews";
+
 const links = [
   ["Hoe werkt het?", "/hoe-werkt-het"],
   ["Over ons", "/over-ons"],
@@ -17,10 +19,11 @@ export function SiteHeader({ inverse = false }: { inverse?: boolean }) {
           <TrustItem>Veilig en vrijblijvend aanmelden</TrustItem>
           <TrustItem>Persoonlijk begeleid door Thijs</TrustItem>
           <TrustItem>Alleen gecontroleerde garages</TrustItem>
-          <Link href="/over-ons#klantervaringen" className="flex items-center gap-2 border-l border-white/15 px-5 transition-colors hover:text-[#ffb45a] lg:justify-center" aria-label="Bekijk echte klantervaringen">
+          <Link href="/over-ons#klantervaringen" className="flex items-center gap-2 border-l border-white/15 px-5 transition-colors hover:text-[#ffb45a] lg:justify-center" aria-label={`Google-beoordeling: ${googleReviewSummary.rating.toLocaleString("nl-NL")} van 5 uit ${googleReviewSummary.reviewCount} reviews`}>
             <Star className="size-4 fill-[#f7941e] text-[#f7941e]" aria-hidden="true" />
-            <span className="text-white/70">Klantervaring:</span>
-            <span>“Top service!”</span>
+            <span className="text-white/70">Google</span>
+            <strong>{googleReviewSummary.rating.toLocaleString("nl-NL")} / 5</strong>
+            <span className="text-white/60">({googleReviewSummary.reviewCount} reviews)</span>
           </Link>
         </div>
       </aside>

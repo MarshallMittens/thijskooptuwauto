@@ -1,12 +1,12 @@
 import { ExternalLink, Quote, Star } from "lucide-react";
 
+import { googleReviewSummary } from "@/lib/public/google-reviews";
+
 const reviews = [
   { quote: "Zeer vriendelijke man! Doet eerlijk zaken.", name: "Patrick", rating: 4 },
   { quote: "Goed geholpen en snel en eerlijk.", name: "Jermain Guhnen", rating: 5 },
   { quote: "Zeer vriendelijk en een goede service.", name: "Sandy Rossel", rating: 5 },
 ] as const;
-
-const googleReviewsUrl = "https://www.google.com/maps/search/?api=1&query=THIJS+KOOPT+UW+AUTO+Houtmolenstraat+41+Doetinchem";
 
 export function CustomerReviews({ className = "" }: { className?: string }) {
   return (
@@ -14,10 +14,10 @@ export function CustomerReviews({ className = "" }: { className?: string }) {
       <div className="grid overflow-hidden rounded-[2rem] bg-[#111111] text-white lg:grid-cols-[.75fr_1.25fr]">
         <div className="flex flex-col justify-center bg-[#f7941e] p-7 text-[#111111] sm:p-10">
           <p className="text-sm font-black uppercase tracking-[.16em]">Google-beoordeling</p>
-          <div className="mt-5 flex items-end gap-3"><strong className="text-7xl font-black leading-none tracking-[-0.07em]">4,5</strong><span className="pb-1 text-lg font-bold">uit 5</span></div>
-          <Stars rating={4.5} className="mt-4 text-[#111111]" label="Gemiddeld 4,5 van 5 sterren" />
-          <p className="mt-4 font-bold">Gebaseerd op 28 openbare Google-reviews</p>
-          <a href={googleReviewsUrl} target="_blank" rel="noreferrer" className="mt-6 inline-flex w-fit items-center gap-2 rounded-xl bg-[#111111] px-5 py-3 font-extrabold text-white transition hover:bg-[#2b2b2b] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#111111]">
+          <div className="mt-5 flex items-end gap-3"><strong className="text-7xl font-black leading-none tracking-[-0.07em]">{googleReviewSummary.rating.toLocaleString("nl-NL")}</strong><span className="pb-1 text-lg font-bold">uit 5</span></div>
+          <Stars rating={googleReviewSummary.rating} className="mt-4 text-[#111111]" label={`Gemiddeld ${googleReviewSummary.rating.toLocaleString("nl-NL")} van 5 sterren`} />
+          <p className="mt-4 font-bold">Gebaseerd op {googleReviewSummary.reviewCount} openbare Google-reviews</p>
+          <a href={googleReviewSummary.profileUrl} target="_blank" rel="noreferrer" className="mt-6 inline-flex w-fit items-center gap-2 rounded-xl bg-[#111111] px-5 py-3 font-extrabold text-white transition hover:bg-[#2b2b2b] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#111111]">
             Bekijk alle reviews <ExternalLink className="size-4" aria-hidden="true" />
           </a>
         </div>
