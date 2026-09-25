@@ -3,7 +3,7 @@
 import { ChangeEvent, FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { AlertTriangle, Camera, Check, ChevronLeft, ChevronRight, Gauge, KeyRound, LoaderCircle, MessageSquare, ShieldCheck, Wrench } from "lucide-react";
+import { AlertTriangle, Camera, Check, ChevronLeft, ChevronRight, Gauge, KeyRound, LoaderCircle, MessageSquare, ShieldCheck, Star, Wrench } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,10 +18,10 @@ const IDEMPOTENCY_KEY = "thijskooptuauto.application.idempotency.v1";
 const stepLabels = ["Kenteken", "Voertuig", "Staat", "Foto’s", "Contact", "Bevestigen"];
 
 type VehicleState = { registration: string; make: string; model: string; variant: string; year: string; fuelType: string; color: string; vehicleType: string };
-type ConditionState = { mileageKm: string; damageDescription: string; technicalIssues: string; maintenanceDescription: string; keyCount: string; remarks: string };
+type ConditionState = { mileageKm: string; damageDescription: string; technicalIssues: string; maintenanceDescription: string; keyCount: string; exteriorRating: string; interiorRating: string; remarks: string };
 type SellerState = { fullName: string; email: string; phone: string; postalCode: string; desiredSaleDate: string };
 
-const emptyCondition: ConditionState = { mileageKm: "", damageDescription: "", technicalIssues: "", maintenanceDescription: "", keyCount: "2", remarks: "" };
+const emptyCondition: ConditionState = { mileageKm: "", damageDescription: "", technicalIssues: "", maintenanceDescription: "", keyCount: "2", exteriorRating: "", interiorRating: "", remarks: "" };
 const emptySeller: SellerState = { fullName: "", email: "", phone: "", postalCode: "", desiredSaleDate: "" };
 
 function getIdempotencyKey() {
@@ -77,7 +77,7 @@ export function ApplicationWizard({ initialRegistration, autoLookup = false }: {
       try {
         const parsed = JSON.parse(stored) as { step?: number; vehicle?: VehicleState; condition?: ConditionState };
         if (parsed.vehicle) setVehicle({ ...parsed.vehicle, registration: initialRegistration || parsed.vehicle.registration });
-        if (parsed.condition) setCondition(parsed.condition);
+        if (parsed.condition) setCondition({ ...emptyCondition, ...parsed.condition });
         if (parsed.step && parsed.step >= 1 && parsed.step <= 4) setStep(parsed.step);
       } catch {
         sessionStorage.removeItem(STORAGE_KEY);
@@ -130,6 +130,7 @@ export function ApplicationWizard({ initialRegistration, autoLookup = false }: {
     if (step === 2 && (!vehicle.make.trim() || !vehicle.model.trim())) return "Vul minimaal merk en model in.";
     if (step === 3 && (!/^\d+$/.test(condition.mileageKm) || Number(condition.mileageKm) > 3_000_000)) return "Vul een geldige kilometerstand in.";
     if (step === 3 && (!/^\d+$/.test(condition.keyCount) || Number(condition.keyCount) > 10)) return "Vul een geldig aantal sleutels tussen 0 en 10 in.";
+    if (step === 3 && (!/^[1-5]$/.test(condition.exteriorRating) || !/^[1-5]$/.test(condition.interiorRating))) return "Geef de buitenkant en het interieur allebei een beoordeling van 1 tot 5 sterren.";
     if (step === 4 && photos.length < 1) return "Voeg minimaal één foto toe.";
     if (step === 5 && (!seller.fullName.trim() || !seller.email.includes("@") || seller.phone.trim().length < 8 || !/^\d{4}\s?[A-Za-z]{2}$/.test(seller.postalCode))) return "Controleer je naam, e-mailadres, telefoonnummer en postcode.";
     return "";
@@ -176,7 +177,14 @@ export function ApplicationWizard({ initialRegistration, autoLookup = false }: {
       setSubmitStatus("Aanvraag controleren en opslaan…");
       const payload = {
         vehicle: { ...vehicle, year: vehicle.year ? Number(vehicle.year) : null },
-        condition: { ...condition, mileageKm: Number(condition.mileageKm), keyCount: Number(condition.keyCount) },
+        condition: {
+          mileageKm: Number(condition.mileageKm),
+          keyCount: Number(condition.keyCount),
+          damageDescription: [`Buitenkant: ${condition.exteriorRating}/5 sterren.`, condition.damageDescription].filter(Boolean).join("\n"),
+          technicalIssues: condition.technicalIssues,
+          maintenanceDescription: condition.maintenanceDescription,
+          remarks: [`Interieur: ${condition.interiorRating}/5 sterren.`, condition.remarks].filter(Boolean).join("\n"),
+        },
         seller,
       };
       const finalizeResponse = await fetch("/api/applications/finalize", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ idempotencyKey, draftId: draft.draftId, draftToken: draft.draftToken, photoPaths: draft.uploads.map((upload) => upload.path), payload, website }) });
@@ -203,17 +211,27 @@ export function ApplicationWizard({ initialRegistration, autoLookup = false }: {
         {step === 2 && <section aria-labelledby="step-2"><h3 id="step-2" className="text-xl font-bold">Controleer de voertuiggegevens</h3>{rdwMessage && <p className="mt-3 rounded-xl bg-orange-50 p-4 text-sm text-orange-950" role="status">{rdwMessage}</p>}<div className="mt-6 grid gap-5 sm:grid-cols-2"><Field label="Merk" id="make" value={vehicle.make} required onChange={(value) => setVehicle({ ...vehicle, make: value })} /><Field label="Model/handelsbenaming" id="model" value={vehicle.model} required onChange={(value) => setVehicle({ ...vehicle, model: value })} /><Field label="Uitvoering" id="variant" value={vehicle.variant} onChange={(value) => setVehicle({ ...vehicle, variant: value })} /><Field label="Voertuigtype" id="vehicleType" value={vehicle.vehicleType} onChange={(value) => setVehicle({ ...vehicle, vehicleType: value })} /><Field label="Bouwjaar" id="year" type="number" value={vehicle.year} onChange={(value) => setVehicle({ ...vehicle, year: value })} /><Field label="Brandstof" id="fuel" value={vehicle.fuelType} onChange={(value) => setVehicle({ ...vehicle, fuelType: value })} /><Field label="Kleur" id="color" value={vehicle.color} onChange={(value) => setVehicle({ ...vehicle, color: value })} /></div></section>}
 
         {step === 3 && <section aria-labelledby="step-3">
-          <h3 id="step-3" className="text-xl font-bold">Wat is de staat van de auto?</h3>
-          <p className="mt-2 text-slate-600">Kies wat van toepassing is en voeg waar nodig een korte uitleg toe.</p>
+          <h3 id="step-3" className="text-xl font-bold">Technische staat van je auto</h3>
+          <p className="mt-2 max-w-3xl leading-7 text-slate-600">Met een paar korte vragen krijgen we een goed beeld van je auto en eventuele kleine gebreken. Hoe meer je vertelt, hoe beter we je kunnen helpen met een passend voorstel. Wil je iets extra toelichten? Dat kan gewoon in de tekstvelden.</p>
+          <p className="mt-3 text-sm font-semibold text-slate-700">Vragen met een * zijn verplicht.</p>
 
           <div className="mt-6 grid gap-5 lg:grid-cols-2">
-            <QuestionCard icon={<Gauge />} title="Kilometerstand" description="De huidige stand op de teller">
+            <QuestionCard icon={<Gauge />} title="Kilometerstand *" description="De huidige stand op de teller">
               <div className="relative mt-4 max-w-xs"><Input id="mileage" type="number" inputMode="numeric" min={0} max={3000000} value={condition.mileageKm} onChange={(event) => setCondition({ ...condition, mileageKm: event.target.value })} required className="h-14 pr-12 text-lg font-bold" aria-label="Kilometerstand" /><span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-sm font-semibold text-slate-500">km</span></div>
             </QuestionCard>
 
-            <QuestionCard icon={<KeyRound />} title="Hoeveel sleutels zijn er?" description="Kies het aantal dat je bij de auto hebt">
+            <QuestionCard icon={<KeyRound />} title="Hoeveel sleutels zijn er? *" description="Kies het aantal dat je bij de auto hebt">
               <fieldset className="mt-4"><legend className="sr-only">Aantal sleutels</legend><div className="grid grid-cols-4 gap-2">{["1", "2", "3", "4"].map((count) => <button key={count} type="button" aria-pressed={condition.keyCount === count} onClick={() => setCondition({ ...condition, keyCount: count })} className={`min-h-14 rounded-xl border-2 px-2 py-2 text-center transition-all focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 ${condition.keyCount === count ? "border-[#ff9418] bg-orange-50 text-[#7a3600] shadow-sm" : "border-slate-200 bg-white text-slate-700 hover:border-orange-300 hover:bg-orange-50/50"}`}><span className="block text-xl font-black">{count}{count === "4" ? "+" : ""}</span><span className="block text-[.7rem] font-semibold">{count === "1" ? "sleutel" : "sleutels"}</span></button>)}</div></fieldset>
               {Number(condition.keyCount) >= 4 ? <div className="mt-3"><Label htmlFor="keys">Exact aantal</Label><Input id="keys" type="number" inputMode="numeric" min={4} max={10} value={condition.keyCount} onChange={(event) => setCondition({ ...condition, keyCount: event.target.value })} required className="mt-2 h-11 max-w-28" /></div> : <input id="keys" type="hidden" value={condition.keyCount} readOnly />}
+            </QuestionCard>
+          </div>
+
+          <div className="mt-5 grid gap-5 lg:grid-cols-2">
+            <QuestionCard icon={<Star />} title="Hoe ziet de buitenkant eruit? *" description="1 ster is veel gebruikssporen, 5 sterren is zeer netjes">
+              <StarRating label="Beoordeling buitenkant" value={condition.exteriorRating} onChange={(value) => setCondition({ ...condition, exteriorRating: value })} />
+            </QuestionCard>
+            <QuestionCard icon={<Star />} title="Hoe ziet het interieur eruit? *" description="Denk aan stoelen, dashboard, bekleding en geurtjes">
+              <StarRating label="Beoordeling interieur" value={condition.interiorRating} onChange={(value) => setCondition({ ...condition, interiorRating: value })} />
             </QuestionCard>
           </div>
 
@@ -241,9 +259,9 @@ export function ApplicationWizard({ initialRegistration, autoLookup = false }: {
 
         {step === 4 && <section aria-labelledby="step-4"><h3 id="step-4" className="text-xl font-bold">Voeg foto’s toe</h3><p className="mt-2 leading-7 text-slate-600">Gebruik JPEG, PNG of WebP, maximaal 12 foto’s van elk 10 MB. Fotografeer voor-, achter- en zijkanten, interieur en eventuele schade. Zorg dat gezichten, documenten, huisnummers en andere persoonsgegevens niet zichtbaar zijn.</p><label htmlFor="photos" className="mt-6 flex cursor-pointer flex-col items-center rounded-2xl border-2 border-dashed border-slate-300 p-10 text-center hover:border-[#a64b00]"><Camera className="size-8 text-[#a64b00]" /><span className="mt-3 font-bold">Kies foto’s</span><span className="mt-1 text-sm text-slate-500">HEIC wordt nog niet ondersteund</span></label><Input id="photos" type="file" accept="image/jpeg,image/png,image/webp" multiple className="sr-only" onChange={selectPhotos} /><ul className="mt-4 space-y-2">{photos.map((photo) => <li key={`${photo.name}-${photo.size}`} className="flex justify-between rounded-lg bg-slate-50 px-4 py-2 text-sm"><span className="truncate">{photo.name}</span><span>{(photo.size / 1024 / 1024).toFixed(1)} MB</span></li>)}</ul><p className="mt-3 text-sm text-slate-500">Geselecteerd: {photos.length} van {MAX_PHOTOS}. Na vernieuwen moet je foto’s opnieuw kiezen.</p></section>}
 
-        {step === 5 && <section aria-labelledby="step-5"><h3 id="step-5" className="text-xl font-bold">Hoe kunnen we je bereiken?</h3><p className="mt-2 text-slate-600">Deze contactgegevens worden niet in de browseropslag bewaard en zijn niet zichtbaar voor dealers.</p><div className="mt-6 grid gap-5 sm:grid-cols-2"><Field label="Naam" id="fullName" value={seller.fullName} required autoComplete="name" onChange={(value) => setSeller({ ...seller, fullName: value })} /><Field label="E-mailadres" id="email" type="email" value={seller.email} required autoComplete="email" onChange={(value) => setSeller({ ...seller, email: value })} /><Field label="Telefoonnummer" id="phone" type="tel" value={seller.phone} required autoComplete="tel" onChange={(value) => setSeller({ ...seller, phone: value })} /><Field label="Postcode" id="postalCode" value={seller.postalCode} required autoComplete="postal-code" onChange={(value) => setSeller({ ...seller, postalCode: value })} /><Field label="Gewenste verkoopdatum (optioneel)" id="desiredDate" type="date" value={seller.desiredSaleDate} onChange={(value) => setSeller({ ...seller, desiredSaleDate: value })} /></div><div className="absolute -left-[10000px]" aria-hidden="true"><Label htmlFor="website">Website</Label><Input id="website" tabIndex={-1} autoComplete="off" value={website} onChange={(event) => setWebsite(event.target.value)} /></div></section>}
+        {step === 5 && <section aria-labelledby="step-5"><h3 id="step-5" className="text-xl font-bold">Contactgegevens</h3><p className="mt-2 max-w-3xl leading-7 text-slate-600">Met deze gegevens kunnen we persoonlijk contact met je opnemen over een mogelijk bod. Je postcode helpt ons om de afstand tot een mogelijke koper te bepalen. Dealers krijgen je naam, e-mailadres, telefoonnummer en adres niet te zien.</p><p className="mt-3 text-sm font-semibold text-slate-700">Velden met een * zijn verplicht. Zonder deze gegevens kunnen we je niet bereiken.</p><div className="mt-6 grid gap-5 sm:grid-cols-2"><Field label="Naam" id="fullName" value={seller.fullName} required autoComplete="name" onChange={(value) => setSeller({ ...seller, fullName: value })} /><Field label="E-mailadres" id="email" type="email" value={seller.email} required autoComplete="email" onChange={(value) => setSeller({ ...seller, email: value })} /><Field label="Telefoonnummer" id="phone" type="tel" value={seller.phone} required autoComplete="tel" onChange={(value) => setSeller({ ...seller, phone: value })} /><Field label="Postcode" id="postalCode" value={seller.postalCode} required autoComplete="postal-code" onChange={(value) => setSeller({ ...seller, postalCode: value })} /><Field label="Gewenste verkoopdatum (optioneel)" id="desiredDate" type="date" value={seller.desiredSaleDate} onChange={(value) => setSeller({ ...seller, desiredSaleDate: value })} /></div><div className="mt-7 rounded-2xl border border-orange-200 bg-orange-50/70 p-5"><h4 className="font-black text-slate-950">Mis ons persoonlijke voorstel niet</h4><ul className="mt-4 grid gap-3 text-sm font-semibold text-slate-700 sm:grid-cols-3"><Benefit>Vrijblijvend</Benefit><Benefit>Persoonlijk voorstel</Benefit><Benefit>Helemaal gratis</Benefit></ul></div><div className="absolute -left-[10000px]" aria-hidden="true"><Label htmlFor="website">Website</Label><Input id="website" tabIndex={-1} autoComplete="off" value={website} onChange={(event) => setWebsite(event.target.value)} /></div></section>}
 
-        {step === 6 && <section aria-labelledby="step-6"><h3 id="step-6" className="text-xl font-bold">Controleer je aanvraag</h3><div className="mt-6 grid gap-4 sm:grid-cols-2"><Summary title="Voertuig" onEdit={() => move(2)} lines={[vehicle.registration, `${vehicle.make} ${vehicle.model}`, [vehicle.year, vehicle.fuelType, vehicle.color].filter(Boolean).join(" · ")]} /><Summary title="Staat" onEdit={() => move(3)} lines={[`${condition.mileageKm} km`, `${condition.keyCount} sleutel(s)`, condition.damageDescription || "Geen schadeomschrijving"]} /><Summary title="Foto’s" onEdit={() => move(4)} lines={[`${photos.length} foto(’s) geselecteerd`, "Foto’s worden privé opgeslagen en eerst gecontroleerd."]} /><Summary title="Contact" onEdit={() => move(5)} lines={[seller.fullName, seller.email, seller.phone, seller.postalCode]} /></div><p className="mt-6 text-sm leading-6 text-slate-600">Door te versturen vraag je ons je autoaanmelding te beoordelen. Dit is geen marketingtoestemming en garandeert geen bod of verkoop. Lees de <Link href="/privacy-en-voorwaarden" className="font-bold text-[#a64b00] underline">concept privacy-informatie en voorwaarden</Link>.</p></section>}
+        {step === 6 && <section aria-labelledby="step-6"><h3 id="step-6" className="text-xl font-bold">Klaar om je aanvraag te versturen?</h3><p className="mt-2 leading-7 text-slate-600">Bekijk je gegevens nog één keer rustig. Wil je iets aanpassen? Klik dan bij het onderdeel op ‘Wijzigen’.</p><div className="mt-6 grid gap-4 sm:grid-cols-2"><Summary title="Voertuig" onEdit={() => move(2)} lines={[vehicle.registration, `${vehicle.make} ${vehicle.model}`, [vehicle.year, vehicle.fuelType, vehicle.color].filter(Boolean).join(" · ")]} /><Summary title="Staat" onEdit={() => move(3)} lines={[`${condition.mileageKm} km`, `${condition.keyCount} sleutel(s)`, `Buitenkant ${condition.exteriorRating}/5 · Interieur ${condition.interiorRating}/5`, condition.damageDescription || "Geen extra schadeomschrijving"]} /><Summary title="Foto’s" onEdit={() => move(4)} lines={[`${photos.length} foto(’s) geselecteerd`, "Foto’s worden privé opgeslagen en eerst gecontroleerd."]} /><Summary title="Contact" onEdit={() => move(5)} lines={[seller.fullName, seller.email, seller.phone, seller.postalCode]} /></div><div className="mt-6 rounded-2xl bg-slate-50 p-5"><p className="font-bold text-slate-950">Tevreden met wat je hebt ingevuld?</p><p className="mt-2 text-sm leading-6 text-slate-600">Klik dan hieronder op ‘Aanvraag versturen’. Je aanvraag is gratis en vrijblijvend. Versturen is geen marketingtoestemming en garandeert geen bod of verkoop. Lees de <Link href="/privacy-en-voorwaarden" className="font-bold text-[#a64b00] underline">concept privacy-informatie en voorwaarden</Link>.</p></div></section>}
       </div>
 
       {error && <p className="mt-6 rounded-xl bg-red-50 p-4 font-semibold text-red-800" role="alert">{error}</p>}
@@ -271,6 +289,17 @@ function QuestionCard({ icon, title, description, children }: { icon: React.Reac
 
 function ChoiceButtons({ label, value, choices, onChange }: { label: string; value: string; choices: { label: string; value: string }[]; onChange: (value: string) => void }) {
   return <fieldset className="mt-4"><legend className="sr-only">{label}</legend><div className="flex flex-wrap gap-2">{choices.map((choice) => { const selected = value === choice.value; return <button key={choice.value} type="button" aria-pressed={selected} onClick={() => onChange(choice.value)} className={`rounded-full border px-3.5 py-2 text-sm font-semibold transition-all focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 ${selected ? "border-[#ff9418] bg-[#ff9418] text-black shadow-sm" : "border-slate-300 bg-white text-slate-700 hover:border-orange-300 hover:bg-orange-50"}`}>{selected && <Check className="mr-1 inline size-4" aria-hidden="true" />}{choice.label}</button>; })}</div></fieldset>;
+}
+
+const ratingLabels = ["", "Veel aandacht nodig", "Duidelijke gebruikssporen", "Normale gebruikssporen", "Netjes", "Zeer netjes"];
+
+function StarRating({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
+  const selected = Number(value);
+  return <fieldset className="mt-5"><legend className="sr-only">{label}</legend><div className="flex flex-wrap gap-1.5">{[1, 2, 3, 4, 5].map((rating) => <button key={rating} type="button" onClick={() => onChange(String(rating))} aria-label={`${rating} van 5 sterren voor ${label.toLowerCase()}`} aria-pressed={selected === rating} className="group rounded-xl p-1.5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-200"><Star className={`size-9 transition-all group-hover:scale-110 ${rating <= selected ? "fill-[#ff9418] text-[#d46800]" : "fill-white text-slate-300 group-hover:text-orange-300"}`} aria-hidden="true" /></button>)}</div><p className={`mt-2 text-sm font-semibold ${selected ? "text-[#8b3f00]" : "text-slate-500"}`} aria-live="polite">{selected ? `${selected} van 5 · ${ratingLabels[selected]}` : "Kies 1 tot 5 sterren"}</p></fieldset>;
+}
+
+function Benefit({ children }: { children: React.ReactNode }) {
+  return <li className="flex items-center gap-2"><span className="grid size-6 shrink-0 place-items-center rounded-full bg-[#ff9418] text-black"><Check className="size-4" aria-hidden="true" /></span>{children}</li>;
 }
 
 function Summary({ title, lines, onEdit }: { title: string; lines: string[]; onEdit: () => void }) {

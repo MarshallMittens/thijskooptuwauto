@@ -78,10 +78,12 @@ test("RDW-uitval laat handmatige invoer toe zonder contactgegevens op te slaan",
   await page.locator("#model").fill("TESTMODEL");
   await page.getByRole("button", { name: "Volgende" }).click();
 
-  await expect(page.getByRole("heading", { name: "Wat is de staat van de auto?" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Technische staat van je auto" })).toBeVisible();
   await page.locator("#mileage").fill("42000");
   await page.getByRole("button", { name: "1 sleutel" }).click();
   await expect(page.getByRole("button", { name: "1 sleutel" })).toHaveAttribute("aria-pressed", "true");
+  await page.getByRole("button", { name: "4 van 5 sterren voor beoordeling buitenkant" }).click();
+  await page.getByRole("button", { name: "3 van 5 sterren voor beoordeling interieur" }).click();
   await page.getByRole("button", { name: "Geen schade" }).click();
   await page.getByRole("button", { name: "Geen gebreken" }).click();
   await page.getByRole("button", { name: "Vakgarage" }).click();
@@ -99,7 +101,8 @@ test("RDW-uitval laat handmatige invoer toe zonder contactgegevens op te slaan",
   await page.locator("#postalCode").fill("1234AB");
   await page.getByRole("button", { name: "Volgende" }).click();
 
-  await expect(page.getByRole("heading", { name: "Controleer je aanvraag" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Klaar om je aanvraag te versturen?" })).toBeVisible();
+  await expect(page.getByText("Buitenkant 4/5 · Interieur 3/5")).toBeVisible();
   const savedDraft = await page.evaluate(() => sessionStorage.getItem("thijskooptuauto.application.v1"));
   expect(savedDraft).not.toContain("proefpersoon@example.test");
   expect(savedDraft).not.toContain("0612345678");
