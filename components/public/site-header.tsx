@@ -14,7 +14,7 @@ const links = [
 export function SiteHeader({ inverse = false }: { inverse?: boolean }) {
   return (
     <>
-      <aside className="overflow-x-auto border-b border-white/10 bg-[#12322d] text-white [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" aria-label="Waarom Thijskooptuauto">
+      <aside className="overflow-x-auto border-b border-[#f7941e]/25 bg-[#1a1a1a] text-white [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" aria-label="Waarom Thijskooptuauto">
         <div className="mx-auto flex min-w-max max-w-[1440px] items-center px-5 py-2.5 text-xs font-bold sm:px-8 lg:grid lg:min-w-0 lg:grid-cols-4 lg:px-10 lg:text-sm">
           <TrustItem>Veilig en vrijblijvend aanmelden</TrustItem>
           <TrustItem>Persoonlijk begeleid door Thijs</TrustItem>
