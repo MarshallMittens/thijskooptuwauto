@@ -22,6 +22,15 @@ test("de kentekenactie opent de aanmeldwizard met genormaliseerd kenteken", asyn
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Je auto verkopen");
   await expect(page.getByText("Veilig en vrijblijvend aanmelden")).toBeVisible();
   await expect(page.getByRole("link", { name: "Google-beoordeling: 4,5 van 5 uit 28 reviews" })).toBeVisible();
+  const plateAndButton = await page.evaluate(() => {
+    const plateElement = document.querySelector(".license-plate-text")?.parentElement;
+    const buttonElement = document.querySelector(".license-plate-submit");
+    const plate = plateElement?.getBoundingClientRect();
+    const button = buttonElement?.getBoundingClientRect();
+    return { plateHeight: plate?.height, buttonHeight: button?.height, plateRadius: plateElement ? getComputedStyle(plateElement).borderRadius : null, buttonRadius: buttonElement ? getComputedStyle(buttonElement).borderRadius : null };
+  });
+  expect(plateAndButton.buttonHeight).toBe(plateAndButton.plateHeight);
+  expect(plateAndButton.buttonRadius).toBe(plateAndButton.plateRadius);
 
   const registration = page.getByRole("textbox", { name: "Vul je kenteken in" });
   await registration.fill("zz-zz-zz");
