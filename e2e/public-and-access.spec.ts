@@ -75,6 +75,9 @@ test("publieke procespagina en mobiel kentekenveld blijven bruikbaar", async ({ 
   await expect(page.getByRole("link", { name: "Al een account? Inloggen" })).toHaveAttribute("href", "/inloggen?returnTo=%2Fdealer");
   await page.locator("summary[aria-label='Taal: Nederlands']").click();
   await expect(page.getByText("Nederlands", { exact: true })).toBeVisible();
+  await expect(page.getByRole("img", { name: "Vlag van Frankrijk" })).toBeVisible();
+  await expect(page.getByRole("img", { name: "Vlag van Duitsland" })).toBeVisible();
+  await expect(page.getByRole("img", { name: "Vlag van het Verenigd Koninkrijk" })).toBeVisible();
   await expect(page.getByText("Nederland", { exact: true })).toBeVisible();
   await expect(page.getByText("Frankrijk", { exact: true })).toBeVisible();
   await expect(page.getByText("Duitsland", { exact: true })).toBeVisible();

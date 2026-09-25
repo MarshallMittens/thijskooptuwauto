@@ -59,21 +59,32 @@ function LanguageSwitch() {
   return (
     <details className="group relative">
       <summary className="flex cursor-pointer list-none items-center gap-1.5 rounded-full border border-white/20 bg-[#242424] px-2.5 py-1.5 text-xs font-black text-white transition-colors hover:border-[#f7941e] hover:text-[#ffb45a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f7941e] [&::-webkit-details-marker]:hidden" aria-label="Taal: Nederlands">
-        <span role="img" aria-label="Vlag van Nederland" className="text-base leading-none">🇳🇱</span>
+        <CountryFlag country="nl" label="Vlag van Nederland" className="h-4 w-6" />
         <span>NL</span>
         <ChevronDown className="size-3.5 transition-transform group-open:rotate-180" aria-hidden="true" />
       </summary>
       <div className="absolute right-0 z-50 mt-2 w-72 overflow-hidden rounded-2xl border border-slate-200 bg-white p-2 text-[#111111] shadow-2xl" aria-label="Kies een taal">
-        <div className="flex items-center gap-3 rounded-xl bg-orange-50 px-3 py-3 text-sm"><span role="img" aria-label="Vlag van Nederland" className="text-2xl">🇳🇱</span><span className="flex-1"><strong className="block">Nederlands</strong><span className="mt-0.5 block text-xs font-medium text-slate-500">Nederland</span></span><Check className="size-4 text-[#a64b00]" aria-label="Actieve taal" /></div>
-        <UnavailableLanguage flag="🇫🇷" flagLabel="Vlag van Frankrijk" name="Français" country="Frankrijk" />
-        <UnavailableLanguage flag="🇩🇪" flagLabel="Vlag van Duitsland" name="Deutsch" country="Duitsland" />
-        <UnavailableLanguage flag="🇬🇧" flagLabel="Vlag van het Verenigd Koninkrijk" name="English" country="Verenigd Koninkrijk" />
+        <div className="flex items-center gap-3 rounded-xl bg-orange-50 px-3 py-3 text-sm"><CountryFlag country="nl" label="Vlag van Nederland" /><span className="flex-1"><strong className="block">Nederlands</strong><span className="mt-0.5 block text-xs font-medium text-slate-500">Nederland</span></span><Check className="size-4 text-[#a64b00]" aria-label="Actieve taal" /></div>
+        <UnavailableLanguage countryCode="fr" flagLabel="Vlag van Frankrijk" name="Français" countryName="Frankrijk" />
+        <UnavailableLanguage countryCode="de" flagLabel="Vlag van Duitsland" name="Deutsch" countryName="Duitsland" />
+        <UnavailableLanguage countryCode="gb" flagLabel="Vlag van het Verenigd Koninkrijk" name="English" countryName="Verenigd Koninkrijk" />
         <p className="px-3 pb-2 pt-3 text-xs leading-5 text-slate-500">De volledige vertalingen worden voorbereid.</p>
       </div>
     </details>
   );
 }
 
-function UnavailableLanguage({ flag, flagLabel, name, country }: { flag: string; flagLabel: string; name: string; country: string }) {
-  return <button type="button" disabled className="mt-1 flex w-full cursor-not-allowed items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm text-slate-400"><span role="img" aria-label={flagLabel} className="text-2xl grayscale">{flag}</span><span className="flex-1"><strong className="block font-semibold">{name}</strong><span className="mt-0.5 block text-xs font-medium">{country}</span></span><span className="text-[.65rem] font-bold uppercase tracking-wide">Binnenkort</span></button>;
+function UnavailableLanguage({ countryCode, flagLabel, name, countryName }: { countryCode: CountryCode; flagLabel: string; name: string; countryName: string }) {
+  return <button type="button" disabled className="mt-1 flex w-full cursor-not-allowed items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm text-slate-400"><CountryFlag country={countryCode} label={flagLabel} /><span className="flex-1"><strong className="block font-semibold">{name}</strong><span className="mt-0.5 block text-xs font-medium">{countryName}</span></span><span className="text-[.65rem] font-bold uppercase tracking-wide">Binnenkort</span></button>;
+}
+
+type CountryCode = "nl" | "fr" | "de" | "gb";
+
+function CountryFlag({ country, label, className = "h-5 w-8" }: { country: CountryCode; label: string; className?: string }) {
+  const sharedClassName = `${className} shrink-0 overflow-hidden rounded-[0.2rem] border border-black/20 shadow-sm`;
+
+  if (country === "nl") return <svg viewBox="0 0 30 20" className={sharedClassName} role="img" aria-label={label}><rect width="30" height="6.67" fill="#ae1c28" /><rect y="6.67" width="30" height="6.66" fill="#fff" /><rect y="13.33" width="30" height="6.67" fill="#21468b" /></svg>;
+  if (country === "fr") return <svg viewBox="0 0 30 20" className={sharedClassName} role="img" aria-label={label}><rect width="10" height="20" fill="#0055a4" /><rect x="10" width="10" height="20" fill="#fff" /><rect x="20" width="10" height="20" fill="#ef4135" /></svg>;
+  if (country === "de") return <svg viewBox="0 0 30 20" className={sharedClassName} role="img" aria-label={label}><rect width="30" height="6.67" fill="#111" /><rect y="6.67" width="30" height="6.66" fill="#dd0000" /><rect y="13.33" width="30" height="6.67" fill="#ffce00" /></svg>;
+  return <svg viewBox="0 0 30 20" className={sharedClassName} role="img" aria-label={label}><rect width="30" height="20" fill="#012169" /><path d="M0 0 30 20M30 0 0 20" stroke="#fff" strokeWidth="5" /><path d="M0 0 30 20M30 0 0 20" stroke="#c8102e" strokeWidth="2" /><path d="M15 0v20M0 10h30" stroke="#fff" strokeWidth="6" /><path d="M15 0v20M0 10h30" stroke="#c8102e" strokeWidth="3.2" /></svg>;
 }
