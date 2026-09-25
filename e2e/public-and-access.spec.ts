@@ -68,7 +68,9 @@ test("publieke procespagina en mobiel kentekenveld blijven bruikbaar", async ({ 
   await expect(page.getByRole("button", { name: /Français/ })).toBeDisabled();
   await expect(page.getByRole("button", { name: /Deutsch/ })).toBeDisabled();
   await expect(page.getByRole("button", { name: /English/ })).toBeDisabled();
-  await expect(page.locator("#klantervaringen").getByText("“Top service!”")).toBeVisible();
+  await expect(page.locator("#klantervaringen").getByText("4,5", { exact: true })).toBeVisible();
+  await expect(page.locator("#klantervaringen").getByRole("link", { name: "Bekijk alle reviews" })).toHaveAttribute("href", /google\.com\/maps/);
+  await expect(page.locator("#klantervaringen").getByRole("img", { name: "4 van 5 sterren" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Volg Thijskooptuauto op Facebook" })).toHaveAttribute("href", "https://www.facebook.com/thijskooptuwauto.nl");
   await expect(page.getByLabel("Instagram-link nog instellen")).toContainText("Instagram");
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
@@ -77,8 +79,8 @@ test("publieke procespagina en mobiel kentekenveld blijven bruikbaar", async ({ 
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 
   await page.goto("/over-ons#klantervaringen");
-  await expect(page.getByRole("heading", { name: "Wat klanten eerder over Thijs vertelden." })).toBeVisible();
-  await expect(page.locator("#klantervaringen").getByText("“Top service!”")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Klanten over hun ervaring met Thijs." })).toBeVisible();
+  await expect(page.locator("#klantervaringen").getByText("“Zeer vriendelijke man! Doet eerlijk zaken.”")).toBeVisible();
 });
 
 test("RDW-uitval laat handmatige invoer toe zonder contactgegevens op te slaan", async ({ page }) => {
