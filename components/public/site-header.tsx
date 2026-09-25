@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Check, CheckCircle2, ChevronDown, Languages, Star } from "lucide-react";
+import { Building2, Check, CheckCircle2, ChevronDown, Languages, Star } from "lucide-react";
 
 const links = [
   ["Hoe werkt het?", "/hoe-werkt-het"],
@@ -33,6 +33,10 @@ export function SiteHeader({ inverse = false }: { inverse?: boolean }) {
             {links.map(([label, href]) => <Link key={href} href={href} className="transition-colors hover:text-[#f7941e]">{label}</Link>)}
           </nav>
           <div className="order-2 flex items-center gap-2 md:order-3">
+            <Link href="/inloggen?returnTo=%2Fdealer" className="inline-flex items-center gap-2 rounded-full border border-white/25 px-3 py-2.5 text-sm font-bold text-white transition-colors hover:border-[#f7941e] hover:text-[#ffb45a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f7941e]" aria-label="Voor bedrijven: inloggen">
+              <Building2 className="size-4" aria-hidden="true" />
+              <span className="hidden xl:inline">Voor bedrijven</span>
+            </Link>
             <LanguageSwitch />
             <Link href="/auto-aanmelden" className="rounded-full bg-[#f7941e] px-4 py-2.5 text-sm font-black text-[#090909] transition-colors hover:bg-[#ffad45] sm:px-5">Meld je auto aan</Link>
           </div>
