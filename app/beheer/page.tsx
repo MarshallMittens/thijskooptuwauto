@@ -1,7 +1,7 @@
-import { changeCompanyStatus } from "@/app/beheer/actions";
 import { setPlatformAffiliationAction } from "@/app/beheer/operatie/actions";
 import { signOut } from "@/app/auth/actions";
 import Link from "next/link";
+import { CompanyStatusControls } from "@/components/admin/company-status-controls";
 import { Button } from "@/components/ui/button";
 import { requireAdmin } from "@/lib/auth/dal";
 import { createClient } from "@/lib/supabase/server";
@@ -49,11 +49,7 @@ export default async function AdminPage() {
                     <td className="p-4 font-bold">{company.status}</td>
                     <td className="p-4"><form action={async () => { "use server"; await setPlatformAffiliationAction({ companyId: company.id, affiliated: !company.is_platform_affiliated }); }}><Button size="sm" variant="outline" disabled={context.staffRole !== "admin"}>{company.is_platform_affiliated ? "Ja · uitschakelen" : "Nee · markeren"}</Button></form></td>
                     <td className="p-4">
-                      <form action={changeCompanyStatus} className="flex gap-2">
-                        <input type="hidden" name="companyId" value={company.id} />
-                        {context.staffRole === "admin" && company.status !== "approved" ? <Button size="sm" name="status" value="approved">Goedkeuren</Button> : null}
-                        {context.staffRole === "admin" && company.status !== "blocked" ? <Button size="sm" variant="destructive" name="status" value="blocked">Blokkeren</Button> : null}
-                      </form>
+                      {context.staffRole === "admin" ? <CompanyStatusControls companyId={company.id} companyName={company.trade_name || company.legal_name} status={company.status} /> : null}
                     </td>
                   </tr>
                 ))}
