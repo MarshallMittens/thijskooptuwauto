@@ -29,10 +29,10 @@ export const metadata: Metadata = {
 export default function Home() {
   return (
     <div className="min-h-screen bg-white text-[#111111]">
+      <SiteHeader inverse />
       <section className="relative isolate overflow-hidden bg-[#111111] text-white">
         <Image src="/car-inspection-hero.png" alt="Donkergrijze auto klaar voor inspectie" fill priority sizes="100vw" className="-z-20 object-cover object-[64%_center]" />
         <div className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,rgba(4,13,28,.98)_0%,rgba(4,13,28,.90)_42%,rgba(4,13,28,.25)_100%)]" />
-        <SiteHeader inverse />
         <div className="mx-auto max-w-[1240px] px-5 py-20 sm:px-8 lg:px-10 lg:py-28">
           <div className="max-w-[660px]">
             <p className="inline-flex rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-sm font-semibold">Persoonlijk en duidelijk</p>

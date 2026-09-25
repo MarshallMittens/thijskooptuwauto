@@ -53,6 +53,20 @@ test("een onvolledig kenteken geeft een fout en verzendt niet", async ({ page })
   await expect(page).toHaveURL("/");
 });
 
+test("het hoofdmenu blijft staan terwijl de voordelenbalk uit beeld schuift", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await page.goto("/");
+
+  const benefits = page.locator('aside[aria-label="Waarom Thijskooptuauto"]');
+  const navigation = page.locator("header").first();
+  await expect(benefits).toBeVisible();
+  await expect(navigation).toHaveCSS("position", "sticky");
+
+  await page.evaluate(() => window.scrollTo(0, 1000));
+  await expect.poll(async () => Math.round((await navigation.boundingBox())?.y ?? -1)).toBe(0);
+  await expect.poll(async () => (await benefits.boundingBox())?.y ?? 0).toBeLessThan(0);
+});
+
 test("besloten dealer- en beheerroutes leiden gasten naar inloggen", async ({ page }) => {
   await page.goto("/dealer");
   await expect(page).toHaveURL(/\/inloggen\?returnTo=%2Fdealer$/);

@@ -30,7 +30,7 @@ export function SiteHeader({ inverse = false }: { inverse?: boolean }) {
         </div>
         <div className="absolute inset-y-0 right-0 flex items-center bg-gradient-to-l from-[#1a1a1a] via-[#1a1a1a] to-transparent pl-5 pr-3 sm:pr-5"><LanguageSwitch /></div>
       </aside>
-      <header className={inverse ? "border-b border-white/10 bg-black/35 text-white backdrop-blur-sm" : "border-b border-white/10 bg-[#090909] text-white"}>
+      <header className={inverse ? "sticky top-0 z-50 border-b border-white/10 bg-[#090909]/95 text-white backdrop-blur-sm" : "sticky top-0 z-50 border-b border-white/10 bg-[#090909] text-white"}>
         <div className="mx-auto flex max-w-[1240px] flex-wrap items-center justify-between gap-4 px-5 py-3 sm:px-8 lg:px-10">
           <Link href="/" className="inline-flex shrink-0 items-center" aria-label="Thijs koopt uw auto — startpagina">
             <Image src="/tkua-logo.png" alt="" width={220} height={222} priority className="h-[4.5rem] w-auto sm:h-20" />
