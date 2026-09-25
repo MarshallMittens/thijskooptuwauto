@@ -20,6 +20,8 @@ test("de kentekenactie opent de aanmeldwizard met genormaliseerd kenteken", asyn
   }));
   await page.goto("/");
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Je auto verkopen");
+  await expect(page.getByText("Veilig en vrijblijvend aanmelden")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Bekijk echte klantervaringen" })).toBeVisible();
 
   const registration = page.getByRole("textbox", { name: "Vul je kenteken in" });
   await registration.fill("zz-zz-zz");
@@ -61,6 +63,10 @@ test("publieke procespagina en mobiel kentekenveld blijven bruikbaar", async ({ 
 
   await page.goto("/hoe-werkt-het");
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+
+  await page.goto("/over-ons#klantervaringen");
+  await expect(page.getByRole("heading", { name: "Wat klanten eerder over Thijs vertelden." })).toBeVisible();
+  await expect(page.locator("#klantervaringen").getByText("“Top service!”")).toBeVisible();
 });
 
 test("RDW-uitval laat handmatige invoer toe zonder contactgegevens op te slaan", async ({ page }) => {
