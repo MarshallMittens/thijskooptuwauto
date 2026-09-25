@@ -11,7 +11,7 @@ alter table public.notification_outbox
 
 create table public.complaints (
   id uuid primary key default gen_random_uuid(),
-  reference text not null unique default lower(encode(gen_random_bytes(12), 'hex'))
+  reference text not null unique default lower(encode(extensions.gen_random_bytes(12), 'hex'))
     check (reference ~ '^[0-9a-f]{24}$'),
   application_id uuid not null references public.applications(id),
   payment_order_id uuid references public.payment_orders(id),

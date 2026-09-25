@@ -53,6 +53,7 @@
 49. **Fase 7 is geen automatische vrijgave.** Interne tests en een door Codex uitgevoerde codecontrole vervangen geen externe juridische/providergoedkeuring, onafhankelijke beveiligingsreview of gebruikersproef. Alle blijven expliciete blokkades in `docs/PHASE7.md`.
 50. **De eerste hostingstap is uitsluitend Preview.** Node blijft op 22.x; Preview gebruikt een eigen Supabase-project en afzonderlijke geheimen. De build weigert localhost, voorbeeldwaarden, hergebruikte private geheimen, een actieve betaalsimulator en productie zonder de afzonderlijke schakelaar `PRODUCTION_DEPLOYMENT_APPROVED=true`.
 51. **Statuscontrole is minimaal en gelaagd.** `/api/health` toont openbaar alleen dat de Next.js-app reageert. Databasecontrole vereist het server-only operationele geheim en geeft geen queryresultaten, foutdetails of configuratie terug.
+52. **Cryptografische extensiefuncties zijn expliciet gekwalificeerd.** Hosted Supabase bewaart `gen_random_bytes` in schema `extensions`. De fase-6-migratie gebruikt daarom `extensions.gen_random_bytes`; deze correctie is gemaakt nadat de eerste acceptatiepoging transactioneel was teruggedraaid en voordat migratie 12 ooit remote als toegepast werd geregistreerd.
 
 ## Veilige tijdelijke keuzes
 
