@@ -24,7 +24,7 @@ export function LicensePlateStart() {
     event.preventDefault();
     const normalized = normalizeRegistration(registration);
     if (!/^[A-Z0-9]{6,8}$/.test(normalized)) { setError("Vul een volledig Nederlands kenteken in."); return; }
-    router.push(`/auto-aanmelden?kenteken=${encodeURIComponent(normalized)}`);
+    router.push(`/auto-aanmelden?kenteken=${encodeURIComponent(normalized)}&ophalen=1`);
   }
 
   return (

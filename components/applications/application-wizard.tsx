@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, FormEvent, useEffect, useState } from "react";
+import { ChangeEvent, FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Camera, Check, ChevronLeft, ChevronRight, LoaderCircle } from "lucide-react";
@@ -51,21 +51,26 @@ async function normalizePhotoInBrowser(file: File) {
   return new File([blob], `${file.name.replace(/\.[^.]+$/, "")}.jpg`, { type: "image/jpeg" });
 }
 
-export function ApplicationWizard({ initialRegistration }: { initialRegistration: string }) {
+export function ApplicationWizard({ initialRegistration, autoLookup = false }: { initialRegistration: string; autoLookup?: boolean }) {
   const router = useRouter();
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(autoLookup ? 2 : 1);
   const [vehicle, setVehicle] = useState<VehicleState>({ registration: normalizeRegistration(initialRegistration), make: "", model: "", variant: "", year: "", fuelType: "", color: "", vehicleType: "" });
   const [condition, setCondition] = useState<ConditionState>(emptyCondition);
   const [seller, setSeller] = useState<SellerState>(emptySeller);
   const [photos, setPhotos] = useState<File[]>([]);
-  const [rdwMessage, setRdwMessage] = useState("");
+  const [rdwMessage, setRdwMessage] = useState(autoLookup ? "Voertuiggegevens worden opgehaald…" : "");
   const [error, setError] = useState("");
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState(autoLookup);
   const [submitStatus, setSubmitStatus] = useState("");
   const [website, setWebsite] = useState("");
   const [idempotencyKey] = useState(getIdempotencyKey);
+  const autoLookupStarted = useRef(false);
 
   useEffect(() => {
+    if (autoLookup) {
+      sessionStorage.removeItem(STORAGE_KEY);
+      return;
+    }
     const timeout = window.setTimeout(() => {
       const stored = sessionStorage.getItem(STORAGE_KEY);
       if (!stored) return;
@@ -79,21 +84,21 @@ export function ApplicationWizard({ initialRegistration }: { initialRegistration
       }
     }, 0);
     return () => window.clearTimeout(timeout);
-  }, [initialRegistration]);
+  }, [autoLookup, initialRegistration]);
 
-  function persist(nextStep: number) {
+  const persist = useCallback((nextStep: number) => {
     sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ step: Math.min(nextStep, 4), vehicle, condition }));
-  }
+  }, [condition, vehicle]);
 
-  function move(nextStep: number) {
+  const move = useCallback((nextStep: number) => {
     setError("");
     setStep(nextStep);
     persist(nextStep);
     window.scrollTo({ top: 0, behavior: "smooth" });
-  }
+  }, [persist]);
 
-  async function lookupRegistration() {
-    const registration = normalizeRegistration(vehicle.registration);
+  const lookupRegistration = useCallback(async (registrationInput?: string) => {
+    const registration = normalizeRegistration(registrationInput ?? vehicle.registration);
     if (!/^[A-Z0-9]{6,8}$/.test(registration)) { setError("Vul een volledig Nederlands kenteken in."); return; }
     setBusy(true); setError(""); setRdwMessage("");
     try {
@@ -113,7 +118,13 @@ export function ApplicationWizard({ initialRegistration }: { initialRegistration
       setRdwMessage("RDW is tijdelijk niet bereikbaar. Vul de gegevens handmatig in.");
       move(2);
     } finally { setBusy(false); }
-  }
+  }, [idempotencyKey, move, vehicle.registration, website]);
+
+  useEffect(() => {
+    if (!autoLookup || autoLookupStarted.current) return;
+    autoLookupStarted.current = true;
+    void lookupRegistration(initialRegistration);
+  }, [autoLookup, initialRegistration, lookupRegistration]);
 
   function validateStep() {
     if (step === 2 && (!vehicle.make.trim() || !vehicle.model.trim())) return "Vul minimaal merk en model in.";
@@ -187,7 +198,7 @@ export function ApplicationWizard({ initialRegistration }: { initialRegistration
       <ol className="mt-4 hidden grid-cols-6 gap-2 text-center text-xs text-slate-500 sm:grid">{stepLabels.map((label, index) => <li key={label} className={index + 1 === step ? "font-bold text-[#a64b00]" : ""}>{label}</li>)}</ol>
 
       <div className="mt-8">
-        {step === 1 && <section aria-labelledby="step-1"><h3 id="step-1" className="text-xl font-bold">Wat is het kenteken?</h3><p className="mt-2 text-slate-600">We vragen alleen openbare technische voertuiggegevens op.</p><div className="mt-6 max-w-sm"><Label htmlFor="registration">Kenteken</Label><Input id="registration" className="mt-2 h-14 border-2 border-[#111111] bg-[#ffd400] text-center text-[1.8rem] font-black uppercase tracking-[.08em] [font-family:Impact,'Arial_Narrow',sans-serif] placeholder:text-black/35" value={formatRegistration(vehicle.registration)} placeholder="12-AB-34" maxLength={10} onChange={(event) => setVehicle({ ...vehicle, registration: normalizeRegistration(event.target.value) })} autoComplete="off" autoCapitalize="characters" spellCheck={false} /></div><Button type="button" className="mt-6" onClick={lookupRegistration} disabled={busy}>{busy && <LoaderCircle className="animate-spin" />}Gegevens ophalen</Button></section>}
+        {step === 1 && <section aria-labelledby="step-1"><h3 id="step-1" className="text-xl font-bold">Wat is het kenteken?</h3><p className="mt-2 text-slate-600">We vragen alleen openbare technische voertuiggegevens op.</p><div className="mt-6 max-w-sm"><Label htmlFor="registration">Kenteken</Label><Input id="registration" className="mt-2 h-14 border-2 border-[#111111] bg-[#ffd400] text-center text-[1.8rem] font-black uppercase tracking-[.08em] [font-family:Impact,'Arial_Narrow',sans-serif] placeholder:text-black/35" value={formatRegistration(vehicle.registration)} placeholder="12-AB-34" maxLength={10} onChange={(event) => setVehicle({ ...vehicle, registration: normalizeRegistration(event.target.value) })} autoComplete="off" autoCapitalize="characters" spellCheck={false} /></div><Button type="button" className="mt-6" onClick={() => void lookupRegistration()} disabled={busy}>{busy && <LoaderCircle className="animate-spin" />}Gegevens ophalen</Button></section>}
 
         {step === 2 && <section aria-labelledby="step-2"><h3 id="step-2" className="text-xl font-bold">Controleer de voertuiggegevens</h3>{rdwMessage && <p className="mt-3 rounded-xl bg-orange-50 p-4 text-sm text-orange-950" role="status">{rdwMessage}</p>}<div className="mt-6 grid gap-5 sm:grid-cols-2"><Field label="Merk" id="make" value={vehicle.make} required onChange={(value) => setVehicle({ ...vehicle, make: value })} /><Field label="Model/handelsbenaming" id="model" value={vehicle.model} required onChange={(value) => setVehicle({ ...vehicle, model: value })} /><Field label="Uitvoering" id="variant" value={vehicle.variant} onChange={(value) => setVehicle({ ...vehicle, variant: value })} /><Field label="Voertuigtype" id="vehicleType" value={vehicle.vehicleType} onChange={(value) => setVehicle({ ...vehicle, vehicleType: value })} /><Field label="Bouwjaar" id="year" type="number" value={vehicle.year} onChange={(value) => setVehicle({ ...vehicle, year: value })} /><Field label="Brandstof" id="fuel" value={vehicle.fuelType} onChange={(value) => setVehicle({ ...vehicle, fuelType: value })} /><Field label="Kleur" id="color" value={vehicle.color} onChange={(value) => setVehicle({ ...vehicle, color: value })} /></div></section>}
 

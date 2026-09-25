@@ -12,6 +12,12 @@ test("de openbare statuscontrole toont geen interne gegevens", async ({ request 
 });
 
 test("de kentekenactie opent de aanmeldwizard met genormaliseerd kenteken", async ({ page }) => {
+  await page.route("**/api/analytics/form-start", (route) => route.fulfill({ status: 204 }));
+  await page.route("**/api/rdw", (route) => route.fulfill({
+    status: 200,
+    contentType: "application/json",
+    body: JSON.stringify({ found: false }),
+  }));
   await page.goto("/");
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Je auto verkopen");
 
@@ -20,8 +26,11 @@ test("de kentekenactie opent de aanmeldwizard met genormaliseerd kenteken", asyn
   await expect(registration).toHaveValue("ZZ-ZZ-ZZ");
   await page.getByRole("button", { name: "Start je aanvraag" }).click();
 
-  await expect(page).toHaveURL(/\/auto-aanmelden\?kenteken=ZZZZZZ$/);
+  await expect(page).toHaveURL(/\/auto-aanmelden\?kenteken=ZZZZZZ&ophalen=1$/);
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Vertel ons over je auto");
+  await expect(page.getByText("Stap 2 van 6")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Controleer de voertuiggegevens" })).toBeVisible();
+  await expect(page.getByRole("status")).toContainText("Vul de gegevens handmatig in");
 });
 
 test("een onvolledig kenteken geeft een fout en verzendt niet", async ({ page }) => {
