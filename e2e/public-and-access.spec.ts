@@ -60,6 +60,9 @@ test("publieke procespagina en mobiel kentekenveld blijven bruikbaar", async ({ 
   await expect(page.getByRole("textbox", { name: "Vul je kenteken in" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Start je aanvraag" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Voor bedrijven: inloggen" })).toHaveAttribute("href", "/inloggen?returnTo=%2Fdealer");
+  await expect(page.getByRole("heading", { name: "Wil je meebieden op geselecteerd aanbod?" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Bedrijfsaccount aanvragen" })).toHaveAttribute("href", "/registreren");
+  await expect(page.getByRole("link", { name: "Al een account? Inloggen" })).toHaveAttribute("href", "/inloggen?returnTo=%2Fdealer");
   await page.locator("summary[aria-label='Taal: Nederlands']").click();
   await expect(page.getByText("Nederlands", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: /Français/ })).toBeDisabled();

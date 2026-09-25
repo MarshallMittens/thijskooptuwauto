@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { BadgeCheck, Building2, Camera, CarFront, Check, ShieldCheck } from "lucide-react";
+import { ArrowRight, BadgeCheck, Building2, Camera, CarFront, Check, MailCheck, ShieldCheck, UserRoundPlus } from "lucide-react";
 
 import { LicensePlateStart } from "@/components/public/license-plate-start";
 import { CustomerReviews } from "@/components/public/customer-reviews";
@@ -13,6 +13,12 @@ const steps = [
   ["02", "Voeg duidelijke foto’s toe", "Laat de buitenkant, binnenkant en eventuele schade zien. Zo kunnen wij je auto zorgvuldig beoordelen.", Camera],
   ["03", "Wij controleren je aanvraag", "We controleren je gegevens en foto’s. Ontbreekt er informatie, dan nemen we persoonlijk contact met je op.", BadgeCheck],
   ["04", "Garages bieden 24 uur", "Na goedkeuring bieden geselecteerde garages 24 uur. Zij zien de bedragen en kunnen elkaar overbieden; wij bespreken het hoogste bod persoonlijk met jou.", Building2],
+] as const;
+
+const companySteps = [
+  ["01", "Maak je persoonlijke login", "Gebruik je zakelijke e-mailadres en bevestig de verificatiemail.", UserRoundPlus],
+  ["02", "Vul je bedrijfsgegevens in", "Geef onder meer je bedrijfsnaam, KvK-nummer, adres en contactpersoon door.", Building2],
+  ["03", "Wacht op onze controle", "Thijs controleert iedere aanvraag. Pas na goedkeuring krijg je toegang tot het aanbod.", BadgeCheck],
 ] as const;
 
 export const metadata: Metadata = {
@@ -50,6 +56,33 @@ export default function Home() {
             {steps.map(([number, title, text, Icon]) => <article key={number} className="rounded-[1.5rem] border border-slate-200 bg-white p-7"><div className="flex justify-between"><span className="font-mono font-bold text-[#a64b00]">{number}</span><Icon className="size-6 text-[#a64b00]" /></div><h3 className="mt-12 text-xl font-extrabold">{title}</h3><p className="mt-3 leading-7 text-slate-600">{text}</p></article>)}
           </div>
           <div className="mt-10 text-center"><Link href="/hoe-werkt-het" className="font-bold text-[#a64b00] hover:underline">Bekijk hoe je jouw auto aanmeldt en biedingen ontvangt</Link></div>
+        </div>
+      </section>
+      <section id="voor-bedrijven" className="overflow-hidden bg-[#111111] px-5 py-20 text-white sm:px-8 lg:px-10 lg:py-24">
+        <div className="mx-auto grid max-w-[1240px] gap-12 lg:grid-cols-[.9fr_1.1fr] lg:items-center lg:gap-16">
+          <div>
+            <p className="eyebrow text-[#f7941e]">Voor autobedrijven</p>
+            <h2 className="mt-3 text-[clamp(2.3rem,5vw,4.2rem)] font-black leading-[.98] tracking-[-0.055em]">Wil je meebieden op geselecteerd aanbod?</h2>
+            <p className="mt-6 max-w-2xl text-lg leading-8 text-white/70">Vraag een bedrijfsaccount aan en vul na de e-mailbevestiging je bedrijfsgegevens in. We controleren iedere registratie handmatig. Na goedkeuring kun je gepubliceerde auto’s bekijken en daarop bieden.</p>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+              <Link href="/registreren" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#f7941e] px-6 py-3 font-extrabold text-[#111111] transition hover:bg-[#ffac48] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#f7941e]">
+                Bedrijfsaccount aanvragen <ArrowRight className="size-4" aria-hidden="true" />
+              </Link>
+              <Link href="/inloggen?returnTo=%2Fdealer" className="inline-flex min-h-12 items-center justify-center rounded-xl border border-white/25 px-6 py-3 font-bold text-white transition hover:border-white/60 hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white">
+                Al een account? Inloggen
+              </Link>
+            </div>
+            <p className="mt-5 flex items-start gap-2 text-sm leading-6 text-white/60"><MailCheck className="mt-0.5 size-4 shrink-0 text-[#f7941e]" aria-hidden="true" />Een registratie geeft niet automatisch toegang. Je ontvangt eerst een verificatiemail en daarna beoordelen we de bedrijfsaanvraag.</p>
+          </div>
+          <ol className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
+            {companySteps.map(([number, title, text, Icon]) => (
+              <li key={number} className="grid gap-5 rounded-[1.4rem] border border-white/15 bg-white/[.07] p-6 sm:block lg:grid lg:grid-cols-[3rem_2.75rem_1fr] lg:items-start">
+                <span className="font-mono text-sm font-bold text-[#f7941e]">{number}</span>
+                <span className="flex size-11 items-center justify-center rounded-full bg-[#f7941e] text-[#111111]"><Icon className="size-5" aria-hidden="true" /></span>
+                <span><strong className="block text-lg font-extrabold">{title}</strong><span className="mt-2 block leading-7 text-white/65">{text}</span></span>
+              </li>
+            ))}
+          </ol>
         </div>
       </section>
       <section className="border-t border-slate-200 bg-white px-5 py-16 sm:px-8 lg:px-10 lg:py-24">
