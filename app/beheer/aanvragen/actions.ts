@@ -10,15 +10,30 @@ const idSchema = z.string().uuid();
 const statusSchema = z.enum(["in_review", "needs_information", "ready", "withdrawn", "closed"]);
 const photoStatusSchema = z.enum(["approved", "rejected"]);
 
-export async function updateApplicationStatus(formData: FormData) {
+const statusUpdateSchema = z.object({
+  applicationId: idSchema,
+  status: statusSchema,
+});
+
+export type ApplicationStatusActionResult = { ok: boolean; message: string };
+
+export async function updateApplicationStatusAction(input: unknown): Promise<ApplicationStatusActionResult> {
   await requireAdmin();
-  const applicationId = idSchema.parse(formData.get("applicationId"));
-  const status = statusSchema.parse(formData.get("status"));
+  const parsed = statusUpdateSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, message: "Ongeldige statuswijziging." };
+
+  const { applicationId, status } = parsed.data;
   const supabase = await createClient();
   const { error } = await supabase.rpc("admin_update_application_status", { p_application_id: applicationId, p_status: status });
-  if (error) throw new Error("De aanvraagstatus kon niet veilig worden gewijzigd.");
+  if (error) {
+    const message = error.message.includes("invalid_status_transition")
+      ? "Deze status volgt niet rechtstreeks op de huidige status. Vernieuw de pagina en kies de volgende beschikbare stap."
+      : "De aanvraagstatus kon niet veilig worden gewijzigd.";
+    return { ok: false, message };
+  }
   revalidatePath("/beheer/aanvragen");
   revalidatePath(`/beheer/aanvragen/${applicationId}`);
+  return { ok: true, message: "De aanvraagstatus is bijgewerkt." };
 }
 
 export async function addInternalNote(formData: FormData) {
