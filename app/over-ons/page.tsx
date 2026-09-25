@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, Building2, Camera, CarFront, ClipboardCheck, MessagesSquare, Quote, ShieldCheck, UserRound } from "lucide-react";
+import { ArrowRight, Building2, Camera, CarFront, ClipboardCheck, MessagesSquare, ShieldCheck, UserRound } from "lucide-react";
 
 import { PublicPage } from "@/components/public/public-page";
+import { CustomerReviews } from "@/components/public/customer-reviews";
 
 export const metadata: Metadata = {
   title: "Over Thijskooptuauto | Persoonlijk je auto aanbieden",
@@ -43,16 +44,7 @@ export default function AboutPage() {
         </div>
       </section>
 
-      <section id="klantervaringen" className="mt-12 scroll-mt-6" aria-labelledby="klantervaringen-titel">
-        <p className="eyebrow">Echte klantervaringen</p>
-        <h2 id="klantervaringen-titel" className="mt-3 text-3xl font-black tracking-[-0.04em] sm:text-4xl">Wat klanten eerder over Thijs vertelden.</h2>
-        <div className="mt-7 grid gap-4 md:grid-cols-3">
-          <Review quote="Prima prijs, service en afhandeling. Aanrader!" name="Freek Hendriksen" location="Zelhem" />
-          <Review quote="Top service!" name="Joop Moorman" location="Doetinchem" />
-          <Review quote="Vriendelijk en behulpzaam door Thijs geholpen." name="Niek Nijenhuis" location="Arnhem" />
-        </div>
-        <p className="mt-4 text-sm leading-6 text-slate-500">Deze klantreacties stonden al op de bestaande website van Thijskooptuauto. Er is geen gemiddelde sterrenscore toegevoegd, omdat die daar niet bij werd vermeld.</p>
-      </section>
+      <CustomerReviews className="mt-12" />
 
       <section className="mt-12" aria-labelledby="uitgangspunten">
         <p className="eyebrow">Onze uitgangspunten</p>
@@ -83,8 +75,4 @@ export default function AboutPage() {
       </section>
     </PublicPage>
   );
-}
-
-function Review({ quote, name, location }: { quote: string; name: string; location: string }) {
-  return <blockquote className="flex min-h-52 flex-col rounded-2xl border border-slate-200 bg-white p-6"><Quote className="size-7 text-[#f7941e]" aria-hidden="true" /><p className="mt-6 text-lg font-bold leading-7">“{quote}”</p><footer className="mt-auto pt-6 text-sm text-slate-600"><strong className="text-slate-950">{name}</strong><span className="ml-1">· {location}</span></footer></blockquote>;
 }

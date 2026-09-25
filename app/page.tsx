@@ -4,6 +4,7 @@ import Link from "next/link";
 import { BadgeCheck, Building2, Camera, CarFront, Check, ShieldCheck } from "lucide-react";
 
 import { LicensePlateStart } from "@/components/public/license-plate-start";
+import { CustomerReviews } from "@/components/public/customer-reviews";
 import { SiteFooter } from "@/components/public/site-footer";
 import { SiteHeader } from "@/components/public/site-header";
 
@@ -50,6 +51,9 @@ export default function Home() {
           </div>
           <div className="mt-10 text-center"><Link href="/hoe-werkt-het" className="font-bold text-[#a64b00] hover:underline">Bekijk hoe je jouw auto aanmeldt en biedingen ontvangt</Link></div>
         </div>
+      </section>
+      <section className="border-t border-slate-200 bg-white px-5 py-16 sm:px-8 lg:px-10 lg:py-24">
+        <div className="mx-auto max-w-[1240px]"><CustomerReviews /></div>
       </section>
       <SiteFooter />
     </div>

@@ -59,6 +59,7 @@ test("publieke procespagina en mobiel kentekenveld blijven bruikbaar", async ({ 
   await page.goto("/");
   await expect(page.getByRole("textbox", { name: "Vul je kenteken in" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Start je aanvraag" })).toBeVisible();
+  await expect(page.locator("#klantervaringen").getByText("“Top service!”")).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 
   await page.goto("/hoe-werkt-het");
