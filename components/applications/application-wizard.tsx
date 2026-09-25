@@ -3,7 +3,7 @@
 import { ChangeEvent, FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Camera, Check, ChevronLeft, ChevronRight, LoaderCircle } from "lucide-react";
+import { AlertTriangle, Camera, Check, ChevronLeft, ChevronRight, Gauge, KeyRound, LoaderCircle, MessageSquare, ShieldCheck, Wrench } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -195,14 +195,49 @@ export function ApplicationWizard({ initialRegistration, autoLookup = false }: {
     <form onSubmit={submit} className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-[0_20px_70px_rgba(7,19,39,.08)] sm:p-8" noValidate>
       <div className="flex items-center justify-between gap-4"><div><p className="text-sm font-bold text-[#a64b00]">Stap {step} van 6</p><h2 className="mt-1 text-2xl font-black">{stepLabels[step - 1]}</h2></div><span className="text-sm text-slate-500">{Math.round((step / 6) * 100)}%</span></div>
       <Progress value={(step / 6) * 100} className="mt-4" aria-label={`Voortgang: stap ${step} van 6`} />
-      <ol className="mt-4 hidden grid-cols-6 gap-2 text-center text-xs text-slate-500 sm:grid">{stepLabels.map((label, index) => <li key={label} className={index + 1 === step ? "font-bold text-[#a64b00]" : ""}>{label}</li>)}</ol>
+      <ol className="mt-5 hidden grid-cols-6 gap-2 text-center text-xs sm:grid">{stepLabels.map((label, index) => { const stepNumber = index + 1; const completed = stepNumber < step; const active = stepNumber === step; return <li key={label} className={active ? "font-bold text-[#a64b00]" : completed ? "font-semibold text-slate-700" : "text-slate-400"}><span className={`mx-auto mb-2 grid size-7 place-items-center rounded-full border transition-colors ${active ? "border-[#ff9418] bg-[#ff9418] text-black" : completed ? "border-[#a64b00] bg-[#a64b00] text-white" : "border-slate-200 bg-slate-50"}`}>{completed ? <Check className="size-4" aria-hidden="true" /> : stepNumber}</span>{label}</li>; })}</ol>
 
       <div className="mt-8">
         {step === 1 && <section aria-labelledby="step-1"><h3 id="step-1" className="text-xl font-bold">Wat is het kenteken?</h3><p className="mt-2 text-slate-600">We vragen alleen openbare technische voertuiggegevens op.</p><div className="mt-6 max-w-sm"><Label htmlFor="registration">Kenteken</Label><Input id="registration" className="mt-2 h-14 border-2 border-[#111111] bg-[#ffd400] text-center text-[1.8rem] font-black uppercase tracking-[.08em] [font-family:Impact,'Arial_Narrow',sans-serif] placeholder:text-black/35" value={formatRegistration(vehicle.registration)} placeholder="12-AB-34" maxLength={10} onChange={(event) => setVehicle({ ...vehicle, registration: normalizeRegistration(event.target.value) })} autoComplete="off" autoCapitalize="characters" spellCheck={false} /></div><Button type="button" className="mt-6" onClick={() => void lookupRegistration()} disabled={busy}>{busy && <LoaderCircle className="animate-spin" />}Gegevens ophalen</Button></section>}
 
         {step === 2 && <section aria-labelledby="step-2"><h3 id="step-2" className="text-xl font-bold">Controleer de voertuiggegevens</h3>{rdwMessage && <p className="mt-3 rounded-xl bg-orange-50 p-4 text-sm text-orange-950" role="status">{rdwMessage}</p>}<div className="mt-6 grid gap-5 sm:grid-cols-2"><Field label="Merk" id="make" value={vehicle.make} required onChange={(value) => setVehicle({ ...vehicle, make: value })} /><Field label="Model/handelsbenaming" id="model" value={vehicle.model} required onChange={(value) => setVehicle({ ...vehicle, model: value })} /><Field label="Uitvoering" id="variant" value={vehicle.variant} onChange={(value) => setVehicle({ ...vehicle, variant: value })} /><Field label="Voertuigtype" id="vehicleType" value={vehicle.vehicleType} onChange={(value) => setVehicle({ ...vehicle, vehicleType: value })} /><Field label="Bouwjaar" id="year" type="number" value={vehicle.year} onChange={(value) => setVehicle({ ...vehicle, year: value })} /><Field label="Brandstof" id="fuel" value={vehicle.fuelType} onChange={(value) => setVehicle({ ...vehicle, fuelType: value })} /><Field label="Kleur" id="color" value={vehicle.color} onChange={(value) => setVehicle({ ...vehicle, color: value })} /></div></section>}
 
-        {step === 3 && <section aria-labelledby="step-3"><h3 id="step-3" className="text-xl font-bold">Wat is de staat van de auto?</h3><div className="mt-6 grid gap-5 sm:grid-cols-2"><Field label="Kilometerstand" id="mileage" type="number" value={condition.mileageKm} required onChange={(value) => setCondition({ ...condition, mileageKm: value })} /><Field label="Aantal sleutels" id="keys" type="number" value={condition.keyCount} required onChange={(value) => setCondition({ ...condition, keyCount: value })} /><TextField label="Schade" id="damage" value={condition.damageDescription} onChange={(value) => setCondition({ ...condition, damageDescription: value })} /><TextField label="Technische gebreken" id="technical" value={condition.technicalIssues} onChange={(value) => setCondition({ ...condition, technicalIssues: value })} /><TextField label="Onderhoud" id="maintenance" value={condition.maintenanceDescription} onChange={(value) => setCondition({ ...condition, maintenanceDescription: value })} /><TextField label="Overige opmerkingen" id="remarks" value={condition.remarks} onChange={(value) => setCondition({ ...condition, remarks: value })} /></div></section>}
+        {step === 3 && <section aria-labelledby="step-3">
+          <h3 id="step-3" className="text-xl font-bold">Wat is de staat van de auto?</h3>
+          <p className="mt-2 text-slate-600">Kies wat van toepassing is en voeg waar nodig een korte uitleg toe.</p>
+
+          <div className="mt-6 grid gap-5 lg:grid-cols-2">
+            <QuestionCard icon={<Gauge />} title="Kilometerstand" description="De huidige stand op de teller">
+              <div className="relative mt-4 max-w-xs"><Input id="mileage" type="number" inputMode="numeric" min={0} max={3000000} value={condition.mileageKm} onChange={(event) => setCondition({ ...condition, mileageKm: event.target.value })} required className="h-14 pr-12 text-lg font-bold" aria-label="Kilometerstand" /><span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-sm font-semibold text-slate-500">km</span></div>
+            </QuestionCard>
+
+            <QuestionCard icon={<KeyRound />} title="Hoeveel sleutels zijn er?" description="Kies het aantal dat je bij de auto hebt">
+              <fieldset className="mt-4"><legend className="sr-only">Aantal sleutels</legend><div className="grid grid-cols-4 gap-2">{["1", "2", "3", "4"].map((count) => <button key={count} type="button" aria-pressed={condition.keyCount === count} onClick={() => setCondition({ ...condition, keyCount: count })} className={`min-h-14 rounded-xl border-2 px-2 py-2 text-center transition-all focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 ${condition.keyCount === count ? "border-[#ff9418] bg-orange-50 text-[#7a3600] shadow-sm" : "border-slate-200 bg-white text-slate-700 hover:border-orange-300 hover:bg-orange-50/50"}`}><span className="block text-xl font-black">{count}{count === "4" ? "+" : ""}</span><span className="block text-[.7rem] font-semibold">{count === "1" ? "sleutel" : "sleutels"}</span></button>)}</div></fieldset>
+              {Number(condition.keyCount) >= 4 ? <div className="mt-3"><Label htmlFor="keys">Exact aantal</Label><Input id="keys" type="number" inputMode="numeric" min={4} max={10} value={condition.keyCount} onChange={(event) => setCondition({ ...condition, keyCount: event.target.value })} required className="mt-2 h-11 max-w-28" /></div> : <input id="keys" type="hidden" value={condition.keyCount} readOnly />}
+            </QuestionCard>
+          </div>
+
+          <div className="mt-5 grid gap-5 lg:grid-cols-2">
+            <QuestionCard icon={<AlertTriangle />} title="Heeft de auto schade?" description="Wees zo volledig mogelijk, ook bij kleine schade">
+              <ChoiceButtons label="Snelle keuze voor schade" value={condition.damageDescription} choices={[{ label: "Geen schade", value: "Geen bekende schade" }, { label: "Lichte schade", value: "Lichte schade aanwezig" }, { label: "Schade aanwezig", value: "Schade aanwezig" }]} onChange={(value) => setCondition({ ...condition, damageDescription: value })} />
+              <TextField label="Toelichting (optioneel)" id="damage" value={condition.damageDescription} placeholder="Bijvoorbeeld: kras op de rechterdeur" onChange={(value) => setCondition({ ...condition, damageDescription: value })} />
+            </QuestionCard>
+
+            <QuestionCard icon={<Wrench />} title="Zijn er technische gebreken?" description="Denk aan storingslampjes, motor of versnellingsbak">
+              <ChoiceButtons label="Snelle keuze voor technische staat" value={condition.technicalIssues} choices={[{ label: "Geen gebreken", value: "Geen bekende technische gebreken" }, { label: "Start en rijdt", value: "Start en rijdt" }, { label: "Gebrek aanwezig", value: "Technisch gebrek aanwezig" }]} onChange={(value) => setCondition({ ...condition, technicalIssues: value })} />
+              <TextField label="Toelichting (optioneel)" id="technical" value={condition.technicalIssues} placeholder="Bijvoorbeeld: motorlampje brandt" onChange={(value) => setCondition({ ...condition, technicalIssues: value })} />
+            </QuestionCard>
+
+            <QuestionCard icon={<ShieldCheck />} title="Hoe is de auto onderhouden?" description="Kies de optie die het beste past">
+              <ChoiceButtons label="Onderhoudshistorie" value={condition.maintenanceDescription} choices={[{ label: "Dealer", value: "Dealeronderhouden" }, { label: "Vakgarage", value: "Onderhouden door vakgarage" }, { label: "Zelf/anders", value: "Zelf of anders onderhouden" }, { label: "Onbekend", value: "Onderhoudshistorie onbekend" }]} onChange={(value) => setCondition({ ...condition, maintenanceDescription: value })} />
+              <TextField label="Toelichting (optioneel)" id="maintenance" value={condition.maintenanceDescription} placeholder="Bijvoorbeeld: onderhoudsboekje aanwezig" onChange={(value) => setCondition({ ...condition, maintenanceDescription: value })} />
+            </QuestionCard>
+
+            <QuestionCard icon={<MessageSquare />} title="Nog iets dat we moeten weten?" description="Bijzonderheden die hierboven niet zijn genoemd">
+              <TextField label="Overige opmerkingen (optioneel)" id="remarks" value={condition.remarks} placeholder="Typ hier je aanvullende informatie" onChange={(value) => setCondition({ ...condition, remarks: value })} />
+            </QuestionCard>
+          </div>
+        </section>}
 
         {step === 4 && <section aria-labelledby="step-4"><h3 id="step-4" className="text-xl font-bold">Voeg foto’s toe</h3><p className="mt-2 leading-7 text-slate-600">Gebruik JPEG, PNG of WebP, maximaal 12 foto’s van elk 10 MB. Fotografeer voor-, achter- en zijkanten, interieur en eventuele schade. Zorg dat gezichten, documenten, huisnummers en andere persoonsgegevens niet zichtbaar zijn.</p><label htmlFor="photos" className="mt-6 flex cursor-pointer flex-col items-center rounded-2xl border-2 border-dashed border-slate-300 p-10 text-center hover:border-[#a64b00]"><Camera className="size-8 text-[#a64b00]" /><span className="mt-3 font-bold">Kies foto’s</span><span className="mt-1 text-sm text-slate-500">HEIC wordt nog niet ondersteund</span></label><Input id="photos" type="file" accept="image/jpeg,image/png,image/webp" multiple className="sr-only" onChange={selectPhotos} /><ul className="mt-4 space-y-2">{photos.map((photo) => <li key={`${photo.name}-${photo.size}`} className="flex justify-between rounded-lg bg-slate-50 px-4 py-2 text-sm"><span className="truncate">{photo.name}</span><span>{(photo.size / 1024 / 1024).toFixed(1)} MB</span></li>)}</ul><p className="mt-3 text-sm text-slate-500">Geselecteerd: {photos.length} van {MAX_PHOTOS}. Na vernieuwen moet je foto’s opnieuw kiezen.</p></section>}
 
@@ -226,8 +261,16 @@ function Field({ label, id, value, onChange, type = "text", required, autoComple
   return <div><Label htmlFor={id}>{label}{required ? " *" : ""}</Label><Input id={id} type={type} value={value} onChange={(event) => onChange(event.target.value)} required={required} autoComplete={autoComplete} className="mt-2 h-12" /></div>;
 }
 
-function TextField({ label, id, value, onChange }: { label: string; id: string; value: string; onChange: (value: string) => void }) {
-  return <div><Label htmlFor={id}>{label}</Label><Textarea id={id} value={value} maxLength={2000} onChange={(event) => onChange(event.target.value)} className="mt-2 min-h-28" /></div>;
+function TextField({ label, id, value, onChange, placeholder }: { label: string; id: string; value: string; onChange: (value: string) => void; placeholder?: string }) {
+  return <div className="mt-4"><Label htmlFor={id}>{label}</Label><Textarea id={id} value={value} placeholder={placeholder} maxLength={2000} onChange={(event) => onChange(event.target.value)} className="mt-2 min-h-24 resize-y bg-white" /></div>;
+}
+
+function QuestionCard({ icon, title, description, children }: { icon: React.ReactNode; title: string; description: string; children: React.ReactNode }) {
+  return <article className="rounded-2xl border border-slate-200 bg-slate-50/70 p-5 transition-shadow hover:shadow-sm"><div className="flex items-start gap-3"><span className="grid size-10 shrink-0 place-items-center rounded-xl bg-orange-100 text-[#a64b00] [&_svg]:size-5" aria-hidden="true">{icon}</span><div><h4 className="font-bold text-slate-950">{title}</h4><p className="mt-1 text-sm leading-5 text-slate-600">{description}</p></div></div>{children}</article>;
+}
+
+function ChoiceButtons({ label, value, choices, onChange }: { label: string; value: string; choices: { label: string; value: string }[]; onChange: (value: string) => void }) {
+  return <fieldset className="mt-4"><legend className="sr-only">{label}</legend><div className="flex flex-wrap gap-2">{choices.map((choice) => { const selected = value === choice.value; return <button key={choice.value} type="button" aria-pressed={selected} onClick={() => onChange(choice.value)} className={`rounded-full border px-3.5 py-2 text-sm font-semibold transition-all focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 ${selected ? "border-[#ff9418] bg-[#ff9418] text-black shadow-sm" : "border-slate-300 bg-white text-slate-700 hover:border-orange-300 hover:bg-orange-50"}`}>{selected && <Check className="mr-1 inline size-4" aria-hidden="true" />}{choice.label}</button>; })}</div></fieldset>;
 }
 
 function Summary({ title, lines, onEdit }: { title: string; lines: string[]; onEdit: () => void }) {

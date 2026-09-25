@@ -80,6 +80,11 @@ test("RDW-uitval laat handmatige invoer toe zonder contactgegevens op te slaan",
 
   await expect(page.getByRole("heading", { name: "Wat is de staat van de auto?" })).toBeVisible();
   await page.locator("#mileage").fill("42000");
+  await page.getByRole("button", { name: "1 sleutel" }).click();
+  await expect(page.getByRole("button", { name: "1 sleutel" })).toHaveAttribute("aria-pressed", "true");
+  await page.getByRole("button", { name: "Geen schade" }).click();
+  await page.getByRole("button", { name: "Geen gebreken" }).click();
+  await page.getByRole("button", { name: "Vakgarage" }).click();
   await page.getByRole("button", { name: "Volgende" }).click();
 
   await page.locator("#photos").setInputFiles({
