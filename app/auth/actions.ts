@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 
-import { requireUser } from "@/lib/auth/dal";
+import { getAccessContext, requireUser } from "@/lib/auth/dal";
 import { getSafeInternalPath } from "@/lib/auth/safe-redirect";
 import {
   credentialsSchema,
@@ -10,6 +10,7 @@ import {
   recoveryEmailSchema,
 } from "@/lib/auth/validation";
 import { getAppUrl } from "@/lib/config/app-url";
+import { getDefaultPortalPath } from "@/lib/domain/access";
 import { createClient } from "@/lib/supabase/server";
 
 export type AuthActionState = { error?: string };
@@ -33,7 +34,8 @@ export async function signIn(
   if (error) return { error: "Inloggen is niet gelukt. Controleer je gegevens." };
 
   const returnTo = formData.get("returnTo");
-  redirect(getSafeInternalPath(returnTo, "/dealer"));
+  const context = await getAccessContext();
+  redirect(getSafeInternalPath(returnTo, getDefaultPortalPath(context)));
 }
 
 export async function signUpDealer(

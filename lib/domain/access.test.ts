@@ -4,6 +4,7 @@ import {
   canAccessDealerPortal,
   canBid,
   canManageCompanies,
+  getDefaultPortalPath,
   type AccessContext,
 } from "./access";
 
@@ -83,5 +84,11 @@ describe("toegangsregels", () => {
         staffRole: "operator",
       }),
     ).toBe(false);
+  });
+
+  it("stuurt een beheerder na algemeen inloggen naar beheer", () => {
+    expect(getDefaultPortalPath({ isStaff: true })).toBe("/beheer");
+    expect(getDefaultPortalPath({ isStaff: false })).toBe("/dealer");
+    expect(getDefaultPortalPath(null)).toBe("/dealer");
   });
 });

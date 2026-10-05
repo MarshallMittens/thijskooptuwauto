@@ -31,3 +31,9 @@ export function canManageCompanies(context: AccessContext) {
 export function canBid(context: AccessContext) {
   return canAccessDealerPortal(context);
 }
+
+export function getDefaultPortalPath(
+  context: Pick<AccessContext, "isStaff"> | null,
+) {
+  return context?.isStaff ? "/beheer" : "/dealer";
+}
