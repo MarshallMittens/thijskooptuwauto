@@ -22,7 +22,7 @@
 | Materiële voertuigwijziging | Nee | Nee | Nee | Nee | Ja, gecontroleerde RPC |
 | Bedrijfsstatus wijzigen | Nee | Nee | Nee | Nee | Alleen admin |
 | Biedbedragen lezen | Nee | Nee | Nee | Alle bedragen/tijdstippen, geen concurrerende identiteit | Alle biedingen met bedrijfsidentiteit |
-| Bieden | Nee | Nee | Nee | Alleen met AAL2 via gecontroleerde bied-RPC | Niet bieden als staff |
+| Bieden | Nee | Nee | Nee | Alleen met AAL2 via gecontroleerde bied-RPC | Alleen de expliciet gemarkeerde platformadmin, met AAL2 en namens het gekoppelde goedgekeurde bedrijf |
 | Winnaarreservering | Nee | Nee | Nee | Niet rechtstreeks leesbaar | Alleen staff met AAL2 |
 | Afspraakvoorstel | Nee | Eigen reactie | Nee | Alleen gereserveerde winnaar met AAL2 | Lezen met AAL2 |
 | Verkoperscontact na veiling | Nee | Eigen gegevens | Nee | Alleen winnaar na bevestigde afspraak | Ja |
@@ -42,7 +42,8 @@
 ## Belangrijkste risico’s en controles
 
 - **Rolverhoging:** geen directe writes op rollen of bedrijfsstatus; security-definerfuncties controleren actor en MFA.
-- **Rolvermenging:** nieuwe actieve dealer- en staff-lidmaatschappen op dezelfde identiteit worden door triggers geweigerd. De dealer-DAL en databasehelpers weigeren staff ook wanneer oudere lokale data beide lidmaatschappen bevat.
+- **Rolvermenging:** nieuwe actieve dealer- en staff-lidmaatschappen op dezelfde identiteit worden door triggers geweigerd. Er bestaat één expliciete uitzondering: een admin kan server-side `can_use_dealer_portal` krijgen en dan met AAL2 namens het eigen goedgekeurde bedrijf handelen. Operators, gewone admins zonder vlag en alle verkopersidentiteiten blijven geweigerd; negatieve database-tests bewaken dit.
+- **Dubbele bevoegdheid platformeigenaar:** de database ziet deze identiteit altijd als admin, ook wanneer de dealerinterface wordt gebruikt. Dit is daarom geen functiescheiding binnen hetzelfde account. Alle andere dealers blijven bedrijfsgescheiden; handelingen van de platformeigenaar moeten via auditlog en de bestaande markering `is_platform_affiliated` herkenbaar blijven.
 - **Verkopersidentiteit:** verkoper, dealer en staff kunnen niet op dezelfde nieuwe identiteit worden gecombineerd. De magic-linkcallback koppelt alleen wanneer het door Supabase bevestigde e-mailadres exact overeenkomt met de verkoperscontactregel.
 - **Dossierreferentie:** de 24 hextekens zijn onvoorspelbaar maar vormen niet zelfstandig de beveiliging; e-mailbezit, een geldige Supabase-sessie en de server-side dossierkoppeling zijn eveneens vereist.
 - **Publicatie zonder verificatie:** een trigger op `listings` weigert status `published` zolang geen geverifieerde verkoper aan de aanvraag is gekoppeld.

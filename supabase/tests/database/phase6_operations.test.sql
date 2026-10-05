@@ -160,6 +160,7 @@ select throws_ok($$ select public.complete_notification_delivery((select notific
 select lives_ok($$ select public.complete_notification_delivery((select notification_id from phase6_state), '11111111-1111-1111-1111-111111111111', false, 'fictieve_transportfout') $$, 'mislukte bezorging blijft bewaard voor retry');
 select is((select status::text from public.notification_outbox where id=(select notification_id from phase6_state)), 'failed', 'mislukte outboxregel krijgt failed-status');
 update public.notification_outbox set next_attempt_at = now() where id=(select notification_id from phase6_state);
+update public.notification_outbox set next_attempt_at = now() + interval '1 hour' where id<>(select notification_id from phase6_state) and status in ('pending', 'failed');
 select results_eq($$ select jsonb_array_length(public.claim_notification_batch('11111111-1111-1111-1111-111111111111', 1)) $$, $$ values(1) $$, 'retry claimt dezelfde regel opnieuw');
 select lives_ok($$ select public.complete_notification_delivery((select notification_id from phase6_state), '11111111-1111-1111-1111-111111111111', true, null) $$, 'geslaagde retry markeert verzonden');
 select results_eq($$ select attempt_count from public.notification_outbox where id=(select notification_id from phase6_state) $$, $$ values(2) $$, 'pogingsteller registreert beide claims');

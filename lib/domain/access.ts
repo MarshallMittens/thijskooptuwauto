@@ -6,13 +6,14 @@ export type AccessContext = {
   assuranceLevel: "aal1" | "aal2";
   isStaff: boolean;
   staffRole: "admin" | "operator" | null;
+  canUseDealerPortal: boolean;
   companyId: string | null;
   companyStatus: CompanyStatus | null;
 };
 
 export function canAccessDealerPortal(context: AccessContext) {
   return (
-    !context.isStaff &&
+    (!context.isStaff || context.canUseDealerPortal) &&
     context.assuranceLevel === "aal2" &&
     context.companyStatus === "approved" &&
     Boolean(context.companyId)

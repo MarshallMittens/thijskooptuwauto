@@ -1,7 +1,7 @@
 begin;
 
 create extension if not exists pgtap with schema extensions;
-select plan(14);
+select plan(21);
 
 insert into auth.users (
   instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
@@ -12,6 +12,7 @@ insert into auth.users (
   ('00000000-0000-0000-0000-000000000000', '01000000-0000-0000-0000-0000000000d1', 'authenticated', 'authenticated', 'identity-dealer@example.test', '', now(), '{}', '{}', now(), now(), '', '', '', ''),
   ('00000000-0000-0000-0000-000000000000', '01000000-0000-0000-0000-0000000000b1', 'authenticated', 'authenticated', 'identity-staff-candidate@example.test', '', now(), '{}', '{}', now(), now(), '', '', '', ''),
   ('00000000-0000-0000-0000-000000000000', '01000000-0000-0000-0000-0000000000c1', 'authenticated', 'authenticated', 'identity-member-candidate@example.test', '', now(), '{}', '{}', now(), now(), '', '', '', ''),
+  ('00000000-0000-0000-0000-000000000000', '01000000-0000-0000-0000-0000000000f1', 'authenticated', 'authenticated', 'identity-platform-owner@example.test', '', now(), '{}', '{}', now(), now(), '', '', '', ''),
   ('00000000-0000-0000-0000-000000000000', '01000000-0000-0000-0000-0000000000e1', 'authenticated', 'authenticated', 'identity-seller@example.test', '', now(), '{}', '{}', now(), now(), '', '', '', '');
 
 insert into public.staff_memberships (user_id, role) values
@@ -27,7 +28,8 @@ insert into public.companies (
 );
 
 insert into public.company_memberships (company_id, user_id, role) values
-  ('11000000-0000-0000-0000-0000000000d1', '01000000-0000-0000-0000-0000000000d1', 'owner');
+  ('11000000-0000-0000-0000-0000000000d1', '01000000-0000-0000-0000-0000000000d1', 'owner'),
+  ('11000000-0000-0000-0000-0000000000d1', '01000000-0000-0000-0000-0000000000f1', 'owner');
 
 insert into public.seller_contacts (id, full_name, email, phone, postal_code)
 values ('21000000-0000-0000-0000-000000000001', 'Fictieve Verkoper', 'identity-seller@example.test', '0699999999', '9999ZZ');
@@ -56,6 +58,26 @@ select throws_ok(
   'dealeridentiteit kan niet tot staff worden verhoogd'
 );
 
+select throws_ok(
+  $$ update public.staff_memberships set can_use_dealer_portal = true where user_id = '01000000-0000-0000-0000-0000000000b1' $$,
+  '23514', null,
+  'een operator kan de platformeigenaar-uitzondering niet krijgen'
+);
+
+select lives_ok(
+  $$ insert into public.staff_memberships (user_id, role, can_use_dealer_portal) values ('01000000-0000-0000-0000-0000000000f1', 'admin', true) $$,
+  'alleen een expliciet gemarkeerde admin mag ook een actief dealerlidmaatschap hebben'
+);
+
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"01000000-0000-0000-0000-0000000000f1","role":"authenticated","aal":"aal1"}', true);
+select throws_ok(
+  $$ select public.list_dealer_listings(null, null, null) $$,
+  'P0001', 'approved_company_required',
+  'ook de platformeigenaar heeft MFA nodig voor dealerrechten'
+);
+reset role;
+
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"01000000-0000-0000-0000-0000000000d1","role":"authenticated","aal":"aal1"}', true);
 select results_eq(
@@ -76,6 +98,26 @@ select throws_ok(
 reset role;
 
 set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"01000000-0000-0000-0000-0000000000f1","role":"authenticated","aal":"aal2"}', true);
+select results_eq(
+  $$ select (public.get_my_access_context()->>'can_use_dealer_portal')::boolean $$,
+  $$ values (true) $$,
+  'de toegangscontext meldt de expliciete dubbele bevoegdheid'
+);
+select results_eq(
+  $$ select count(*)::bigint from jsonb_array_elements(public.list_dealer_listings(null, null, null)) item where item->>'id' = '61000000-0000-0000-0000-000000000001' $$,
+  $$ values (1::bigint) $$,
+  'de platformeigenaar ziet met MFA het goedgekeurde dealeraanbod'
+);
+reset role;
+
+select throws_ok(
+  $$ update public.staff_memberships set can_use_dealer_portal = false where user_id = '01000000-0000-0000-0000-0000000000f1' $$,
+  'P0001', 'staff_dealer_identity_conflict',
+  'de uitzondering kan niet worden uitgezet terwijl het actieve dealerlidmaatschap blijft bestaan'
+);
+
+set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"01000000-0000-0000-0000-0000000000d1","role":"authenticated","aal":"aal2"}', true);
 select results_eq(
   $$ select count(*)::bigint from jsonb_array_elements(public.list_dealer_listings(null, null, null)) item where item->>'id' = '61000000-0000-0000-0000-000000000001' $$,
@@ -90,6 +132,14 @@ select results_eq(
   $$ select count(*)::bigint from public.auction_policy_versions $$,
   $$ values (0::bigint) $$,
   'dealer kan interne policyversies niet rechtstreeks lezen'
+);
+reset role;
+
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"01000000-0000-0000-0000-0000000000f1","role":"authenticated","aal":"aal2"}', true);
+select lives_ok(
+  $$ select public.place_bid('71000000-0000-0000-0000-000000000001', 110000, '81000000-0000-0000-0000-000000000002') $$,
+  'de platformeigenaar kan met MFA namens het gekoppelde bedrijf bieden'
 );
 reset role;
 
@@ -131,7 +181,7 @@ select throws_ok(
   'bestaand gecombineerd staff/dealeraccount krijgt geen dealerrechten'
 );
 select throws_ok(
-  $$ select public.place_bid('71000000-0000-0000-0000-000000000001', 110000, '81000000-0000-0000-0000-000000000002') $$,
+  $$ select public.place_bid('71000000-0000-0000-0000-000000000001', 120000, '81000000-0000-0000-0000-000000000003') $$,
   'P0001', 'approved_company_required',
   'bestaand gecombineerd staff/dealeraccount kan niet bieden'
 );

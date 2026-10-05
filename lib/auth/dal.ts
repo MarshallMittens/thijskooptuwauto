@@ -10,6 +10,7 @@ import { createClient } from "@/lib/supabase/server";
 const accessSchema = z.object({
   is_staff: z.boolean(),
   staff_role: z.enum(["admin", "operator"]).nullable(),
+  can_use_dealer_portal: z.boolean(),
   company_id: z.string().uuid().nullable(),
   company_status: z.enum(["pending", "approved", "blocked"]).nullable(),
 });
@@ -33,6 +34,7 @@ export const getAccessContext = cache(async (): Promise<AccessContext | null> =>
       claimsData?.claims?.aal === "aal2" ? "aal2" : "aal1",
     isStaff: parsed.data.is_staff,
     staffRole: parsed.data.staff_role,
+    canUseDealerPortal: parsed.data.can_use_dealer_portal,
     companyId: parsed.data.company_id,
     companyStatus: parsed.data.company_status,
   };
@@ -47,7 +49,7 @@ export async function requireUser(returnTo: string) {
 export async function requireDealer() {
   const context = await requireUser("/dealer");
 
-  if (context.isStaff) redirect("/geen-toegang");
+  if (context.isStaff && !context.canUseDealerPortal) redirect("/geen-toegang");
   if (!context.companyId) redirect("/dealer/registreren");
   if (context.companyStatus === "pending") redirect("/dealer/wachten");
   if (context.companyStatus === "blocked") redirect("/dealer/geblokkeerd");

@@ -12,6 +12,7 @@ const base: AccessContext = {
   assuranceLevel: "aal1",
   isStaff: false,
   staffRole: null,
+  canUseDealerPortal: false,
   companyId: "company-1",
   companyStatus: "pending",
 };
@@ -41,6 +42,30 @@ describe("toegangsregels", () => {
         assuranceLevel: "aal2",
         isStaff: true,
         staffRole: "admin",
+      }),
+    ).toBe(false);
+  });
+
+  it("laat uitsluitend een expliciet bevoegde platformadmin ook als dealer werken", () => {
+    expect(
+      canBid({
+        ...base,
+        companyStatus: "approved",
+        assuranceLevel: "aal2",
+        isStaff: true,
+        staffRole: "admin",
+        canUseDealerPortal: true,
+      }),
+    ).toBe(true);
+
+    expect(
+      canBid({
+        ...base,
+        companyStatus: "approved",
+        assuranceLevel: "aal2",
+        isStaff: true,
+        staffRole: "operator",
+        canUseDealerPortal: false,
       }),
     ).toBe(false);
   });

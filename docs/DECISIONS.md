@@ -54,6 +54,7 @@
 50. **De eerste hostingstap is uitsluitend Preview.** Node blijft op 22.x; Preview gebruikt een eigen Supabase-project en afzonderlijke geheimen. De build weigert localhost, voorbeeldwaarden, hergebruikte private geheimen, een actieve betaalsimulator en productie zonder de afzonderlijke schakelaar `PRODUCTION_DEPLOYMENT_APPROVED=true`.
 51. **Statuscontrole is minimaal en gelaagd.** `/api/health` toont openbaar alleen dat de Next.js-app reageert. Databasecontrole vereist het server-only operationele geheim en geeft geen queryresultaten, foutdetails of configuratie terug.
 52. **Cryptografische extensiefuncties zijn expliciet gekwalificeerd.** Hosted Supabase bewaart `gen_random_bytes` in schema `extensions`. De fase-6-migratie gebruikt daarom `extensions.gen_random_bytes`; deze correctie is gemaakt nadat de eerste acceptatiepoging transactioneel was teruggedraaid en voordat migratie 12 ooit remote als toegepast werd geregistreerd.
+53. **De platformeigenaar mag één gecombineerde admin-/dealeridentiteit gebruiken.** Dit is een expliciete uitzondering via `staff_memberships.can_use_dealer_portal`, uitsluitend mogelijk voor `admin`. De uitzondering vereist nog steeds MFA, een actief bedrijfslidmaatschap en een goedgekeurd, niet-geblokkeerd bedrijf. Gewone staff- en dealeridentiteiten blijven door triggers gescheiden. Omdat dezelfde sessie ook adminrechten heeft, is dit geen technische functiescheiding; platformaffiliatie en auditregistratie blijven daarom verplicht.
 
 ## Veilige tijdelijke keuzes
 
