@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { getAppUrl } from "@/lib/config/app-url";
+import { mapSellerAccessEmailError } from "@/lib/email/seller-access-error";
 import { createRateLimitActorKey } from "@/lib/security/public-request";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -30,6 +31,9 @@ export async function POST(request: Request) {
     if (prepareError?.message.includes("rate_limit_exceeded")) {
       return NextResponse.json({ error: "Er zijn te veel pogingen gedaan. Probeer het over een uur opnieuw." }, { status: 429 });
     }
+    if (prepareError) {
+      return NextResponse.json({ error: "De beveiligde e-mail kon tijdelijk niet worden voorbereid." }, { status: 503 });
+    }
 
     if (allowed === true) {
       const callback = new URL("/auth/callback", getAppUrl());
@@ -38,10 +42,17 @@ export async function POST(request: Request) {
         `/mijn-aanvraag/activeren?referentie=${parsed.data.reference}`,
       );
       const supabase = await createClient();
-      await supabase.auth.signInWithOtp({
+      const { error: emailError } = await supabase.auth.signInWithOtp({
         email: parsed.data.email,
         options: { emailRedirectTo: callback.toString(), shouldCreateUser: true },
       });
+      if (emailError) {
+        const failure = mapSellerAccessEmailError(emailError);
+        const headers = failure.retryAfterSeconds
+          ? { "Retry-After": String(failure.retryAfterSeconds) }
+          : undefined;
+        return NextResponse.json({ error: failure.message }, { status: failure.status, headers });
+      }
     }
 
     return NextResponse.json({ message: genericMessage });

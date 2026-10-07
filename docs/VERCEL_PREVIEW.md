@@ -59,6 +59,8 @@ PRODUCTION_DEPLOYMENT_APPROVED=false
 
 `RDW_APP_TOKEN`, `RESEND_API_KEY` en `RESEND_FROM_EMAIL` blijven voor de eerste technische rookproef leeg. De openbare RDW-terugval en duurzame outbox kunnen wel worden getest, maar er wordt nog geen echte e-mail bezorgd.
 
+Let op: Supabase Auth bezorgt zonder eigen SMTP alleen aan vooraf geautoriseerde projectteamadressen en hanteert een zeer lage testlimiet. Een proef met echte particuliere verkopers vereist daarom eerst een eigen SMTP-provider in Supabase Auth. De applicatie toont een geweigerde of gelimiteerde verzending als fout en meldt niet langer ten onrechte dat de mail is verstuurd.
+
 De build stopt bewust bij ontbrekende waarden, voorbeeldwaarden, localhost, hergebruikte geheimen, een actieve betaalsimulator of een ongeautoriseerde productiedeployment.
 
 ## 4. Preview maken
