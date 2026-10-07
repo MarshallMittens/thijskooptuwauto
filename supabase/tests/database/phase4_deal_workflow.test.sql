@@ -1,7 +1,7 @@
 begin;
 
 create extension if not exists pgtap with schema extensions;
-select plan(39);
+select plan(40);
 
 insert into auth.users (
   instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
@@ -83,6 +83,11 @@ from (select public.dealer_propose_appointment(
 select ok((select appointment_id is not null and proposal_id is not null from phase4_state), 'winnaar stelt één of meer afspraakmomenten voor');
 select results_eq($$ select (public.dealer_propose_appointment((select reservation_id from phase4_state), array[now() + interval '1 day', now() + interval '2 days'], '81000000-0000-0000-0000-000000000002')->>'created')::boolean $$, $$ values (false) $$, 'dubbel afspraakverzoek is idempotent');
 select throws_ok($$ select public.seller_respond_appointment('40000000-0000-0000-0000-000000000401', (select appointment_id from phase4_state), 'confirm', now() + interval '1 day', null) $$, 'P0001', 'application_access_denied', 'dealer kan verkopersbevestiging niet nabootsen');
+reset role;
+
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000004a1","role":"authenticated","aal":"aal2"}', true);
+select throws_ok($$ select public.admin_restart_bid_round('40000000-0000-0000-0000-000000000401', 'De bieding is na opvolging alsnog te laag.', '81000000-0000-0000-0000-000000000099') $$, 'P0001', 'auction_followup_started', 'beheer kan na het starten van de afspraakroute niet herstarten');
 reset role;
 
 set local role authenticated;

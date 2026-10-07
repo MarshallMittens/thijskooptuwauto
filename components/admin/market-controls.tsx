@@ -3,8 +3,9 @@
 import { useState, useTransition } from "react";
 import { LoaderCircle } from "lucide-react";
 
-import { closeBidRoundAction, publishApplicationAction, type MarketActionResult } from "@/app/beheer/aanvragen/market-actions";
+import { closeBidRoundAction, publishApplicationAction, restartBidRoundAction, type MarketActionResult } from "@/app/beheer/aanvragen/market-actions";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { formatEuroCents } from "@/lib/bids/amount";
 import { formatAmsterdamDateTime } from "@/lib/time/format";
 
@@ -24,6 +25,7 @@ type MarketState = {
 
 export function MarketControls({ applicationId, applicationStatus, sellerVerified, market }: { applicationId: string; applicationStatus: string; sellerVerified: boolean; market: MarketState }) {
   const [result, setResult] = useState<MarketActionResult | null>(null);
+  const [restartReason, setRestartReason] = useState("");
   const [pending, startTransition] = useTransition();
 
   function publish() {
@@ -35,6 +37,21 @@ export function MarketControls({ applicationId, applicationStatus, sellerVerifie
     if (!market.roundId) return;
     if (!window.confirm("De 24 uur zijn verstreken. Wil je de hoogste bieding nu als winnaarreservering vastleggen? Dit is nog geen koop.")) return;
     startTransition(async () => setResult(await closeBidRoundAction({ applicationId, roundId: market.roundId! })));
+  }
+
+  function restart() {
+    const reason = restartReason.trim();
+    if (reason.length < 10) {
+      setResult({ ok: false, message: "Vul een duidelijke reden van minimaal 10 tekens in." });
+      return;
+    }
+    if (!window.confirm("Een nieuwe lege biedronde start direct en duurt exact 24 uur. De oude biedingen blijven als historie bewaard en een eventuele winnaarreservering wordt ingetrokken. Doorgaan?")) return;
+    const idempotencyKey = crypto.randomUUID();
+    startTransition(async () => {
+      const actionResult = await restartBidRoundAction({ applicationId, reason, idempotencyKey });
+      setResult(actionResult);
+      if (actionResult.ok) setRestartReason("");
+    });
   }
 
   return (
@@ -49,6 +66,13 @@ export function MarketControls({ applicationId, applicationStatus, sellerVerifie
           {market.policyStatus === "test" && <p className="rounded-lg bg-amber-50 p-3 text-sm font-semibold text-amber-900">Testbeleid actief. Kosten en contractvoorwaarden zijn nog niet goedgekeurd; productielivegang blijft geblokkeerd.</p>}
           {market.outcomeStatus && market.outcomeStatus !== "pending" && <p className="rounded-lg bg-emerald-50 p-3 text-sm font-semibold text-emerald-900">Uitslag: {market.outcomeStatus}. Een winnaarreservering is geen automatische verkoop.</p>}
           {market.needsFinalization && <Button type="button" onClick={close} disabled={pending}>{pending && <LoaderCircle className="animate-spin" />}Uitslag vastleggen</Button>}
+          {market.roundStatus === "closed" && market.outcomeStatus !== "pending" && market.outcomeStatus !== "disputed" && <div className="rounded-xl border border-orange-200 bg-orange-50/40 p-4">
+            <h3 className="font-black">Nog een biedronde starten</h3>
+            <p className="mt-1 text-sm leading-6 text-slate-700">Gebruik dit als de biedingen onvoldoende zijn. De vorige ronde en biedingen blijven bewaard; de nieuwe ronde begint zonder biedingen.</p>
+            <label htmlFor="restart-reason" className="mt-3 block text-sm font-bold">Reden voor de nieuwe ronde</label>
+            <Textarea id="restart-reason" value={restartReason} onChange={(event) => setRestartReason(event.target.value)} maxLength={500} placeholder="Bijvoorbeeld: hoogste bod sluit niet aan bij de verwachte marktwaarde." className="mt-2 bg-white" />
+            <Button type="button" onClick={restart} disabled={pending || restartReason.trim().length < 10} className="mt-3">{pending && <LoaderCircle className="animate-spin" />}Nieuwe biedronde van 24 uur starten</Button>
+          </div>}
         </div>
       ) : (
         <div className="mt-4 space-y-4">

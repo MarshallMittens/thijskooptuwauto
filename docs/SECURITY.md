@@ -85,6 +85,7 @@
 - **Herstelproef:** het script weigert externe hosts, gebruikt willekeurig benoemde tijdelijke databases/buckets, vergelijkt SHA-256 en ruimt in `finally` op. Een bewijsrecord bevat geen dump, sleutel of objectinhoud.
 - **Onbesliste commerciële regels:** de eerste veilingpolicy heeft status `test`; kosten blijven leeg. De database weigert status `approved` zolang kosten, betaler, voorwaardenversie, goedkeuringsactor en goedkeuringstijd ontbreken.
 - **Vertraagde sluittaak:** een te laat bod wordt onafhankelijk van de taak geweigerd. De idempotente batchfunctie kan een verlopen ronde later sluiten en maakt door een unieke databaseconstraint maximaal één winnaarreservering.
+- **Onveilige veilingherstart:** alleen staff met `aal2` kan een afgesloten ronde herstarten, met verplichte reden en idempotentiesleutel. Een databaselock en unieke index voorkomen twee gelijktijdige actieve rondes; bestaande biedingen worden nooit aangepast. Zodra afspraak, verkoopdossier of geschil bestaat, weigert de database de herstart.
 - **Logging:** technische logs bevatten geen wachtwoorden, tokens, volledige formulierinhoud of onnodige persoonsgegevens. Zakelijke contactnotities en wijzigingsredenen zijn afgeschermde dossiergegevens, geen technische logs.
 
 ## Herstel beheeraccount

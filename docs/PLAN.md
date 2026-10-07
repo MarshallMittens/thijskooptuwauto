@@ -56,6 +56,7 @@ De onderstaande oorspronkelijke voortgang blijft als technische historie behoude
 - [x] Negatieve rechten-, deadline-, minimumstap-, append-only- en idempotentietests slagen tegen lokale PostgreSQL.
 - [x] Twee echte gelijktijdige databaseverbindingen bewijzen dat gelijke biedingen exact één winnaar opleveren.
 - [x] Sluiten is idempotent, maakt maximaal één winnaarreservering en maakt geen koop of verkoopdossier.
+- [x] Beheer kan een definitief afgesloten ronde gemotiveerd opnieuw starten; oude biedingen blijven historie, de nieuwe ronde is leeg en vervolgafhandeling blokkeert herstart.
 - [~] `close_due_bid_rounds` kan verlopen rondes herstelbaar in batches sluiten; het externe schema dat deze functie periodiek aanroept wordt pas bij hosting ingericht.
 - [~] Ieder opgeslagen bod en iedere uitslag krijgt transactioneel een outboxnotificatie; Resend-verzending is optioneel en nog niet ingesteld.
 - [x] Reviewfix: tijdelijke uploadpaden zijn gescheiden van definitieve, alleen server-schrijfbare fotopaden.

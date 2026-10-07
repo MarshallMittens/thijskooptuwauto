@@ -103,6 +103,10 @@ export type Database = {
         Args: { p_bid_round_id: string };
         Returns: Json;
       };
+      admin_restart_bid_round: {
+        Args: { p_application_id: string; p_reason: string; p_idempotency_key: string };
+        Returns: Json;
+      };
       get_admin_market_state: {
         Args: { p_application_id: string };
         Returns: Json;

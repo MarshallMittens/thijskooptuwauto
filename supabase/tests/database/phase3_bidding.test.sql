@@ -1,7 +1,7 @@
 begin;
 
 create extension if not exists pgtap with schema extensions;
-select plan(35);
+select plan(54);
 
 insert into auth.users (
   instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
@@ -37,7 +37,7 @@ values ('40000000-0000-0000-0000-000000000001', 85000, 2, 'Geen zichtbare schade
 insert into public.vehicle_photos (id, application_id, storage_path, media_type, size_bytes, sha256, sort_order, review_status, metadata_removed_at)
 values ('50000000-0000-0000-0000-000000000001', '40000000-0000-0000-0000-000000000001', 'applications/test/0.jpg', 'image/jpeg', 1000, repeat('a', 64), 0, 'approved', now());
 
-create temporary table phase3_state (listing_id uuid, round_id uuid, first_bid_id uuid, winning_bid_id uuid);
+create temporary table phase3_state (listing_id uuid, round_id uuid, first_bid_id uuid, winning_bid_id uuid, second_round_id uuid);
 grant all on table phase3_state to authenticated;
 
 set local role authenticated;
@@ -115,6 +115,52 @@ select results_eq($$ select count(*)::bigint from public.winner_reservations $$,
 reset role;
 
 select results_eq($$ select count(*)::bigint from public.audit_log where action = 'bid_round.closed' and entity_id = (select round_id from phase3_state) $$, $$ values (1::bigint) $$, 'sluiting wordt één keer geaudit');
+
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000d1","role":"authenticated","aal":"aal2"}', true);
+select throws_ok($$ select public.admin_restart_bid_round('40000000-0000-0000-0000-000000000001', 'Biedingen waren onvoldoende.', '71000000-0000-0000-0000-000000000001') $$, 'P0001', 'staff_aal2_required', 'dealer kan een gesloten biedronde niet herstarten');
+reset role;
+
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000a1","role":"authenticated","aal":"aal1"}', true);
+select throws_ok($$ select public.admin_restart_bid_round('40000000-0000-0000-0000-000000000001', 'Biedingen waren onvoldoende.', '71000000-0000-0000-0000-000000000002') $$, 'P0001', 'staff_aal2_required', 'beheer zonder MFA kan een gesloten biedronde niet herstarten');
+reset role;
+
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000a1","role":"authenticated","aal":"aal2"}', true);
+select throws_ok($$ select public.admin_restart_bid_round('40000000-0000-0000-0000-000000000001', 'te kort', '71000000-0000-0000-0000-000000000003') $$, 'P0001', 'restart_reason_required', 'beheer moet een duidelijke herstartreden vastleggen');
+update phase3_state
+set second_round_id = (public.admin_restart_bid_round(
+  '40000000-0000-0000-0000-000000000001',
+  'De hoogste bieding sluit onvoldoende aan bij de verwachte marktwaarde.',
+  '71000000-0000-0000-0000-000000000004'
+)->>'bid_round_id')::uuid;
+select ok((select second_round_id is not null and second_round_id <> round_id from phase3_state), 'herstart maakt een afzonderlijke nieuwe biedronde');
+select results_eq($$ select extract(epoch from (ends_at - starts_at))::bigint from public.bid_rounds where id = (select second_round_id from phase3_state) $$, $$ values (86400::bigint) $$, 'herstart duurt opnieuw exact 86400 seconden');
+select results_eq($$ select status::text from public.bid_rounds where id = (select second_round_id from phase3_state) $$, $$ values ('active'::text) $$, 'herstart begint direct actief');
+select results_eq($$ select count(*)::bigint from public.bids where bid_round_id = (select round_id from phase3_state) $$, $$ values (3::bigint) $$, 'oude biedingen blijven onveranderd bewaard');
+select results_eq($$ select count(*)::bigint from public.bids where bid_round_id = (select second_round_id from phase3_state) $$, $$ values (0::bigint) $$, 'nieuwe biedronde begint zonder biedingen');
+select results_eq($$ select status from public.winner_reservations where bid_round_id = (select round_id from phase3_state) $$, $$ values ('released'::text) $$, 'oude winnaarreservering wordt ingetrokken');
+select results_eq($$ select public.get_admin_market_state('40000000-0000-0000-0000-000000000001')->>'roundId' $$, $$ select second_round_id::text from phase3_state $$, 'beheer ziet de nieuwe ronde als actuele ronde');
+select results_eq($$ select jsonb_array_length(public.get_admin_market_state('40000000-0000-0000-0000-000000000001')->'bids') $$, $$ values (0) $$, 'beheer ziet in de nieuwe ronde een lege biedlijst');
+select results_eq($$ select (public.admin_restart_bid_round('40000000-0000-0000-0000-000000000001', 'De hoogste bieding sluit onvoldoende aan bij de verwachte marktwaarde.', '71000000-0000-0000-0000-000000000004')->>'created')::boolean $$, $$ values (false) $$, 'dezelfde herstartaanvraag is idempotent');
+select results_eq($$ select count(*)::bigint from public.bid_rounds where listing_id = (select listing_id from phase3_state) $$, $$ values (2::bigint) $$, 'idempotente herhaling maakt geen derde ronde');
+select throws_ok($$ select public.admin_restart_bid_round('40000000-0000-0000-0000-000000000001', 'Nog een poging met een andere sleutel.', '71000000-0000-0000-0000-000000000005') $$, 'P0001', 'bid_round_not_finalized', 'een actieve ronde kan niet nogmaals worden herstart');
+reset role;
+
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000d2","role":"authenticated","aal":"aal2"}', true);
+select results_eq($$ select count(*)::bigint from jsonb_array_elements(public.list_dealer_listings(null, null, 'active')) item where (item#>>'{round,id}')::uuid = (select second_round_id from phase3_state) $$, $$ values (1::bigint) $$, 'dealers zien de nieuwe actieve ronde');
+select results_eq($$ select jsonb_array_length(public.get_dealer_won_cases()) $$, $$ values (0) $$, 'de ingetrokken winnaar ziet geen gewonnen dossier meer');
+reset role;
+
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e3","role":"authenticated","aal":"aal1"}', true);
+select is(public.get_seller_phase4_state('40000000-0000-0000-0000-000000000001')->'reservation', 'null'::jsonb, 'verkoper ziet geen ingetrokken winnaarreservering als actieve afhandeling');
+reset role;
+
+select results_eq($$ select after_data->>'reason' from public.audit_log where action = 'bid_round.restarted' and entity_id = (select second_round_id from phase3_state) $$, $$ values ('De hoogste bieding sluit onvoldoende aan bij de verwachte marktwaarde.'::text) $$, 'reden en nieuwe ronde staan in de auditlog');
+select results_eq($$ select count(*)::bigint from public.notification_outbox where entity_id in ((select second_round_id from phase3_state), (select id from public.winner_reservations where bid_round_id = (select round_id from phase3_state))) and event_type in ('bid_round.restarted', 'bid_round.reservation_released') $$, $$ values (2::bigint) $$, 'verkoper en oude winnaar krijgen elk een duurzame melding');
 
 select is(
   extract(epoch from ((timestamptz '2026-03-28 12:00:00+01' + interval '86400 seconds') - timestamptz '2026-03-28 12:00:00+01'))::bigint,

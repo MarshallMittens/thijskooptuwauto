@@ -10,6 +10,12 @@ const publishSchema = z.object({
   applicationId: z.string().uuid(),
 });
 
+const restartSchema = z.object({
+  applicationId: z.string().uuid(),
+  reason: z.string().trim().min(10).max(500),
+  idempotencyKey: z.string().uuid(),
+});
+
 export type MarketActionResult = { ok: boolean; message: string };
 
 export async function publishApplicationAction(input: z.input<typeof publishSchema>): Promise<MarketActionResult> {
@@ -55,4 +61,34 @@ export async function closeBidRoundAction(input: { applicationId: string; roundI
   revalidatePath(`/beheer/aanvragen/${parsed.data.applicationId}`);
   revalidatePath("/dealer");
   return { ok: true, message: "De uitslag is vastgelegd. De hoogste bieder is gereserveerd; dit is nog geen koop." };
+}
+
+export async function restartBidRoundAction(input: z.input<typeof restartSchema>): Promise<MarketActionResult> {
+  await requireAdmin();
+  const parsed = restartSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, message: "Vul een duidelijke reden van minimaal 10 tekens in." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("admin_restart_bid_round", {
+    p_application_id: parsed.data.applicationId,
+    p_reason: parsed.data.reason,
+    p_idempotency_key: parsed.data.idempotencyKey,
+  });
+  if (error) {
+    const known = [
+      ["bid_round_not_finalized", "Leg eerst de uitslag van de afgelopen ronde vast."],
+      ["auction_followup_started", "Herstarten kan niet meer omdat de afspraak- of afhandelingsroute al is begonnen."],
+      ["bid_round_disputed", "Deze biedronde heeft een geschilstatus en kan niet opnieuw worden gestart."],
+      ["winner_reservation_disputed", "De winnaarreservering heeft een geschilstatus en kan niet worden ingetrokken."],
+      ["published_listing_required", "Alleen een nog gepubliceerde auto kan opnieuw worden aangeboden."],
+    ] as const;
+    const match = known.find(([key]) => error.message.includes(key));
+    return { ok: false, message: match?.[1] ?? "De nieuwe biedronde kon niet veilig worden gestart." };
+  }
+
+  revalidatePath(`/beheer/aanvragen/${parsed.data.applicationId}`);
+  revalidatePath("/dealer");
+  revalidatePath("/dealer/mijn-biedingen");
+  revalidatePath("/dealer/gewonnen");
+  return { ok: true, message: "De vorige biedingen blijven bewaard. Er loopt nu een nieuwe, lege biedronde van exact 24 uur." };
 }
