@@ -2,18 +2,27 @@ project_id = "thijskooptuauto"
 
 [api]
 enabled = true
-port = 54321
+port = 54521
 schemas = ["public", "storage", "graphql_public"]
 extra_search_path = ["public", "extensions"]
 max_rows = 1000
 
 [db]
-port = 54322
-shadow_port = 54320
+port = 54522
+shadow_port = 54520
 
 [studio]
 enabled = true
-port = 54323
+port = 54523
+
+[local_smtp]
+enabled = true
+port = 54524
+smtp_port = 54525
+pop3_port = 54526
+
+[analytics]
+enabled = false
 
 [auth]
 enabled = true

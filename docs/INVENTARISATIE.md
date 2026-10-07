@@ -350,7 +350,7 @@ Neem uitsluitend lokaal de door Supabase getoonde URL en sleutels over in `.env.
 npm run dev
 ```
 
-Open `http://127.0.0.1:3000`. Lokale Supabase Studio gebruikt volgens de projectconfiguratie poort `54323`. Auth-e-mails worden lokaal door de Supabase-mailinterface opgevangen; er wordt lokaal geen echte e-mail verzonden.
+Open `http://127.0.0.1:3000`. Lokale Supabase Studio gebruikt volgens de projectconfiguratie poort `54523`. Auth-e-mails worden lokaal door de Supabase-mailinterface opgevangen; er wordt lokaal geen echte e-mail verzonden.
 
 ### 7.3 Testen en bouwen
 

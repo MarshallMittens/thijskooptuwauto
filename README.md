@@ -116,7 +116,7 @@ Voor productie wordt deze bootstrap-procedure apart gecontroleerd en nooit met e
 
 Gebruik voor Thijs als inkoper een afzonderlijk dealeraccount. Een beheeraccount kan niet als dealer bieden. Bestaande lokale accounts met beide lidmaatschappen behouden beheerinzage, maar krijgen geen dealerrechten en moeten vóór productie gecontroleerd worden opgeschoond.
 
-Particuliere verkopers gebruiken geen wachtwoord. Zij openen `/mijn-aanvraag`, voeren hun aanvraagreferentie en het e-mailadres uit de aanvraag in en ontvangen lokaal een eenmalige link in Mailpit op `http://127.0.0.1:54324`.
+Particuliere verkopers gebruiken geen wachtwoord. Zij openen `/mijn-aanvraag`, voeren hun aanvraagreferentie en het e-mailadres uit de aanvraag in en ontvangen lokaal een eenmalige link in Mailpit op `http://127.0.0.1:54524`.
 
 ## Documentatie
 
