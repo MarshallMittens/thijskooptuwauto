@@ -10,7 +10,7 @@ Legenda: `[x]` gebouwd en lokaal geverifieerd, `[~]` gebouwd maar nog niet volle
 - [x] Fase 1: wachtwoordherstel en globale sessie-intrekking na wachtwoordwijziging toegevoegd.
 - [x] Fase 1: versieerbare veilingpolicy toegevoegd met exact 86400 seconden, uitsluitend een testminimumstap en een harde blokkade op onvolledig goedgekeurde kosteninstellingen.
 - [x] Fase 1: negatieve unit- en database-tests voor MFA, identiteitsscheiding en testbeleid toegevoegd.
-- [x] Fase 1: gecontroleerde admin-/dealeruitzondering voor de platformeigenaar toegevoegd; standaard uit, admin-only, MFA-verplicht en negatief getest.
+- [x] Fase 1: gecontroleerde admin-/dealeruitzondering voor expliciet aangewezen platformadmins toegevoegd; per account standaard uit, admin-only, MFA-verplicht, bedrijfsgescheiden en negatief getest.
 - [x] Nieuwe fase 2: wachtwoordloze verkoperverificatie en beveiligd eigen dossier boven op de bestaande aanmeldwizard.
 - [x] Nieuwe fase 2: verkoper ziet uitsluitend eigen aanvraag en private foto’s via vijf minuten geldige links; andere verkopers, dealers en staff-identiteiten kunnen niet koppelen.
 - [x] Nieuwe fase 2: aanvullen is alleen mogelijk bij `needs_information`; daarna gaat het dossier gecontroleerd terug naar `in_review`.

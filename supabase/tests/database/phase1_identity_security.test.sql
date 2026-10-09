@@ -1,7 +1,7 @@
 begin;
 
 create extension if not exists pgtap with schema extensions;
-select plan(21);
+select plan(24);
 
 insert into auth.users (
   instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
@@ -13,6 +13,7 @@ insert into auth.users (
   ('00000000-0000-0000-0000-000000000000', '01000000-0000-0000-0000-0000000000b1', 'authenticated', 'authenticated', 'identity-staff-candidate@example.test', '', now(), '{}', '{}', now(), now(), '', '', '', ''),
   ('00000000-0000-0000-0000-000000000000', '01000000-0000-0000-0000-0000000000c1', 'authenticated', 'authenticated', 'identity-member-candidate@example.test', '', now(), '{}', '{}', now(), now(), '', '', '', ''),
   ('00000000-0000-0000-0000-000000000000', '01000000-0000-0000-0000-0000000000f1', 'authenticated', 'authenticated', 'identity-platform-owner@example.test', '', now(), '{}', '{}', now(), now(), '', '', '', ''),
+  ('00000000-0000-0000-0000-000000000000', '01000000-0000-0000-0000-0000000000f2', 'authenticated', 'authenticated', 'identity-second-platform-admin@example.test', '', now(), '{}', '{}', now(), now(), '', '', '', ''),
   ('00000000-0000-0000-0000-000000000000', '01000000-0000-0000-0000-0000000000e1', 'authenticated', 'authenticated', 'identity-seller@example.test', '', now(), '{}', '{}', now(), now(), '', '', '', '');
 
 insert into public.staff_memberships (user_id, role) values
@@ -29,7 +30,8 @@ insert into public.companies (
 
 insert into public.company_memberships (company_id, user_id, role) values
   ('11000000-0000-0000-0000-0000000000d1', '01000000-0000-0000-0000-0000000000d1', 'owner'),
-  ('11000000-0000-0000-0000-0000000000d1', '01000000-0000-0000-0000-0000000000f1', 'owner');
+  ('11000000-0000-0000-0000-0000000000d1', '01000000-0000-0000-0000-0000000000f1', 'owner'),
+  ('11000000-0000-0000-0000-0000000000d1', '01000000-0000-0000-0000-0000000000f2', 'owner');
 
 insert into public.seller_contacts (id, full_name, email, phone, postal_code)
 values ('21000000-0000-0000-0000-000000000001', 'Fictieve Verkoper', 'identity-seller@example.test', '0699999999', '9999ZZ');
@@ -69,12 +71,31 @@ select lives_ok(
   'alleen een expliciet gemarkeerde admin mag ook een actief dealerlidmaatschap hebben'
 );
 
+select lives_ok(
+  $$ insert into public.staff_memberships (user_id, role, can_use_dealer_portal) values ('01000000-0000-0000-0000-0000000000f2', 'admin', true) $$,
+  'meerdere expliciet gemarkeerde admins kunnen gecontroleerd dealerrechten krijgen'
+);
+
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"01000000-0000-0000-0000-0000000000f1","role":"authenticated","aal":"aal1"}', true);
 select throws_ok(
   $$ select public.list_dealer_listings(null, null, null) $$,
   'P0001', 'approved_company_required',
   'ook de platformeigenaar heeft MFA nodig voor dealerrechten'
+);
+reset role;
+
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"01000000-0000-0000-0000-0000000000f2","role":"authenticated","aal":"aal2"}', true);
+select results_eq(
+  $$ select (public.get_my_access_context()->>'can_use_dealer_portal')::boolean $$,
+  $$ values (true) $$,
+  'de tweede expliciet aangewezen admin krijgt dezelfde gecontroleerde dealercontext'
+);
+select results_eq(
+  $$ select count(*)::bigint from jsonb_array_elements(public.list_dealer_listings(null, null, null)) item where item->>'id' = '61000000-0000-0000-0000-000000000001' $$,
+  $$ values (1::bigint) $$,
+  'de tweede expliciet aangewezen admin ziet met MFA het goedgekeurde dealeraanbod'
 );
 reset role;
 
