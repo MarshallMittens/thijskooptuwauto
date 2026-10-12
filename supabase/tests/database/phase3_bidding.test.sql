@@ -50,9 +50,9 @@ reset role;
 select ok((select listing_id is not null and round_id is not null from phase3_state), 'beheer publiceert een vaste voertuigversie met biedronde');
 select results_eq($$ select extract(epoch from (ends_at - starts_at))::bigint from public.bid_rounds where id = (select round_id from phase3_state) $$, $$ values (86400::bigint) $$, 'biedronde duurt exact 86400 seconden');
 select results_eq($$ select status::text from public.bid_rounds where id = (select round_id from phase3_state) $$, $$ values ('active'::text) $$, 'nieuwe biedronde start direct actief');
-select results_eq($$ select rules_snapshot->>'minimumIncrementCents' from public.bid_rounds where id = (select round_id from phase3_state) $$, $$ values ('10000'::text) $$, 'minimumstap tot vijfduizend euro is als snapshot opgeslagen');
-select results_eq($$ select rules_snapshot->>'minimumIncrementThresholdCents' from public.bid_rounds where id = (select round_id from phase3_state) $$, $$ values ('500000'::text) $$, 'drempel van vijfduizend euro is als snapshot opgeslagen');
-select results_eq($$ select rules_snapshot->>'minimumIncrementAboveThresholdCents' from public.bid_rounds where id = (select round_id from phase3_state) $$, $$ values ('15000'::text) $$, 'minimumstap vanaf vijfduizend euro is als snapshot opgeslagen');
+select results_eq($$ select rules_snapshot->>'minimumIncrementCents' from public.bid_rounds where id = (select round_id from phase3_state) $$, $$ values ('10000'::text) $$, 'minimumstap tot tienduizend euro is als snapshot opgeslagen');
+select results_eq($$ select rules_snapshot->>'minimumIncrementThresholdCents' from public.bid_rounds where id = (select round_id from phase3_state) $$, $$ values ('1000000'::text) $$, 'drempel van tienduizend euro is als snapshot opgeslagen');
+select results_eq($$ select rules_snapshot->>'minimumIncrementAboveThresholdCents' from public.bid_rounds where id = (select round_id from phase3_state) $$, $$ values ('15000'::text) $$, 'minimumstap vanaf tienduizend euro is als snapshot opgeslagen');
 select results_eq($$ select count(*)::bigint from public.audit_log where entity_id = (select listing_id from phase3_state) and action = 'listing.published' $$, $$ values (1::bigint) $$, 'publicatie staat in de auditlog');
 select results_eq($$ select count(*)::bigint from public.notification_outbox where event_type = 'listing.published' and entity_id = (select listing_id from phase3_state) $$, $$ values (2::bigint) $$, 'alle goedgekeurde garages krijgen een duurzame melding van nieuw aanbod');
 
@@ -74,11 +74,11 @@ select results_eq($$ select count(*)::bigint from jsonb_array_elements(public.li
 select is(public.get_dealer_listing((select listing_id from phase3_state))#>>'{vehicle,registration}', '12AB34', 'dealer ziet de gepubliceerde voertuigversie');
 select results_eq($$ select count(*)::bigint from public.seller_contacts $$, $$ values (0::bigint) $$, 'dealer kan verkopersgegevens niet rechtstreeks lezen');
 select results_eq($$ select count(*)::bigint from public.internal_notes $$, $$ values (0::bigint) $$, 'dealer kan interne notities niet lezen');
-update phase3_state set first_bid_id = (public.place_bid(round_id, 490000, '70000000-0000-0000-0000-000000000001')->>'bid_id')::uuid;
+update phase3_state set first_bid_id = (public.place_bid(round_id, 990000, '70000000-0000-0000-0000-000000000001')->>'bid_id')::uuid;
 select ok((select first_bid_id is not null from phase3_state), 'eerste positieve bod wordt opgeslagen');
-select throws_ok($$ select public.place_bid((select round_id from phase3_state), 499999, '70000000-0000-0000-0000-000000000002') $$, 'P0001', 'bid_below_minimum_increment', 'onder vijfduizend euro wordt minder dan honderd euro verhoging geweigerd');
-select lives_ok($$ select public.place_bid((select round_id from phase3_state), 500000, '70000000-0000-0000-0000-000000000003') $$, 'exact honderd euro verhogen tot vijfduizend wordt geaccepteerd');
-select results_eq($$ select (public.place_bid((select round_id from phase3_state), 490000, '70000000-0000-0000-0000-000000000001')->>'created')::boolean $$, $$ values (false) $$, 'dubbel verzoek met dezelfde sleutel maakt geen tweede bod');
+select throws_ok($$ select public.place_bid((select round_id from phase3_state), 999999, '70000000-0000-0000-0000-000000000002') $$, 'P0001', 'bid_below_minimum_increment', 'onder tienduizend euro wordt minder dan honderd euro verhoging geweigerd');
+select lives_ok($$ select public.place_bid((select round_id from phase3_state), 1000000, '70000000-0000-0000-0000-000000000003') $$, 'exact honderd euro verhogen tot tienduizend wordt geaccepteerd');
+select results_eq($$ select (public.place_bid((select round_id from phase3_state), 990000, '70000000-0000-0000-0000-000000000001')->>'created')::boolean $$, $$ values (false) $$, 'dubbel verzoek met dezelfde sleutel maakt geen tweede bod');
 reset role;
 
 set local role authenticated;
@@ -86,10 +86,10 @@ select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000
 select results_eq($$ select count(*)::bigint from public.bids $$, $$ values (0::bigint) $$, 'ander bedrijf kan biedingen niet rechtstreeks lezen');
 select results_eq($$ select jsonb_array_length(public.get_dealer_listing((select listing_id from phase3_state))->'bidHistory') $$, $$ values (2) $$, 'ander bedrijf ziet wel dezelfde anonieme biedbedragen via de gecontroleerde functie');
 select results_eq($$ select count(*)::bigint from jsonb_array_elements(public.get_dealer_listing((select listing_id from phase3_state))->'bidHistory') item where (item->>'isOwnCompany')::boolean $$, $$ values (0::bigint) $$, 'biedhistorie lekt geen concurrerende identiteit als eigen bedrijf');
-select throws_ok($$ select public.place_bid((select round_id from phase3_state), 514999, '70000000-0000-0000-0000-000000000004') $$, 'P0001', 'bid_below_minimum_increment', 'vanaf vijfduizend euro wordt minder dan honderdvijftig euro verhoging geweigerd');
-update phase3_state set winning_bid_id = (public.place_bid(round_id, 515000, '70000000-0000-0000-0000-000000000005')->>'bid_id')::uuid;
+select throws_ok($$ select public.place_bid((select round_id from phase3_state), 1014999, '70000000-0000-0000-0000-000000000004') $$, 'P0001', 'bid_below_minimum_increment', 'vanaf tienduizend euro wordt minder dan honderdvijftig euro verhoging geweigerd');
+update phase3_state set winning_bid_id = (public.place_bid(round_id, 1015000, '70000000-0000-0000-0000-000000000005')->>'bid_id')::uuid;
 select ok((select winning_bid_id is not null from phase3_state), 'andere garage kan met honderdvijftig euro verhogen');
-select throws_ok($$ select public.place_bid((select round_id from phase3_state), 515000, '70000000-0000-0000-0000-000000000006') $$, 'P0001', 'bid_below_minimum_increment', 'een gelijk tweede bedrag wordt geweigerd');
+select throws_ok($$ select public.place_bid((select round_id from phase3_state), 1015000, '70000000-0000-0000-0000-000000000006') $$, 'P0001', 'bid_below_minimum_increment', 'een gelijk tweede bedrag wordt geweigerd');
 reset role;
 
 select results_eq($$ select count(*)::bigint from public.notification_outbox where event_type = 'bid.placed' and entity_id in (select id from public.bids where bid_round_id = (select round_id from phase3_state)) $$, $$ values (3::bigint) $$, 'ieder opgeslagen bod krijgt een duurzame notificatie');

@@ -43,7 +43,7 @@
 - Dealers zien geen verkopersgegevens, interne notities of identiteit van andere biedende bedrijven; alle goedgekeurde dealers zien wel dezelfde bedragen en tijdstippen.
 - Alleen gepubliceerde, onveranderlijke voertuigversies en goedgekeurde foto’s zijn zichtbaar.
 - Een nieuwe ronde start op databasetijd en eindigt exact 86400 seconden later.
-- Een bod wordt als gehele eurocenten opgeslagen en moet bij een bestaande hoogste bieding onder €5.000 minimaal €100 hoger en vanaf €5.000 minimaal €150 hoger zijn.
+- Een bod wordt als gehele eurocenten opgeslagen en moet bij een bestaande hoogste bieding onder €10.000 minimaal €100 hoger en vanaf €10.000 minimaal €150 hoger zijn.
 - Rechtstreekse inserts, updates en deletes op `bids` worden geweigerd.
 - Dezelfde idempotentiesleutel met dezelfde inhoud retourneert hetzelfde bod; andere inhoud wordt geweigerd.
 - Een bod na de databasetijd van de deadline wordt geweigerd, ongeacht een sluitingstaak.

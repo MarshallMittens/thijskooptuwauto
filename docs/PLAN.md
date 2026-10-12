@@ -11,7 +11,7 @@ Legenda: `[x]` gebouwd en lokaal geverifieerd, `[~]` gebouwd maar nog niet volle
 - [x] Fotogids, mobiele cameraknop, aparte schadefoto-instructie en de tekst dat foto’s niet met AI worden aangevuld zijn toegevoegd.
 - [x] Btw-/margestatus, particulier/zakelijk gebruik, rook-/dierenlucht en fysieke/digitale onderhoudsregistratie worden als voertuigcontext opgeslagen.
 - [x] Lopende veilingen hebben een apart staff-overzicht met biedaantal, hoogste bod en biedende bedrijven.
-- [x] Veilingen kunnen gecontroleerd opnieuw worden gestart; biedstappen zijn €100 onder €5.000 en €150 vanaf €5.000 zonder bovengrenswijziging.
+- [x] Veilingen kunnen gecontroleerd opnieuw worden gestart; biedstappen zijn €100 onder €10.000 en €150 vanaf €10.000.
 - [x] Er is geen limiet van vijf garages. Nieuwe publicaties en overbiedingen schrijven per betrokken garage een duurzame outboxmelding.
 - [x] Dealerinlog en de beknopte gebruiksregels zijn duidelijker benoemd; platformrelatie en toegangsblokkade zijn in beheer zichtbaar gescheiden.
 - [~] Lokale Supabase Auth-mails hebben Thijskooptuauto-opmaak. Dezelfde HTML en een geverifieerde eigen SMTP-afzender moeten nog in het gekoppelde Supabase-project worden ingesteld.
@@ -74,7 +74,7 @@ De onderstaande oorspronkelijke voortgang blijft als technische historie behoude
 - [~] Gepubliceerd aanbod, filters, private gecontroleerde foto’s en detailpagina werken lokaal; geautomatiseerde browser-E2E volgt nog.
 - [x] Nieuwe publicaties starten op database-transactietijd en duren exact 86400 seconden.
 - [x] Alle goedgekeurde garages zien dezelfde bedragen en tijdstippen, zonder bedrijfsidentiteit van concurrenten of verkopersgegevens.
-- [x] De testminimumstap komt uit een onveranderlijke policy-snapshot per ronde: €100 onder €5.000 en €150 vanaf €5.000, ook boven €10.000.
+- [x] De testminimumstap komt uit een onveranderlijke policy-snapshot per ronde: €100 onder €10.000 en €150 vanaf €10.000.
 - [x] Transactionele append-only biedfunctie gebruikt een biedrondelock, `clock_timestamp()`, globale hoogste bieding en idempotentie.
 - [x] Negatieve rechten-, deadline-, minimumstap-, append-only- en idempotentietests slagen tegen lokale PostgreSQL.
 - [x] Twee echte gelijktijdige databaseverbindingen bewijzen dat gelijke biedingen exact één winnaar opleveren.

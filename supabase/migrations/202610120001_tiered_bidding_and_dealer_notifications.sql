@@ -20,7 +20,7 @@ insert into public.auction_policy_versions (
   'test',
   86400,
   10000,
-  500000,
+  1000000,
   15000,
   null,
   null,
