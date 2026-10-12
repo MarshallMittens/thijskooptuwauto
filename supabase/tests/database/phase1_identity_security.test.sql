@@ -175,7 +175,7 @@ select results_eq(
   'onbesliste behandelingskosten zijn niet als productiebeleid ingevuld'
 );
 select throws_ok(
-  $$ insert into public.auction_policy_versions (version, status, minimum_increment_cents) values (2, 'approved', 5000) $$,
+  $$ insert into public.auction_policy_versions (version, status, minimum_increment_cents) values (99, 'approved', 5000) $$,
   '23514', null,
   'onvolledige kostenconfiguratie kan niet als goedgekeurd beleid worden opgeslagen'
 );

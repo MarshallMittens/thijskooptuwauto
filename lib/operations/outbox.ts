@@ -26,6 +26,8 @@ const subjects: Record<string, string> = {
   "complaint.updated": "Je klachtendossier is bijgewerkt",
   "payment.status_changed": "De betaalstatus van je dossier is bijgewerkt",
   "bid.placed": "Je bod is opgeslagen",
+  "bid.outbid": "Je bent overboden",
+  "listing.published": "Er staat een nieuwe auto klaar",
   "auction.outcome": "De biedronde is afgerond",
 };
 
@@ -37,7 +39,18 @@ function escapeHtml(value: string) {
 
 async function deliver(item: z.infer<typeof itemSchema>, apiKey: string, from: string) {
   const subject = subjects[item.event_type] ?? "Er is een update in je dossier";
-  const portalUrl = new URL(item.event_type.startsWith("complaint") ? "/mijn-aanvraag" : "/", getAppUrl()).toString();
+  const payload = item.payload && typeof item.payload === "object" && !Array.isArray(item.payload)
+    ? item.payload as Record<string, unknown>
+    : {};
+  const listingId = typeof payload.listing_id === "string" && /^[0-9a-f-]{36}$/i.test(payload.listing_id)
+    ? payload.listing_id
+    : null;
+  const portalPath = item.event_type.startsWith("complaint")
+    ? "/mijn-aanvraag"
+    : listingId
+      ? `/dealer/aanbod/${listingId}`
+      : "/dealer";
+  const portalUrl = new URL(portalPath, getAppUrl()).toString();
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {

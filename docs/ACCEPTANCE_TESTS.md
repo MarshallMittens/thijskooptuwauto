@@ -27,6 +27,7 @@
 - Publiceren wordt in PostgreSQL geweigerd zolang de verkoper niet is geverifieerd.
 - Dubbel indienen geeft één aanvraag en dezelfde uitkomst.
 - Contactgegevens worden niet in de browsersessie opgeslagen.
+- Een fout e-mailadres wordt vóór foto-upload geweigerd; een al ingelogde verkoper kan een nieuwe aanvraag alleen via expliciete koppeling en een exact overeenkomend geverifieerd adres openen.
 - Een anonieme gebruiker kan aanvragen, verkopersgegevens, fotometadata en concepten niet uitlezen.
 - Foto’s worden alleen met een kort geldige uploadmachtiging naar de private bucket geschreven.
 - De server controleert werkelijke foto-inhoud en bestandsgrootte en codeert geaccepteerde foto’s opnieuw als JPEG zonder metadata.
@@ -42,11 +43,13 @@
 - Dealers zien geen verkopersgegevens, interne notities of identiteit van andere biedende bedrijven; alle goedgekeurde dealers zien wel dezelfde bedragen en tijdstippen.
 - Alleen gepubliceerde, onveranderlijke voertuigversies en goedgekeurde foto’s zijn zichtbaar.
 - Een nieuwe ronde start op databasetijd en eindigt exact 86400 seconden later.
-- Een bod wordt als gehele eurocenten opgeslagen en moet bij een bestaande hoogste bieding minimaal de policy-stap hoger zijn.
+- Een bod wordt als gehele eurocenten opgeslagen en moet bij een bestaande hoogste bieding onder €5.000 minimaal €100 hoger en vanaf €5.000 minimaal €150 hoger zijn.
 - Rechtstreekse inserts, updates en deletes op `bids` worden geweigerd.
 - Dezelfde idempotentiesleutel met dezelfde inhoud retourneert hetzelfde bod; andere inhoud wordt geweigerd.
 - Een bod na de databasetijd van de deadline wordt geweigerd, ongeacht een sluitingstaak.
 - Iedere succesvolle bieding schrijft een auditregel en notificatie-outboxregel in dezelfde transactie.
+- Iedere publicatie maakt voor alle goedgekeurde garages een gededupliceerde outboxmelding; de vorige hoogste bieder krijgt bij een bod van een ander bedrijf precies één overbodenmelding.
+- Alleen staff met `aal2` kan het overzicht van lopende veilingen inclusief de namen van biedende bedrijven lezen; dealers worden database-side geweigerd.
 - Beheer ziet alle biedingen. Sluiten maakt maximaal één winnaarreservering, maar geen koop of verkoopdossier.
 - Herhaald sluiten geeft dezelfde uitslag en maakt geen tweede winnaarreservering.
 - Gelijktijdige verhogingen worden door de biedrondelock in geldige volgorde verwerkt; twee echte databaseverbindingen bewijzen dat van twee gelijke gelijktijdige biedingen exact één wordt opgeslagen.

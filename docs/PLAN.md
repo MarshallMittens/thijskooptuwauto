@@ -2,6 +2,27 @@
 
 Legenda: `[x]` gebouwd en lokaal geverifieerd, `[~]` gebouwd maar nog niet volledig end-to-end of extern gekoppeld, `[ ]` nog niet gebouwd.
 
+## Verwerking praktijktestfeedback — 12 oktober 2026
+
+- [x] Bedankpagina toont het kenteken als herkenbare dossiernaam; de onvoorspelbare referentie blijft alleen als technische beveiligingscode beschikbaar.
+- [x] Een al ingelogde verkoper kan een nieuwe aanvraag expliciet koppelen; de database blijft het geverifieerde e-mailadres vergelijken en weigert dealer-/staffaccounts.
+- [x] Contactgegevens worden vóór fotoverwerking met hetzelfde Zod-schema als de server gecontroleerd, inclusief dubbele punten in een e-maildomein.
+- [x] Beheer kan materiële voertuiggegevens gecontroleerd aanpassen; een bestaande veiling wordt daarbij ingetrokken in plaats van stilzwijgend gewijzigd.
+- [x] Fotogids, mobiele cameraknop, aparte schadefoto-instructie en de tekst dat foto’s niet met AI worden aangevuld zijn toegevoegd.
+- [x] Btw-/margestatus, particulier/zakelijk gebruik, rook-/dierenlucht en fysieke/digitale onderhoudsregistratie worden als voertuigcontext opgeslagen.
+- [x] Lopende veilingen hebben een apart staff-overzicht met biedaantal, hoogste bod en biedende bedrijven.
+- [x] Veilingen kunnen gecontroleerd opnieuw worden gestart; biedstappen zijn €100 onder €5.000 en €150 vanaf €5.000 zonder bovengrenswijziging.
+- [x] Er is geen limiet van vijf garages. Nieuwe publicaties en overbiedingen schrijven per betrokken garage een duurzame outboxmelding.
+- [x] Dealerinlog en de beknopte gebruiksregels zijn duidelijker benoemd; platformrelatie en toegangsblokkade zijn in beheer zichtbaar gescheiden.
+- [~] Lokale Supabase Auth-mails hebben Thijskooptuauto-opmaak. Dezelfde HTML en een geverifieerde eigen SMTP-afzender moeten nog in het gekoppelde Supabase-project worden ingesteld.
+- [ ] Sms-berichten vereisen providerkeuze, verwerkersafspraken, toestemming, afzender en kostenbeleid; er wordt niet stilzwijgend een betaalde sms-dienst geactiveerd.
+- [ ] Een commerciële KvK-validatie-API of andere betrouwbare externe bron moet nog worden gekozen. Tot die tijd controleert beheer handmatig; alleen formaat en uniciteit zijn technisch afgedwongen.
+- [ ] Automatisch/proxy bieden vereist een afzonderlijk transactieontwerp, limietprivacy, gelijktijdigheidstests en dealeruitleg; dit wordt niet als eenvoudige formulieroptie toegevoegd.
+- [ ] Registreren wie een veiling heeft bekeken vereist doelbinding, bewaartermijn en privacytekst voordat persoonsgebonden kijklogs worden opgeslagen.
+- [ ] De €250 transportservice is besloten voor gekozen transport, maar betaler, btw, factuurmoment, annulering en restitutie blokkeren inning en facturatie.
+- [ ] Klant- en garagekosten gaan ieder rechtstreeks naar Thijskooptuauto, maar exacte bedragen, btw, verschuldigdheidsmoment en restitutie ontbreken nog. Testfacturen blijven daarom €0 en `draft_blocked`.
+- [ ] Gedragsbadges voor garages blijven een latere productfase en vereisen objectieve criteria, bezwaarroute en anti-manipulatieregels.
+
 ## Herijking na fase-0-inventarisatie — bouwplan 22 september 2026
 
 - [x] Fase 0: bestaande repository, UI, koppelingen, infrastructuur en testcommando's vastgelegd in `docs/INVENTARISATIE.md`.
@@ -40,8 +61,10 @@ De onderstaande oorspronkelijke voortgang blijft als technische historie behoude
 
 - [x] Publieke pagina’s, metadata, sitemap en navigatie met herkenbare conceptteksten.
 - [~] Zesstaps aanvraagformulier met tijdelijk concepttoken en idempotentie; databasepad is geverifieerd, browser-E2E volgt nog.
+- [x] Formulier vraagt btw-/margestatus, particulier/zakelijk gebruik, onderhoudsregistratie en rook-/dierenlucht als duidelijke keuzes en valideert contactgegevens vóór upload.
 - [x] RDW-opvraag via de officiële openbare kentekendataset met handmatige terugval.
 - [~] Private signed upload, serverinspectie, hercodering zonder metadata en fotoreview; geautomatiseerde browser-E2E volgt nog.
+- [~] De fotostap geeft vaste hoekvoorbeelden, schade-instructies en een mobiele cameraknop; HEIC-decodering blijft afhankelijk van browserondersteuning en krijgt een duidelijke terugvalmelding.
 - [~] Onvoorspelbare referentie en duurzame notificatie-outbox zijn lokaal geverifieerd; Resend is optioneel en nog niet ingesteld.
 - [~] Beheeroverzicht, statusovergangen, interne notities en fotocontrole; databasefuncties zijn geverifieerd, browser-E2E volgt nog.
 - [~] Magic-linkverificatie en eigen verkopersdossier zijn lokaal gebouwd en database-side getest; volledige browser-E2E van de e-mailklik volgt nog.
@@ -51,14 +74,16 @@ De onderstaande oorspronkelijke voortgang blijft als technische historie behoude
 - [~] Gepubliceerd aanbod, filters, private gecontroleerde foto’s en detailpagina werken lokaal; geautomatiseerde browser-E2E volgt nog.
 - [x] Nieuwe publicaties starten op database-transactietijd en duren exact 86400 seconden.
 - [x] Alle goedgekeurde garages zien dezelfde bedragen en tijdstippen, zonder bedrijfsidentiteit van concurrenten of verkopersgegevens.
-- [x] De globale testminimumstap van €50,00 komt uit een onveranderlijke policy-snapshot per ronde.
+- [x] De testminimumstap komt uit een onveranderlijke policy-snapshot per ronde: €100 onder €5.000 en €150 vanaf €5.000, ook boven €10.000.
 - [x] Transactionele append-only biedfunctie gebruikt een biedrondelock, `clock_timestamp()`, globale hoogste bieding en idempotentie.
 - [x] Negatieve rechten-, deadline-, minimumstap-, append-only- en idempotentietests slagen tegen lokale PostgreSQL.
 - [x] Twee echte gelijktijdige databaseverbindingen bewijzen dat gelijke biedingen exact één winnaar opleveren.
 - [x] Sluiten is idempotent, maakt maximaal één winnaarreservering en maakt geen koop of verkoopdossier.
 - [x] Beheer kan een definitief afgesloten ronde gemotiveerd opnieuw starten; oude biedingen blijven historie, de nieuwe ronde is leeg en vervolgafhandeling blokkeert herstart.
+- [x] Beheer heeft een apart overzicht van lopende veilingen met eindtijd, hoogste bod, biedaantal en uitsluitend voor staff zichtbare bedrijfsnamen.
 - [~] `close_due_bid_rounds` kan verlopen rondes herstelbaar in batches sluiten; het externe schema dat deze functie periodiek aanroept wordt pas bij hosting ingericht.
-- [~] Ieder opgeslagen bod en iedere uitslag krijgt transactioneel een outboxnotificatie; Resend-verzending is optioneel en nog niet ingesteld.
+- [~] Ieder opgeslagen bod, iedere nieuwe publicatie, iedere overbieding en iedere uitslag krijgt transactioneel een outboxnotificatie; Resend-verzending is afhankelijk van de apart ingestelde worker.
+- [x] Er is geen productlimiet van vijf garages; alle goedgekeurde garages krijgen hetzelfde aanbod en de beheerpagina toont alle aanmeldingen met aantallen.
 - [x] Reviewfix: tijdelijke uploadpaden zijn gescheiden van definitieve, alleen server-schrijfbare fotopaden.
 - [x] Reviewfix: rate limiting gebruikt geen wijzigbare User-Agent en concepttokens blijven geldig bij een netwerkovergang.
 

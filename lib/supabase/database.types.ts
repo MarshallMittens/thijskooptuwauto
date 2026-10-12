@@ -111,6 +111,10 @@ export type Database = {
         Args: { p_application_id: string };
         Returns: Json;
       };
+      list_admin_active_auctions: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
       list_dealer_listings: {
         Args: { p_query: string | null; p_make: string | null; p_round_status: string | null };
         Returns: Json;

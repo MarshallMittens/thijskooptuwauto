@@ -22,7 +22,7 @@
 18. **Afhandeling blijft gescheiden.** Het sluiten van een biedronde wijzigt de verkoopstatus niet. Beheer kiest een bod expliciet en doorloopt gecontroleerde stappen naar akkoord en voltooiing.
 19. **Materiële wijzigingen trekken aanbod in.** Een wijziging aan kilometerstand, schade, techniek of onderhoud trekt een gepubliceerde listing in en annuleert de ronde. Oude revisies en biedingen blijven onveranderd; herpublicatie maakt een nieuwe revisie en ronde.
 20. **Beheer en inkopen gebruiken gescheiden identiteiten.** Nieuwe staff/dealer-overlap wordt database-side geweigerd. Een eventueel bestaand gecombineerd lokaal account kan blijven beheren maar krijgt geen dealerdata of biedrechten.
-21. **Commerciële regels zijn versieerbaar en default-off.** Policyversie 1 is uitsluitend `test`, duurt 86400 seconden en gebruikt €50 als testminimumstap. Kostenbedrag en betaler blijven leeg; een policy kan niet `approved` worden zonder expliciete kostenconfiguratie, voorwaardenversie en goedkeuringsactor.
+21. **Commerciële regels zijn versieerbaar en default-off.** Policyversie 2 is uitsluitend `test`, duurt 86400 seconden en gebruikt €100 minimumverhoging bij een actueel hoogste bod onder €5.000 en €150 vanaf €5.000, dus ook boven €10.000. Kostenbedragen blijven leeg; een policy kan niet `approved` worden zonder expliciete kostenconfiguratie, voorwaardenversie en goedkeuringsactor.
 22. **Verkopers gebruiken een wachtwoordloze Supabase-sessie.** De combinatie van onvoorspelbare aanvraagreferentie en overeenkomend e-mailadres mag uitsluitend een magic link voorbereiden. Na de e-mailklik koppelt een databasefunctie de geverifieerde Auth-identiteit aan precies één eigen aanvraag; staff- en dealeridentiteiten worden geweigerd.
 23. **Verificatie is een publicatievoorwaarde.** Een database-trigger weigert iedere gepubliceerde listing zonder geverifieerde verkoper, ook wanneer een browser of alternatieve API de beheerinterface probeert te omzeilen.
 24. **Een nieuwe ronde duurt exact 24 uur.** De database bepaalt start en einde tijdens dezelfde publicatietransactie; de browser kan geen tijden kiezen of meesturen.
@@ -36,7 +36,7 @@
 32. **Geen automatische tweede winnaar.** Een afwijzing, no-show of vastgelopen vervolgroute maakt een beheertaak; de tweede bieder wordt niet automatisch koper.
 33. **Betalingen zitten achter een adapter.** Fase 5 kent alleen de providernaam `simulated` in omgeving `test`. Een toekomstige echte provider krijgt een afzonderlijke adapter en goedkeuringspad; de simulator wordt nooit als operationele provider gepresenteerd.
 34. **Simulator is default-off en productieverboden.** De databasemigratie zet hem uit. Alleen beheer met MFA kan hem via servercode activeren wanneer lokale simulatorvariabelen aanwezig zijn; de server weigert dit in een productie-runtime.
-35. **Geen verzonnen behandelingskosten.** Zolang bedrag en betalende partij niet zijn vastgesteld, gebruikt de testsimulator €0 vergoeding en de blijvende markering `test_unconfigured`. Dit is geen commercieel besluit.
+35. **Geen verzonnen behandelingskosten.** Zowel de particuliere klant als de garage betaalt de eigen platformkosten rechtstreeks en exclusief aan Thijskooptuauto. De bedragen, btw-behandeling, het verschuldigdheidsmoment en restitutieregels zijn nog niet vastgesteld; daarom gebruikt de testsimulator €0 vergoeding en de blijvende markering `test_unconfigured` en blijven fiscale facturen geblokkeerd.
 36. **Providerbericht is de betaalautoriteit.** Een terugkeerpagina of browseractie bewijst geen betaling. Alleen een tijdgebonden HMAC-ondertekend bericht wordt verwerkt, waarna PostgreSQL bedrag, EUR-valuta, ontvanger en toegestane statusvolgorde opnieuw controleert.
 37. **Ontvangst, vrijgave en uitbetaling zijn verschillende feiten.** Volledig ontvangen geld krijgt `received_held`; vrijgave vereist dubbele overdrachtsbevestiging en beheercontrole; provideracceptatie en uiteindelijke uitbetaling blijven afzonderlijke events.
 38. **Uitbetaling verdwijnt niet bij een geschil.** Een geschil kan een reeds uitbetaalde transactie markeren en een opvolgtaak maken, maar `paid_out_at` blijft als historisch feit staan. Terugbetaling is een afzonderlijk, idempotent proces.
@@ -56,6 +56,10 @@
 52. **Cryptografische extensiefuncties zijn expliciet gekwalificeerd.** Hosted Supabase bewaart `gen_random_bytes` in schema `extensions`. De fase-6-migratie gebruikt daarom `extensions.gen_random_bytes`; deze correctie is gemaakt nadat de eerste acceptatiepoging transactioneel was teruggedraaid en voordat migratie 12 ooit remote als toegepast werd geregistreerd.
 53. **Uitsluitend expliciet aangewezen platformadmins mogen een gecombineerde admin-/dealeridentiteit gebruiken.** Dit is een per account ingestelde uitzondering via `staff_memberships.can_use_dealer_portal`, uitsluitend mogelijk voor `admin`. De uitzondering vereist nog steeds MFA, een actief bedrijfslidmaatschap en een goedgekeurd, niet-geblokkeerd bedrijf. Iedere aangewezen admin handelt alleen namens het eigen gekoppelde bedrijf. Gewone staff- en dealeridentiteiten blijven door triggers gescheiden. Omdat dezelfde sessie ook adminrechten heeft, is dit geen technische functiescheiding; platformaffiliatie, expliciete aanwijzing en auditregistratie blijven daarom verplicht.
 54. **Een slechte uitslag wordt niet overschreven maar krijgt een nieuwe ronde.** Alleen beheer met MFA kan een definitief afgesloten biedronde gemotiveerd opnieuw aanbieden. Oude biedingen en de oude uitslag blijven onveranderlijk bewaard, een nog niet opgevolgde winnaarreservering wordt vrijgegeven en de nieuwe ronde start leeg voor exact 24 uur. Zodra afspraak, koopafhandeling, geschil of een verkoopdossier bestaat, wordt herstart geweigerd.
+55. **Er geldt geen maximumaantal aangesloten garages.** Iedere afzonderlijk geregistreerde en goedgekeurde garage kan deelnemen; beveiliging, filters en notificaties mogen geen impliciete limiet van vijf bedrijven introduceren.
+56. **Transport is een expliciete keuze in de afhandeling.** Wanneer de transport-/ophaalservice wordt gekozen is het afgesproken tarief €250. Betaler, btw-behandeling, annuleringsregels en het precieze factuurmoment blijven open en daarom wordt dit bedrag nog niet geïnd of gefactureerd.
+57. **Toegang en platformrelatie zijn verschillende beheeracties.** Goedkeuren/blokkeren bepaalt dealerportaaltoegang. De markering platformkoper is uitsluitend voor belangenconflicten en functiescheiding en verandert de toegang niet; de beheerinterface benoemt en scheidt deze acties zichtbaar.
+58. **Nieuwe aanbod- en overbodenmeldingen worden duurzaam vastgelegd.** Publicatie maakt per goedgekeurde garage één outboxbericht en een nieuw hoogste bod maakt voor de vorige hoogste garage één overbodenbericht. Externe bezorging blijft afhankelijk van de apart geactiveerde mailworker.
 
 ## Veilige tijdelijke keuzes
 
@@ -63,7 +67,7 @@
 - De eerste uploadversie accepteert JPEG, PNG en WebP, maximaal 12 bestanden van 10 MB.
 - KvK-controle is handmatig; er wordt geen extra commerciële API toegevoegd.
 - Het dealerportaal ververst actieve biedingen iedere vijftien seconden en bij terugkeer naar het tabblad. Dit is doelbewuste polling; Supabase Realtime is niet nodig voor correcte biedverwerking.
-- Policyversie 1 blijft uitsluitend een lokale testconfiguratie. De werkende veilingtechniek activeert geen productiebeleid of livegang.
+- Policyversie 2 blijft uitsluitend een testconfiguratie. De werkende veilingtechniek en afgesproken biedstappen activeren geen productiebeleid of livegang.
 - Een afspraakreactietermijn van 24 uur is voorlopig een operationeel signaal, geen automatische juridische vervaldatum of koopbinding.
 - Fictieve ontvanger-onboarding vraagt geen echte identiteits- of bankgegevens en bewijst niets over provideracceptatie.
 - `@supabase/ssr` blijft achter de adapter in `lib/supabase` zodat een toekomstige API-wijziging lokaal blijft.
@@ -73,7 +77,7 @@
 
 - Juridische rol: inkoper, bemiddelaar of beide.
 - Moment van gebondenheid, geldigheidsduur en intrekking van biedingen.
-- Eventuele kosten, minimale bieding en minimumverhoging.
+- Exacte platformkosten per klant en garage, btw-/factuurbehandeling, betaalmoment, restitutie en een eventuele minimale openingsbieding. De staffel voor minimumverhogingen is wel vastgesteld.
 - Bewaartermijnen en verwijderprocedure per gegevenscategorie.
 - Definitief KvK-nummer, juridische bedrijfsidentiteit, privacy- en voorwaardeninhoud. Het vestigingsadres, telefoonnummer en algemene e-mailadres zijn door de ondernemer aangeleverd voor de contactpagina.
 - Productiebeheerder(s), MFA-herstelprocedure en functiescheiding.
