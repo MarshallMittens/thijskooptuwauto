@@ -29,6 +29,18 @@ export function formatRegistration(value: string) {
 const optionalText = (maximum: number) =>
   z.string().trim().max(maximum).optional().default("");
 
+export const sellerPayloadSchema = z.object({
+  fullName: z.string().trim().min(2, "Vul je volledige naam in.").max(120),
+  email: z.string().trim().email("Vul een geldig e-mailadres in, bijvoorbeeld naam@voorbeeld.nl.").max(254),
+  phone: z.string().trim().min(8, "Vul een geldig telefoonnummer in.").max(30),
+  postalCode: z
+    .string()
+    .trim()
+    .transform((value) => value.toUpperCase().replace(/\s+/g, ""))
+    .pipe(z.string().regex(/^\d{4}[A-Z]{2}$/, "Vul een geldige Nederlandse postcode in.")),
+  desiredSaleDate: z.string().date().or(z.literal("")).optional().default(""),
+});
+
 export const applicationPayloadSchema = z.object({
   vehicle: z.object({
     registration: z
@@ -51,17 +63,7 @@ export const applicationPayloadSchema = z.object({
     keyCount: z.number().int().min(0).max(10),
     remarks: optionalText(2_000),
   }),
-  seller: z.object({
-    fullName: z.string().trim().min(2).max(120),
-    email: z.string().trim().email().max(254),
-    phone: z.string().trim().min(8).max(30),
-    postalCode: z
-      .string()
-      .trim()
-      .transform((value) => value.toUpperCase().replace(/\s+/g, ""))
-      .pipe(z.string().regex(/^\d{4}[A-Z]{2}$/)),
-    desiredSaleDate: z.string().date().or(z.literal("")).optional().default(""),
-  }),
+  seller: sellerPayloadSchema,
 });
 
 export type ApplicationPayload = z.infer<typeof applicationPayloadSchema>;

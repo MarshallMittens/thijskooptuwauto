@@ -10,18 +10,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
-import { ACCEPTED_PHOTO_TYPES, formatRegistration, MAX_PHOTO_BYTES, MAX_PHOTOS, normalizeRegistration } from "@/lib/applications/schema";
+import { ACCEPTED_PHOTO_TYPES, applicationPayloadSchema, formatRegistration, MAX_PHOTO_BYTES, MAX_PHOTOS, normalizeRegistration, sellerPayloadSchema } from "@/lib/applications/schema";
 import { createClient } from "@/lib/supabase/browser";
 
 const STORAGE_KEY = "thijskooptuauto.application.v1";
 const IDEMPOTENCY_KEY = "thijskooptuauto.application.idempotency.v1";
 const stepLabels = ["Kenteken", "Voertuig", "Staat", "Foto’s", "Contact", "Bevestigen"];
+const CAMERA_PHOTO_TYPES = new Set<string>([...ACCEPTED_PHOTO_TYPES, "image/heic", "image/heif"]);
 
 type VehicleState = { registration: string; make: string; model: string; variant: string; year: string; fuelType: string; color: string; vehicleType: string };
-type ConditionState = { mileageKm: string; damageDescription: string; technicalIssues: string; maintenanceDescription: string; keyCount: string; exteriorRating: string; interiorRating: string; remarks: string };
+type ConditionState = { mileageKm: string; damageDescription: string; damageNotes: string; technicalIssues: string; technicalNotes: string; maintenanceDescription: string; maintenanceNotes: string; keyCount: string; exteriorRating: string; interiorRating: string; smokeOrPets: string; maintenanceRecords: string; vatStatus: string; privatelyDriven: string; remarks: string };
 type SellerState = { fullName: string; email: string; phone: string; postalCode: string; desiredSaleDate: string };
 
-const emptyCondition: ConditionState = { mileageKm: "", damageDescription: "", technicalIssues: "", maintenanceDescription: "", keyCount: "2", exteriorRating: "", interiorRating: "", remarks: "" };
+const emptyCondition: ConditionState = { mileageKm: "", damageDescription: "", damageNotes: "", technicalIssues: "", technicalNotes: "", maintenanceDescription: "", maintenanceNotes: "", keyCount: "2", exteriorRating: "", interiorRating: "", smokeOrPets: "", maintenanceRecords: "", vatStatus: "", privatelyDriven: "", remarks: "" };
 const emptySeller: SellerState = { fullName: "", email: "", phone: "", postalCode: "", desiredSaleDate: "" };
 
 function getIdempotencyKey() {
@@ -34,10 +35,15 @@ function getIdempotencyKey() {
 }
 
 async function normalizePhotoInBrowser(file: File) {
-  if (!ACCEPTED_PHOTO_TYPES.includes(file.type as (typeof ACCEPTED_PHOTO_TYPES)[number]) || file.size > MAX_PHOTO_BYTES) {
-    throw new Error("Alleen JPEG, PNG of WebP tot 10 MB is toegestaan.");
+  if (!CAMERA_PHOTO_TYPES.has(file.type.toLowerCase()) || file.size > MAX_PHOTO_BYTES) {
+    throw new Error("Kies een JPEG-, PNG-, WebP- of HEIC-foto van maximaal 10 MB.");
   }
-  const bitmap = await createImageBitmap(file);
+  let bitmap: ImageBitmap;
+  try {
+    bitmap = await createImageBitmap(file);
+  } catch {
+    throw new Error("Deze foto kon niet worden geopend. Maak de foto opnieuw of kies een JPEG-, PNG- of WebP-bestand.");
+  }
   const scale = Math.min(1, 2400 / bitmap.width, 2400 / bitmap.height);
   const canvas = document.createElement("canvas");
   canvas.width = Math.max(1, Math.round(bitmap.width * scale));
@@ -132,7 +138,10 @@ export function ApplicationWizard({ initialRegistration, autoLookup = false }: {
     if (step === 3 && (!/^\d+$/.test(condition.keyCount) || Number(condition.keyCount) > 10)) return "Vul een geldig aantal sleutels tussen 0 en 10 in.";
     if (step === 3 && (!/^[1-5]$/.test(condition.exteriorRating) || !/^[1-5]$/.test(condition.interiorRating))) return "Geef de buitenkant en het interieur allebei een beoordeling van 1 tot 5 sterren.";
     if (step === 4 && photos.length < 1) return "Voeg minimaal één foto toe.";
-    if (step === 5 && (!seller.fullName.trim() || !seller.email.includes("@") || seller.phone.trim().length < 8 || !/^\d{4}\s?[A-Za-z]{2}$/.test(seller.postalCode))) return "Controleer je naam, e-mailadres, telefoonnummer en postcode.";
+    if (step === 5) {
+      const sellerResult = sellerPayloadSchema.safeParse(seller);
+      if (!sellerResult.success) return sellerResult.error.issues[0]?.message ?? "Controleer je contactgegevens.";
+    }
     return "";
   }
 
@@ -142,12 +151,14 @@ export function ApplicationWizard({ initialRegistration, autoLookup = false }: {
     move(Math.min(6, step + 1));
   }
 
-  function selectPhotos(event: ChangeEvent<HTMLInputElement>) {
-    const selected = Array.from(event.target.files ?? []);
-    if (selected.length > MAX_PHOTOS) { setError(`Selecteer maximaal ${MAX_PHOTOS} foto’s.`); return; }
-    const invalid = selected.find((file) => !ACCEPTED_PHOTO_TYPES.includes(file.type as (typeof ACCEPTED_PHOTO_TYPES)[number]) || file.size > MAX_PHOTO_BYTES);
-    if (invalid) { setError(`${invalid.name} is geen JPEG, PNG of WebP van maximaal 10 MB.`); return; }
+  function selectPhotos(event: ChangeEvent<HTMLInputElement>, append = false) {
+    const chosen = Array.from(event.target.files ?? []);
+    const selected = append ? [...photos, ...chosen] : chosen;
+    if (selected.length > MAX_PHOTOS) { setError(`Selecteer maximaal ${MAX_PHOTOS} foto’s.`); event.target.value = ""; return; }
+    const invalid = selected.find((file) => !CAMERA_PHOTO_TYPES.has(file.type.toLowerCase()) || file.size > MAX_PHOTO_BYTES);
+    if (invalid) { setError(`${invalid.name} is geen geschikte foto van maximaal 10 MB.`); event.target.value = ""; return; }
     setPhotos(selected); setError(""); persist(4);
+    event.target.value = "";
   }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -155,6 +166,22 @@ export function ApplicationWizard({ initialRegistration, autoLookup = false }: {
     if (step !== 6 || busy) return;
     setBusy(true); setError("");
     try {
+      const payloadResult = applicationPayloadSchema.safeParse({
+        vehicle: { ...vehicle, year: vehicle.year ? Number(vehicle.year) : null },
+        condition: {
+          mileageKm: Number(condition.mileageKm),
+          keyCount: Number(condition.keyCount),
+          damageDescription: [`Buitenkant: ${condition.exteriorRating}/5 sterren.`, condition.damageDescription, condition.damageNotes].filter(Boolean).join("\n"),
+          technicalIssues: [condition.technicalIssues, condition.technicalNotes].filter(Boolean).join("\n"),
+          maintenanceDescription: [condition.maintenanceDescription, condition.maintenanceNotes, condition.maintenanceRecords ? `Onderhoudsregistratie: ${condition.maintenanceRecords}.` : ""].filter(Boolean).join("\n"),
+          remarks: [`Interieur: ${condition.interiorRating}/5 sterren.`, condition.smokeOrPets ? `Rook- of dierenlucht: ${condition.smokeOrPets}.` : "", condition.vatStatus ? `Btw-status: ${condition.vatStatus}.` : "", condition.privatelyDriven ? `Particulier gereden: ${condition.privatelyDriven}.` : "", condition.remarks].filter(Boolean).join("\n"),
+        },
+        seller,
+      });
+      if (!payloadResult.success) {
+        throw new Error(payloadResult.error.issues[0]?.message ?? "Controleer de ingevulde gegevens.");
+      }
+
       setSubmitStatus("Foto’s veilig voorbereiden…");
       const normalizedPhotos = [];
       for (const photo of photos) normalizedPhotos.push(await normalizePhotoInBrowser(photo));
@@ -175,19 +202,7 @@ export function ApplicationWizard({ initialRegistration, autoLookup = false }: {
       }
 
       setSubmitStatus("Aanvraag controleren en opslaan…");
-      const payload = {
-        vehicle: { ...vehicle, year: vehicle.year ? Number(vehicle.year) : null },
-        condition: {
-          mileageKm: Number(condition.mileageKm),
-          keyCount: Number(condition.keyCount),
-          damageDescription: [`Buitenkant: ${condition.exteriorRating}/5 sterren.`, condition.damageDescription].filter(Boolean).join("\n"),
-          technicalIssues: condition.technicalIssues,
-          maintenanceDescription: condition.maintenanceDescription,
-          remarks: [`Interieur: ${condition.interiorRating}/5 sterren.`, condition.remarks].filter(Boolean).join("\n"),
-        },
-        seller,
-      };
-      const finalizeResponse = await fetch("/api/applications/finalize", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ idempotencyKey, draftId: draft.draftId, draftToken: draft.draftToken, photoPaths: draft.uploads.map((upload) => upload.path), payload, website }) });
+      const finalizeResponse = await fetch("/api/applications/finalize", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ idempotencyKey, draftId: draft.draftId, draftToken: draft.draftToken, photoPaths: draft.uploads.map((upload) => upload.path), payload: payloadResult.data, website }) });
       const finalized = await finalizeResponse.json() as { error?: string; reference?: string };
       if (!finalizeResponse.ok || !finalized.reference) throw new Error(finalized.error || "De aanvraag kon niet worden opgeslagen.");
 
@@ -208,7 +223,7 @@ export function ApplicationWizard({ initialRegistration, autoLookup = false }: {
       <div className="mt-8">
         {step === 1 && <section aria-labelledby="step-1"><h3 id="step-1" className="text-xl font-bold">Wat is het kenteken?</h3><p className="mt-2 text-slate-600">We vragen alleen openbare technische voertuiggegevens op.</p><div className="mt-6 max-w-sm"><Label htmlFor="registration">Kenteken</Label><Input id="registration" className="mt-2 h-14 border-2 border-[#111111] bg-[#ffd400] text-center text-[1.8rem] font-black uppercase tracking-[.08em] [font-family:Impact,'Arial_Narrow',sans-serif] placeholder:text-black/35" value={formatRegistration(vehicle.registration)} placeholder="12-AB-34" maxLength={10} onChange={(event) => setVehicle({ ...vehicle, registration: normalizeRegistration(event.target.value) })} autoComplete="off" autoCapitalize="characters" spellCheck={false} /></div><Button type="button" className="mt-6" onClick={() => void lookupRegistration()} disabled={busy}>{busy && <LoaderCircle className="animate-spin" />}Gegevens ophalen</Button></section>}
 
-        {step === 2 && <section aria-labelledby="step-2"><h3 id="step-2" className="text-xl font-bold">Controleer de voertuiggegevens</h3>{rdwMessage && <p className="mt-3 rounded-xl bg-orange-50 p-4 text-sm text-orange-950" role="status">{rdwMessage}</p>}<div className="mt-6 grid gap-5 sm:grid-cols-2"><Field label="Merk" id="make" value={vehicle.make} required onChange={(value) => setVehicle({ ...vehicle, make: value })} /><Field label="Model/handelsbenaming" id="model" value={vehicle.model} required onChange={(value) => setVehicle({ ...vehicle, model: value })} /><Field label="Uitvoering" id="variant" value={vehicle.variant} onChange={(value) => setVehicle({ ...vehicle, variant: value })} /><Field label="Voertuigtype" id="vehicleType" value={vehicle.vehicleType} onChange={(value) => setVehicle({ ...vehicle, vehicleType: value })} /><Field label="Bouwjaar" id="year" type="number" value={vehicle.year} onChange={(value) => setVehicle({ ...vehicle, year: value })} /><Field label="Brandstof" id="fuel" value={vehicle.fuelType} onChange={(value) => setVehicle({ ...vehicle, fuelType: value })} /><Field label="Kleur" id="color" value={vehicle.color} onChange={(value) => setVehicle({ ...vehicle, color: value })} /></div></section>}
+        {step === 2 && <section aria-labelledby="step-2"><h3 id="step-2" className="text-xl font-bold">Controleer de voertuiggegevens</h3>{rdwMessage && <p className="mt-3 rounded-xl bg-orange-50 p-4 text-sm text-orange-950" role="status">{rdwMessage}</p>}<div className="mt-6 grid gap-5 sm:grid-cols-2"><Field label="Merk" id="make" value={vehicle.make} required onChange={(value) => setVehicle({ ...vehicle, make: value })} /><Field label="Model/handelsbenaming" id="model" value={vehicle.model} required onChange={(value) => setVehicle({ ...vehicle, model: value })} /><Field label="Uitvoering" id="variant" value={vehicle.variant} onChange={(value) => setVehicle({ ...vehicle, variant: value })} /><Field label="Voertuigtype" id="vehicleType" value={vehicle.vehicleType} onChange={(value) => setVehicle({ ...vehicle, vehicleType: value })} /><Field label="Bouwjaar" id="year" type="number" value={vehicle.year} onChange={(value) => setVehicle({ ...vehicle, year: value })} /><Field label="Brandstof" id="fuel" value={vehicle.fuelType} onChange={(value) => setVehicle({ ...vehicle, fuelType: value })} /><Field label="Kleur" id="color" value={vehicle.color} onChange={(value) => setVehicle({ ...vehicle, color: value })} /></div><div className="mt-6 grid gap-5 lg:grid-cols-2"><QuestionCard icon={<ShieldCheck />} title="Hoe wordt de auto fiscaal aangeboden?" description="Dit helpt garages om het bod en een eventuele btw-vermelding correct te beoordelen."><ChoiceButtons label="Btw-status" value={condition.vatStatus} choices={[{ label: "Marge-auto", value: "marge-auto" }, { label: "Btw-auto", value: "btw-auto" }, { label: "Onbekend", value: "onbekend" }]} onChange={(value) => setCondition({ ...condition, vatStatus: value })} /></QuestionCard><QuestionCard icon={<Gauge />} title="Is de auto particulier gereden?" description="Kies wat het beste bij het recente gebruik past."><ChoiceButtons label="Particulier gereden" value={condition.privatelyDriven} choices={[{ label: "Ja", value: "ja" }, { label: "Nee, zakelijk", value: "nee, zakelijk" }, { label: "Onbekend", value: "onbekend" }]} onChange={(value) => setCondition({ ...condition, privatelyDriven: value })} /></QuestionCard></div></section>}
 
         {step === 3 && <section aria-labelledby="step-3">
           <h3 id="step-3" className="text-xl font-bold">Technische staat van je auto</h3>
@@ -238,17 +253,25 @@ export function ApplicationWizard({ initialRegistration, autoLookup = false }: {
           <div className="mt-5 grid gap-5 lg:grid-cols-2">
             <QuestionCard icon={<AlertTriangle />} title="Heeft de auto schade?" description="Wees zo volledig mogelijk, ook bij kleine schade">
               <ChoiceButtons label="Snelle keuze voor schade" value={condition.damageDescription} choices={[{ label: "Geen schade", value: "Geen bekende schade" }, { label: "Lichte schade", value: "Lichte schade aanwezig" }, { label: "Schade aanwezig", value: "Schade aanwezig" }]} onChange={(value) => setCondition({ ...condition, damageDescription: value })} />
-              <TextField label="Toelichting (optioneel)" id="damage" value={condition.damageDescription} placeholder="Bijvoorbeeld: kras op de rechterdeur" onChange={(value) => setCondition({ ...condition, damageDescription: value })} />
+              <TextField label="Toelichting (optioneel)" id="damage" value={condition.damageNotes} placeholder="Bijvoorbeeld: kras op de rechterdeur" onChange={(value) => setCondition({ ...condition, damageNotes: value })} />
             </QuestionCard>
 
             <QuestionCard icon={<Wrench />} title="Zijn er technische gebreken?" description="Denk aan storingslampjes, motor of versnellingsbak">
               <ChoiceButtons label="Snelle keuze voor technische staat" value={condition.technicalIssues} choices={[{ label: "Geen gebreken", value: "Geen bekende technische gebreken" }, { label: "Start en rijdt", value: "Start en rijdt" }, { label: "Gebrek aanwezig", value: "Technisch gebrek aanwezig" }]} onChange={(value) => setCondition({ ...condition, technicalIssues: value })} />
-              <TextField label="Toelichting (optioneel)" id="technical" value={condition.technicalIssues} placeholder="Bijvoorbeeld: motorlampje brandt" onChange={(value) => setCondition({ ...condition, technicalIssues: value })} />
+              <TextField label="Toelichting (optioneel)" id="technical" value={condition.technicalNotes} placeholder="Bijvoorbeeld: motorlampje brandt" onChange={(value) => setCondition({ ...condition, technicalNotes: value })} />
             </QuestionCard>
 
             <QuestionCard icon={<ShieldCheck />} title="Hoe is de auto onderhouden?" description="Kies de optie die het beste past">
               <ChoiceButtons label="Onderhoudshistorie" value={condition.maintenanceDescription} choices={[{ label: "Dealer", value: "Dealeronderhouden" }, { label: "Vakgarage", value: "Onderhouden door vakgarage" }, { label: "Zelf/anders", value: "Zelf of anders onderhouden" }, { label: "Onbekend", value: "Onderhoudshistorie onbekend" }]} onChange={(value) => setCondition({ ...condition, maintenanceDescription: value })} />
-              <TextField label="Toelichting (optioneel)" id="maintenance" value={condition.maintenanceDescription} placeholder="Bijvoorbeeld: onderhoudsboekje aanwezig" onChange={(value) => setCondition({ ...condition, maintenanceDescription: value })} />
+              <TextField label="Toelichting (optioneel)" id="maintenance" value={condition.maintenanceNotes} placeholder="Bijvoorbeeld: laatste beurt uitgevoerd in mei" onChange={(value) => setCondition({ ...condition, maintenanceNotes: value })} />
+            </QuestionCard>
+
+            <QuestionCard icon={<ShieldCheck />} title="Zijn de onderhoudsboekjes aanwezig?" description="Een digitale registratie is net zo waardevol om te vermelden">
+              <ChoiceButtons label="Onderhoudsboekjes" value={condition.maintenanceRecords} choices={[{ label: "Fysiek", value: "fysiek aanwezig" }, { label: "Digitaal", value: "digitaal aanwezig" }, { label: "Beide", value: "fysiek en digitaal aanwezig" }, { label: "Niet aanwezig", value: "niet aanwezig" }]} onChange={(value) => setCondition({ ...condition, maintenanceRecords: value })} />
+            </QuestionCard>
+
+            <QuestionCard icon={<MessageSquare />} title="Is er rook- of dierenlucht aanwezig?" description="Geuren zijn lastig op foto’s te beoordelen en daarom belangrijk om apart te noemen">
+              <ChoiceButtons label="Rook- of dierenlucht" value={condition.smokeOrPets} choices={[{ label: "Nee", value: "niet aanwezig" }, { label: "Rooklucht", value: "rooklucht aanwezig" }, { label: "Dierenlucht", value: "dierenlucht aanwezig" }, { label: "Beide", value: "rook- en dierenlucht aanwezig" }]} onChange={(value) => setCondition({ ...condition, smokeOrPets: value })} />
             </QuestionCard>
 
             <QuestionCard icon={<MessageSquare />} title="Nog iets dat we moeten weten?" description="Bijzonderheden die hierboven niet zijn genoemd">
@@ -257,11 +280,26 @@ export function ApplicationWizard({ initialRegistration, autoLookup = false }: {
           </div>
         </section>}
 
-        {step === 4 && <section aria-labelledby="step-4"><h3 id="step-4" className="text-xl font-bold">Voeg foto’s toe</h3><p className="mt-2 leading-7 text-slate-600">Gebruik JPEG, PNG of WebP, maximaal 12 foto’s van elk 10 MB. Fotografeer voor-, achter- en zijkanten, interieur en eventuele schade. Zorg dat gezichten, documenten, huisnummers en andere persoonsgegevens niet zichtbaar zijn.</p><label htmlFor="photos" className="mt-6 flex cursor-pointer flex-col items-center rounded-2xl border-2 border-dashed border-slate-300 p-10 text-center hover:border-[#a64b00]"><Camera className="size-8 text-[#a64b00]" /><span className="mt-3 font-bold">Kies foto’s</span><span className="mt-1 text-sm text-slate-500">HEIC wordt nog niet ondersteund</span></label><Input id="photos" type="file" accept="image/jpeg,image/png,image/webp" multiple className="sr-only" onChange={selectPhotos} /><ul className="mt-4 space-y-2">{photos.map((photo) => <li key={`${photo.name}-${photo.size}`} className="flex justify-between rounded-lg bg-slate-50 px-4 py-2 text-sm"><span className="truncate">{photo.name}</span><span>{(photo.size / 1024 / 1024).toFixed(1)} MB</span></li>)}</ul><p className="mt-3 text-sm text-slate-500">Geselecteerd: {photos.length} van {MAX_PHOTOS}. Na vernieuwen moet je foto’s opnieuw kiezen.</p></section>}
+        {step === 4 && <section aria-labelledby="step-4">
+          <h3 id="step-4" className="text-xl font-bold">Laat je auto duidelijk zien</h3>
+          <p className="mt-2 max-w-3xl leading-7 text-slate-600">Met duidelijke foto’s kunnen aangesloten garages je auto beter beoordelen. Maak bij voorkeur de onderstaande beelden en voeg aparte detailfoto’s toe van schade. We gebruiken geen AI om schade of ontbrekende delen in foto’s aan te vullen.</p>
+          <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3" aria-label="Aanbevolen autofoto’s">
+            {["Linksvoor", "Rechtsachter", "Interieur met geopende deur", "Dashboard en kilometerstand", "Bagageruimte", "Schade van dichtbij"].map((angle, index) => <div key={angle} className="rounded-xl border border-slate-200 bg-slate-50 p-4"><span className="text-xs font-black text-[#a64b00]">{index + 1}</span><p className="mt-1 font-bold">{angle}</p></div>)}
+          </div>
+          <div className="mt-6 grid gap-3 sm:grid-cols-2">
+            <label htmlFor="camera-photo" className="flex min-h-28 cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-[#ff9418] bg-orange-50 p-5 text-center transition-colors hover:bg-orange-100 active:bg-orange-200"><Camera className="size-7 text-[#a64b00]" /><span className="mt-2 font-bold">Maak een foto</span><span className="mt-1 text-xs text-slate-600">Op telefoon of tablet opent dit de camera</span></label>
+            <Input id="camera-photo" type="file" accept="image/*" capture="environment" className="sr-only" onChange={(event) => selectPhotos(event, true)} />
+            <label htmlFor="photos" className="flex min-h-28 cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-300 p-5 text-center transition-colors hover:border-[#a64b00] hover:bg-orange-50 active:bg-orange-100"><Camera className="size-7 text-[#a64b00]" /><span className="mt-2 font-bold">Kies foto’s uit je apparaat</span><span className="mt-1 text-xs text-slate-500">JPEG, PNG of WebP · maximaal 10 MB per foto</span></label>
+            <Input id="photos" type="file" accept="image/jpeg,image/png,image/webp" multiple className="sr-only" onChange={(event) => selectPhotos(event)} />
+          </div>
+          <p className="mt-4 text-sm text-slate-600">Let erop dat gezichten, documenten, huisnummers en andere persoonsgegevens niet zichtbaar zijn.</p>
+          <ul className="mt-4 space-y-2">{photos.map((photo, index) => <li key={`${photo.name}-${photo.size}-${index}`} className="flex items-center justify-between gap-3 rounded-lg bg-slate-50 px-4 py-2 text-sm"><span className="truncate">{photo.name}</span><button type="button" className="shrink-0 font-bold text-[#a64b00] underline" onClick={() => setPhotos((current) => current.filter((_, photoIndex) => photoIndex !== index))}>Verwijderen</button></li>)}</ul>
+          <p className="mt-3 text-sm text-slate-500">Geselecteerd: {photos.length} van {MAX_PHOTOS}. Na vernieuwen moet je foto’s opnieuw kiezen.</p>
+        </section>}
 
         {step === 5 && <section aria-labelledby="step-5"><h3 id="step-5" className="text-xl font-bold">Contactgegevens</h3><p className="mt-2 max-w-3xl leading-7 text-slate-600">Met deze gegevens kunnen we persoonlijk contact met je opnemen over een mogelijk bod. Je postcode helpt ons om de afstand tot een mogelijke koper te bepalen. Dealers krijgen je naam, e-mailadres, telefoonnummer en adres niet te zien.</p><p className="mt-3 text-sm font-semibold text-slate-700">Velden met een * zijn verplicht. Zonder deze gegevens kunnen we je niet bereiken.</p><div className="mt-6 grid gap-5 sm:grid-cols-2"><Field label="Naam" id="fullName" value={seller.fullName} required autoComplete="name" onChange={(value) => setSeller({ ...seller, fullName: value })} /><Field label="E-mailadres" id="email" type="email" value={seller.email} required autoComplete="email" onChange={(value) => setSeller({ ...seller, email: value })} /><Field label="Telefoonnummer" id="phone" type="tel" value={seller.phone} required autoComplete="tel" onChange={(value) => setSeller({ ...seller, phone: value })} /><Field label="Postcode" id="postalCode" value={seller.postalCode} required autoComplete="postal-code" onChange={(value) => setSeller({ ...seller, postalCode: value })} /><Field label="Gewenste verkoopdatum (optioneel)" id="desiredDate" type="date" value={seller.desiredSaleDate} onChange={(value) => setSeller({ ...seller, desiredSaleDate: value })} /></div><div className="mt-7 rounded-2xl border border-orange-200 bg-orange-50/70 p-5"><h4 className="font-black text-slate-950">Mis ons persoonlijke voorstel niet</h4><ul className="mt-4 grid gap-3 text-sm font-semibold text-slate-700 sm:grid-cols-3"><Benefit>Vrijblijvend</Benefit><Benefit>Persoonlijk voorstel</Benefit><Benefit>Helemaal gratis</Benefit></ul></div><div className="absolute -left-[10000px]" aria-hidden="true"><Label htmlFor="website">Website</Label><Input id="website" tabIndex={-1} autoComplete="off" value={website} onChange={(event) => setWebsite(event.target.value)} /></div></section>}
 
-        {step === 6 && <section aria-labelledby="step-6"><h3 id="step-6" className="text-xl font-bold">Klaar om je aanvraag te versturen?</h3><p className="mt-2 leading-7 text-slate-600">Bekijk je gegevens nog één keer rustig. Wil je iets aanpassen? Klik dan bij het onderdeel op ‘Wijzigen’.</p><div className="mt-6 grid gap-4 sm:grid-cols-2"><Summary title="Voertuig" onEdit={() => move(2)} lines={[vehicle.registration, `${vehicle.make} ${vehicle.model}`, [vehicle.year, vehicle.fuelType, vehicle.color].filter(Boolean).join(" · ")]} /><Summary title="Staat" onEdit={() => move(3)} lines={[`${condition.mileageKm} km`, `${condition.keyCount} sleutel(s)`, `Buitenkant ${condition.exteriorRating}/5 · Interieur ${condition.interiorRating}/5`, condition.damageDescription || "Geen extra schadeomschrijving"]} /><Summary title="Foto’s" onEdit={() => move(4)} lines={[`${photos.length} foto(’s) geselecteerd`, "Foto’s worden privé opgeslagen en eerst gecontroleerd."]} /><Summary title="Contact" onEdit={() => move(5)} lines={[seller.fullName, seller.email, seller.phone, seller.postalCode]} /></div><div className="mt-6 rounded-2xl bg-slate-50 p-5"><p className="font-bold text-slate-950">Tevreden met wat je hebt ingevuld?</p><p className="mt-2 text-sm leading-6 text-slate-600">Klik dan hieronder op ‘Aanvraag versturen’. Je aanvraag is gratis en vrijblijvend. Versturen is geen marketingtoestemming en garandeert geen bod of verkoop. Lees de <Link href="/privacy-en-voorwaarden" className="font-bold text-[#a64b00] underline">concept privacy-informatie en voorwaarden</Link>.</p></div></section>}
+        {step === 6 && <section aria-labelledby="step-6"><h3 id="step-6" className="text-xl font-bold">Klaar om je aanvraag te versturen?</h3><p className="mt-2 leading-7 text-slate-600">Bekijk je gegevens nog één keer rustig. Wil je iets aanpassen? Klik dan bij het onderdeel op ‘Wijzigen’.</p><div className="mt-6 grid gap-4 sm:grid-cols-2"><Summary title="Voertuig" onEdit={() => move(2)} lines={[vehicle.registration, `${vehicle.make} ${vehicle.model}`, [vehicle.year, vehicle.fuelType, vehicle.color].filter(Boolean).join(" · "), [condition.vatStatus, condition.privatelyDriven ? `particulier gereden: ${condition.privatelyDriven}` : ""].filter(Boolean).join(" · ")]} /><Summary title="Staat" onEdit={() => move(3)} lines={[`${condition.mileageKm} km`, `${condition.keyCount} sleutel(s)`, `Buitenkant ${condition.exteriorRating}/5 · Interieur ${condition.interiorRating}/5`, [condition.damageDescription, condition.damageNotes].filter(Boolean).join(" · ") || "Geen extra schadeomschrijving", condition.maintenanceRecords, condition.smokeOrPets]} /><Summary title="Foto’s" onEdit={() => move(4)} lines={[`${photos.length} foto(’s) geselecteerd`, "Foto’s worden privé opgeslagen en eerst gecontroleerd."]} /><Summary title="Contact" onEdit={() => move(5)} lines={[seller.fullName, seller.email, seller.phone, seller.postalCode]} /></div><div className="mt-6 rounded-2xl bg-slate-50 p-5"><p className="font-bold text-slate-950">Tevreden met wat je hebt ingevuld?</p><p className="mt-2 text-sm leading-6 text-slate-600">Klik dan hieronder op ‘Aanvraag versturen’. Je aanvraag is gratis en vrijblijvend. Versturen is geen marketingtoestemming en garandeert geen bod of verkoop. Lees de <Link href="/privacy-en-voorwaarden" className="font-bold text-[#a64b00] underline">concept privacy-informatie en voorwaarden</Link>.</p></div></section>}
       </div>
 
       {error && <p className="mt-6 rounded-xl bg-red-50 p-4 font-semibold text-red-800" role="alert">{error}</p>}
@@ -280,7 +318,7 @@ function Field({ label, id, value, onChange, type = "text", required, autoComple
 }
 
 function TextField({ label, id, value, onChange, placeholder }: { label: string; id: string; value: string; onChange: (value: string) => void; placeholder?: string }) {
-  return <div className="mt-4"><Label htmlFor={id}>{label}</Label><Textarea id={id} value={value} placeholder={placeholder} maxLength={2000} onChange={(event) => onChange(event.target.value)} className="mt-2 min-h-24 resize-y bg-white" /></div>;
+  return <div className="mt-4"><Label htmlFor={id}>{label}</Label><Textarea id={id} value={value} placeholder={placeholder} maxLength={1500} onChange={(event) => onChange(event.target.value)} className="mt-2 min-h-24 resize-y bg-white" /></div>;
 }
 
 function QuestionCard({ icon, title, description, children }: { icon: React.ReactNode; title: string; description: string; children: React.ReactNode }) {

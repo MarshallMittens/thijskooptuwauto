@@ -55,4 +55,12 @@ describe("applicationPayloadSchema", () => {
     });
     expect(result.success).toBe(false);
   });
+
+  it("weigert een ogenschijnlijk e-mailadres met twee punten in het domein", () => {
+    const result = applicationPayloadSchema.safeParse({
+      ...validPayload,
+      seller: { ...validPayload.seller, email: "test@gmail..com" },
+    });
+    expect(result.success).toBe(false);
+  });
 });

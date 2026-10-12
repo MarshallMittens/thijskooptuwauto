@@ -16,8 +16,8 @@ export default async function SignInPage({
       <section className="auth-card">
         <Link href="/" className="text-sm font-bold text-[#a64b00]">← Terug naar de website</Link>
         <p className="eyebrow mt-8">Besloten omgeving</p>
-        <h1 className="mt-3 text-4xl font-black tracking-[-0.05em] text-[#111111]">Inloggen</h1>
-        <p className="mt-3 leading-7 text-slate-600">Voor goedgekeurde autobedrijven en beheerders.</p>
+        <h1 className="mt-3 text-4xl font-black tracking-[-0.05em] text-[#111111]">Inloggen voor autobedrijven</h1>
+        <p className="mt-3 leading-7 text-slate-600">Log in met het zakelijke account van je garage. Goedgekeurde garages kunnen het aanbod bekijken en bieden; beheerders gaan na dezelfde veilige login naar de beheeromgeving.</p>
         {wachtwoord === "gewijzigd" ? <p className="mt-6 rounded-lg bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-900" role="status">Je wachtwoord is gewijzigd. Log opnieuw in.</p> : null}
         {!configured ? (
           <div className="mt-7 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm leading-6 text-amber-950">

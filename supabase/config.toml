@@ -34,6 +34,18 @@ enable_signup = true
 enable_signup = true
 enable_confirmations = true
 
+[auth.email.template.confirmation]
+subject = "Bevestig je account bij Thijskooptuauto"
+content_path = "./supabase/templates/confirmation.html"
+
+[auth.email.template.magic_link]
+subject = "Open je autoaanvraag veilig"
+content_path = "./supabase/templates/magic_link.html"
+
+[auth.email.template.recovery]
+subject = "Kies een nieuw wachtwoord voor Thijskooptuauto"
+content_path = "./supabase/templates/recovery.html"
+
 [auth.mfa.totp]
 enroll_enabled = true
 verify_enabled = true

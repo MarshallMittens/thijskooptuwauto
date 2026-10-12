@@ -3,6 +3,7 @@ import Image from "next/image";
 import { z } from "zod";
 
 import { signOut } from "@/app/auth/actions";
+import { claimSellerApplicationAction } from "@/app/mijn-aanvraag/actions";
 import { ApplicationUpdateForm } from "@/components/seller/application-update-form";
 import { SellerAccessForm } from "@/components/seller/access-form";
 import { SellerPhaseFourControls, type SellerPhaseFourState } from "@/components/seller/phase-four-controls";
@@ -136,8 +137,9 @@ export default async function SellerPortalPage({ searchParams }: { searchParams:
           <form action={signOut}><Button variant="outline">Uitloggen</Button></form>
         </div>
         {params.geverifieerd === "1" ? <p className="mt-6 rounded-xl bg-emerald-50 p-4 font-semibold text-emerald-900" role="status">Je e-mailadres is geverifieerd en het dossier is gekoppeld.</p> : null}
-        {params.fout ? <p className="mt-6 rounded-xl bg-red-50 p-4 font-semibold text-red-900" role="alert">De beveiligde link kon niet aan deze aanvraag worden gekoppeld.</p> : null}
-        {!withPhotos.length ? <div className="mt-8 rounded-2xl border border-slate-200 p-6"><h2 className="text-xl font-black">Geen gekoppelde aanvraag</h2><p className="mt-2 text-slate-600">Dit account heeft geen verkopersdossier. Log uit en vraag opnieuw een link aan met het e-mailadres uit de aanvraag.</p></div> : null}
+        {params.fout ? <p className="mt-6 rounded-xl bg-red-50 p-4 font-semibold text-red-900" role="alert">De aanvraag kon niet worden gekoppeld. Controleer of je bent ingelogd met hetzelfde e-mailadres als in de autoaanvraag. Beheer- en dealeraccounts kunnen niet als verkopersaccount worden gebruikt.</p> : null}
+        {initialReference ? <form action={claimSellerApplicationAction} className="mt-8 rounded-2xl border border-orange-200 bg-orange-50/70 p-6"><input type="hidden" name="reference" value={initialReference} /><h2 className="text-xl font-black">Koppel deze autoaanvraag</h2><p className="mt-2 max-w-2xl text-slate-700">Je bent al ingelogd. Bevestig hieronder dat je deze aanvraag wilt koppelen aan het geverifieerde e-mailadres van dit account.</p><Button className="mt-5" type="submit">Aanvraag veilig koppelen</Button></form> : null}
+        {!withPhotos.length ? <div className="mt-8 rounded-2xl border border-slate-200 p-6"><h2 className="text-xl font-black">Nog geen gekoppelde aanvraag</h2><p className="mt-2 text-slate-600">Open de knop uit de bedankpagina of vraag een nieuwe beveiligde link aan met hetzelfde e-mailadres als in de aanvraag.</p>{!initialReference ? <SellerAccessForm initialReference="" /> : null}</div> : null}
         <div className="mt-8 space-y-8">
           {withPhotos.map((dossier) => <article key={dossier.id} className="rounded-2xl border border-slate-200 p-6">
             <div className="flex flex-wrap justify-between gap-4"><div><p className="font-mono text-sm text-slate-500">{dossier.reference}</p><h2 className="mt-2 text-3xl font-black">{dossier.vehicle.registration}</h2><p className="mt-2 text-slate-600">{[dossier.vehicle.make, dossier.vehicle.model, dossier.vehicle.variant].filter(Boolean).join(" ")}</p></div><div className="h-fit rounded-xl bg-orange-50 px-4 py-3 font-bold text-orange-950">{statusLabels[dossier.status] ?? dossier.status}</div></div>

@@ -1,12 +1,33 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { z } from "zod";
 
 import { requireUser } from "@/lib/auth/dal";
 import { sellerUpdateSchema } from "@/lib/sellers/schema";
 import { createClient } from "@/lib/supabase/server";
 
 export type SellerUpdateState = { ok?: boolean; message?: string };
+
+const sellerClaimSchema = z.string().regex(/^[0-9a-f]{24}$/);
+
+export async function claimSellerApplicationAction(formData: FormData) {
+  await requireUser("/mijn-aanvraag");
+  const parsedReference = sellerClaimSchema.safeParse(formData.get("reference"));
+  if (!parsedReference.success) redirect("/mijn-aanvraag?fout=ongeldige-referentie");
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("claim_seller_application", {
+    p_reference: parsedReference.data,
+  });
+  if (error) {
+    redirect(`/mijn-aanvraag?referentie=${parsedReference.data}&fout=koppelen`);
+  }
+
+  revalidatePath("/mijn-aanvraag");
+  redirect("/mijn-aanvraag?geverifieerd=1");
+}
 
 export async function updateSellerApplication(
   _previousState: SellerUpdateState,
