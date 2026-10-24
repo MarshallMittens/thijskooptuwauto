@@ -11,11 +11,14 @@ export const metadata: Metadata = { title: "Aanvraag ontvangen | Thijs koopt uw 
 export default async function ThanksPage({ searchParams }: { searchParams: Promise<{ referentie?: string }> }) {
   const { referentie } = await searchParams;
   const safeReference = referentie && /^[a-f0-9]{24}$/.test(referentie) ? referentie : "niet beschikbaar";
-  const dossierHref = safeReference === "niet beschikbaar" ? "/mijn-aanvraag" : `/mijn-aanvraag?referentie=${safeReference}`;
   let registration = "Je auto";
   if (safeReference !== "niet beschikbaar") {
     const admin = createAdminClient();
-    const { data: application } = await admin.from("applications").select("vehicle_id").eq("reference", safeReference).maybeSingle();
+    const { data: application } = await admin
+      .from("applications")
+      .select("vehicle_id")
+      .eq("public_reference", safeReference)
+      .maybeSingle();
     if (application?.vehicle_id) {
       const { data: vehicle } = await admin.from("vehicles").select("registration_normalized").eq("id", application.vehicle_id).maybeSingle();
       if (vehicle?.registration_normalized) registration = formatRegistration(vehicle.registration_normalized);
@@ -37,7 +40,7 @@ export default async function ThanksPage({ searchParams }: { searchParams: Promi
         <div>
           <p className="text-lg font-black">Bedankt voor je aanvraag!</p>
           <p className="mt-1 leading-7">
-            Je gegevens zijn veilig ontvangen. Thijs bekijkt je aanmelding en neemt contact met je op zodra er nieuws is.
+            Je gegevens zijn veilig ontvangen. We sturen een bevestiging naar het e-mailadres dat je hebt ingevuld.
           </p>
         </div>
       </div>
@@ -45,21 +48,12 @@ export default async function ThanksPage({ searchParams }: { searchParams: Promi
       <div className="rounded-2xl border border-slate-200 bg-white p-7">
         <p className="text-sm font-bold uppercase tracking-wide text-slate-500">Kenteken</p>
         <p className="mt-2 text-3xl font-black">{registration}</p>
-        {safeReference !== "niet beschikbaar" ? (
-          <details className="mt-4 text-sm text-slate-500">
-            <summary className="cursor-pointer font-semibold">Technische aanvraagcode tonen</summary>
-            <p className="mt-2 break-all font-mono">{safeReference}</p>
-          </details>
-        ) : null}
         <p className="mt-5 leading-7 text-slate-600">
-          Bevestig nu je e-mailadres. Zo houden we je autogegevens privé en kun je de status en eventuele vragen van
-          Thijskooptuauto veilig bekijken.
+          Je hoeft niets meer te bevestigen. Thijs bekijkt je aanmelding en neemt persoonlijk contact met je op zodra er
+          nieuws is over je auto.
         </p>
         <div className="mt-6 flex flex-wrap gap-4">
-          <Link href={dossierHref} className="inline-flex rounded-lg bg-[#f7941e] px-5 py-3 font-bold text-[#090909]">
-            Mijn aanvraag veilig openen
-          </Link>
-          <Link href="/" className="inline-flex items-center font-bold text-[#a64b00] underline">
+          <Link href="/" className="inline-flex rounded-lg bg-[#f7941e] px-5 py-3 font-bold text-[#090909]">
             Terug naar de startpagina
           </Link>
         </div>
