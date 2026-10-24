@@ -1,0 +1,11 @@
+begin;
+create extension if not exists pgtap with schema extensions;
+select plan(3);
+set local role authenticated;
+select set_config('request.jwt.claims', '{"role":"authenticated","aal":"aal1"}', true);
+select throws_ok($$ select public.set_proxy_bid('00000000-0000-0000-0000-000000000001', 100000) $$, 'P0001', 'approved_company_required', 'onbevoegde sessie kan geen maximum instellen');
+select throws_ok($$ select * from public.proxy_bid_limits $$, '42501', null, 'geheime maxima zijn niet rechtstreeks leesbaar');
+select throws_ok($$ select public.place_manual_bid_internal('00000000-0000-0000-0000-000000000001', 100000, '00000000-0000-0000-0000-000000000002') $$, '42501', null, 'interne biedfunctie kan niet worden omzeild');
+reset role;
+select * from finish();
+rollback;

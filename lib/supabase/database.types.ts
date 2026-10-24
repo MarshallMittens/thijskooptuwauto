@@ -46,6 +46,10 @@ export type Database = {
     };
     Views: Record<string, never>;
     Functions: {
+      admin_handling_fees: { Args: { p_seller_cents?: number; p_buyer_cents?: number; p_vat_percent?: number }; Returns: Json };
+      set_proxy_bid: { Args: { p_bid_round_id: string; p_maximum_cents: number }; Returns: Json };
+      record_dealer_listing_view: { Args: { p_listing_id: string }; Returns: undefined };
+      get_admin_listing_views: { Args: { p_application_id: string }; Returns: Json };
       get_my_access_context: {
         Args: Record<PropertyKey, never>;
         Returns: Json;

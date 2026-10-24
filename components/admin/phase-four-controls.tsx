@@ -123,8 +123,8 @@ export function PhaseFourControls({
       </div>
     </section>
 
-    <section className="rounded-2xl border border-amber-300 bg-amber-50/40 p-6">
-      <h2 className="text-xl font-black">Materiële voertuigwijziging</h2>
+    <section id="autogegevens-aanpassen" className="scroll-mt-24 rounded-2xl border border-amber-300 bg-amber-50/40 p-6">
+      <h2 className="text-xl font-black">Autogegevens aanpassen</h2>
       <p className="mt-2 text-sm leading-6 text-slate-700">Gebruik dit voor gewijzigde kilometerstand, schade, techniek of onderhoud. Bij gepubliceerd aanbod wordt de bestaande publicatie ingetrokken en de biedronde geannuleerd. Biedingen en de oude voertuigversie blijven bewaard.</p>
       <form onSubmit={recordChange} className="mt-5 grid gap-4 lg:grid-cols-2">
         <div><Label htmlFor="change-mileage">Kilometerstand</Label><Input id="change-mileage" name="mileageKm" type="number" min={0} max={5000000} defaultValue={condition.mileageKm ?? ""} className="mt-2" /></div>

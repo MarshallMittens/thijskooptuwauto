@@ -182,6 +182,29 @@ code {
   }
 }
 
+/* Touch feedback works without hover; selected choices retain their own colour. */
+button,
+a[class*="rounded"],
+label:has(input[type="file"]) {
+  -webkit-tap-highlight-color: rgba(247, 148, 30, 0.28);
+  touch-action: manipulation;
+}
+
+button:not(:disabled):active,
+a[class*="rounded"]:active,
+label:has(input[type="file"]):active {
+  filter: brightness(0.88);
+  box-shadow: 0 0 0 3px rgba(247, 148, 30, 0.35);
+}
+
+@media (hover: hover) {
+  button:not(:disabled):hover,
+  a[class*="rounded"]:hover,
+  label:has(input[type="file"]):hover {
+    filter: brightness(0.94);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;

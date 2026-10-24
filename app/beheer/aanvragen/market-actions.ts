@@ -88,7 +88,10 @@ export async function restartBidRoundAction(input: z.input<typeof restartSchema>
 
   revalidatePath(`/beheer/aanvragen/${parsed.data.applicationId}`);
   revalidatePath("/dealer");
-  revalidatePath("/dealer/mijn-biedingen");
+  revalidatePath("/beheer/veilingen");
+  revalidatePath("/beheer/aanvragen");
+  revalidatePath("/dealer/biedingen");
+  if (parsed.data.applicationId) revalidatePath("/dealer/aanbod", "layout");
   revalidatePath("/dealer/gewonnen");
   return { ok: true, message: "De vorige biedingen blijven bewaard. Er loopt nu een nieuwe, lege biedronde van exact 24 uur." };
 }

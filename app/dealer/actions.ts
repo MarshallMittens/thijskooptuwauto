@@ -18,6 +18,21 @@ const bidSchema = z.object({
 
 export type BidActionResult = { ok: boolean; message: string; amountCents?: number };
 
+export async function setProxyBidAction(input: z.input<typeof bidSchema>): Promise<BidActionResult> {
+  await requireDealer();
+  const parsed = bidSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, message: "Controleer je maximumbod." };
+  const maximum = parseEuroAmountToCents(parsed.data.amount);
+  if (maximum === null) return { ok: false, message: "Vul een geldig maximumbedrag in." };
+  const client = await createClient();
+  const { error } = await client.rpc("set_proxy_bid", { p_bid_round_id: parsed.data.roundId, p_maximum_cents: maximum });
+  if (error) return { ok: false, message: error.message.includes("bid_round_closed") ? "Deze biedronde is gesloten." : "Het maximum kon niet worden ingesteld. Kies minstens het minimale nieuwe bod; een bestaand maximum kan alleen worden verhoogd." };
+  revalidatePath(`/dealer/aanbod/${parsed.data.listingId}`);
+  revalidatePath("/dealer/biedingen");
+  revalidatePath("/dealer");
+  return { ok: true, message: `Automatisch bieden ingesteld tot ${new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR" }).format(maximum / 100)}. Je maximum blijft afgeschermd.` };
+}
+
 export async function placeBidAction(input: z.input<typeof bidSchema>): Promise<BidActionResult> {
   await requireDealer();
   const parsed = bidSchema.safeParse(input);

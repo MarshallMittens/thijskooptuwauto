@@ -51,6 +51,9 @@ async function deliver(item: z.infer<typeof itemSchema>, apiKey: string, from: s
       ? `/dealer/aanbod/${listingId}`
       : "/dealer";
   const portalUrl = new URL(portalPath, getAppUrl()).toString();
+  const html = item.event_type === "bid.outbid"
+    ? `<h1>Je bent overboden</h1><p>Een andere garage heeft een hoger bod geplaatst op een auto waarop jouw bedrijf heeft geboden.</p><p>Wil je nog meebieden? Bekijk het actuele hoogste bod en de resterende tijd in het dealerportaal.</p><p><a href="${escapeHtml(portalUrl)}">Bekijk de auto en bied opnieuw</a></p><p>Deze melding is geen toewijzing of koopovereenkomst.</p>`
+    : `<p>${escapeHtml(subject)}.</p><p><a href="${escapeHtml(portalUrl)}">Open het beveiligde dossier</a> voor de actuele status.</p><p>Reageer niet met wachtwoorden, bankgegevens of identiteitsdocumenten.</p>`;
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
@@ -62,7 +65,7 @@ async function deliver(item: z.infer<typeof itemSchema>, apiKey: string, from: s
       from,
       to: [item.recipient],
       subject,
-      html: `<p>${escapeHtml(subject)}.</p><p><a href="${escapeHtml(portalUrl)}">Open het beveiligde dossier</a> voor de actuele status.</p><p>Reageer niet met wachtwoorden, bankgegevens of identiteitsdocumenten.</p>`,
+      html,
     }),
     signal: AbortSignal.timeout(8_000),
   });

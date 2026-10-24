@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { RecordListingView } from "@/components/applications/record-listing-view";
 import { notFound } from "next/navigation";
 import { z } from "zod";
 
@@ -41,6 +42,7 @@ export default async function DealerListingPage({ params }: { params: Promise<{ 
 
   return <main className="portal-page"><section className="portal-panel max-w-6xl">
     <DealerHeader />
+    <RecordListingView listingId={listing.id} />
     <Link href="/dealer" className="mt-7 inline-flex font-bold text-[#a64b00] underline">← Terug naar aanbod</Link>
     <div className="mt-6 flex flex-wrap items-start justify-between gap-5">
       <div><p className="font-mono font-bold text-[#a64b00]">{listing.vehicle.registration}</p><h1 className="mt-2 text-4xl font-black">{listing.vehicle.make} {listing.vehicle.model}</h1><p className="mt-2 text-slate-600">{[listing.vehicle.variant, listing.vehicle.year, listing.vehicle.fuelType].filter(Boolean).join(" · ")}</p></div>

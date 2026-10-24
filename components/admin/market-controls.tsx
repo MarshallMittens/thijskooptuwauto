@@ -67,11 +67,11 @@ export function MarketControls({ applicationId, applicationStatus, sellerVerifie
           {market.outcomeStatus && market.outcomeStatus !== "pending" && <p className="rounded-lg bg-emerald-50 p-3 text-sm font-semibold text-emerald-900">Uitslag: {market.outcomeStatus}. Een winnaarreservering is geen automatische verkoop.</p>}
           {market.needsFinalization && <Button type="button" onClick={close} disabled={pending}>{pending && <LoaderCircle className="animate-spin" />}Uitslag vastleggen</Button>}
           {market.roundStatus === "closed" && market.outcomeStatus !== "pending" && market.outcomeStatus !== "disputed" && <div className="rounded-xl border border-orange-200 bg-orange-50/40 p-4">
-            <h3 className="font-black">Nog een biedronde starten</h3>
+            <h3 className="font-black">Veiling opnieuw starten</h3>
             <p className="mt-1 text-sm leading-6 text-slate-700">Gebruik dit als de biedingen onvoldoende zijn. De vorige ronde en biedingen blijven bewaard; de nieuwe ronde begint zonder biedingen.</p>
             <label htmlFor="restart-reason" className="mt-3 block text-sm font-bold">Reden voor de nieuwe ronde</label>
             <Textarea id="restart-reason" value={restartReason} onChange={(event) => setRestartReason(event.target.value)} maxLength={500} placeholder="Bijvoorbeeld: hoogste bod sluit niet aan bij de verwachte marktwaarde." className="mt-2 bg-white" />
-            <Button type="button" onClick={restart} disabled={pending || restartReason.trim().length < 10} className="mt-3">{pending && <LoaderCircle className="animate-spin" />}Nieuwe biedronde van 24 uur starten</Button>
+            <Button type="button" onClick={restart} disabled={pending || restartReason.trim().length < 10} className="mt-3">{pending && <LoaderCircle className="animate-spin" />}Veiling opnieuw starten · 24 uur</Button>
           </div>}
         </div>
       ) : (
