@@ -9,7 +9,6 @@ import { addInternalNote, reviewPhoto } from "@/app/beheer/aanvragen/actions";
 import { ApplicationStatusControls } from "@/components/admin/application-status-controls";
 import { MarketControls } from "@/components/admin/market-controls";
 import { PhaseFourControls } from "@/components/admin/phase-four-controls";
-import { TestPaymentPanel } from "@/components/admin/test-payment-panel";
 import { ComplaintAdminPanel } from "@/components/admin/complaint-admin-panel";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -117,7 +116,6 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
     <div className="mt-8 grid gap-6 lg:grid-cols-2"><Panel title="Status wijzigen"><ApplicationStatusControls applicationId={application.id} status={application.status} /></Panel><Panel title="Interne notitie"><form action={addInternalNote}><input type="hidden" name="applicationId" value={application.id} /><Textarea name="body" required maxLength={2000} aria-label="Interne notitie" /><Button className="mt-3" size="sm">Notitie opslaan</Button></form><div className="mt-5 space-y-3">{application.notes.map((note) => <article key={note.id} className="rounded-lg bg-slate-50 p-3"><p className="whitespace-pre-wrap text-sm">{note.body}</p><p className="mt-2 text-xs text-slate-500">{note.author} · {formatAmsterdamDateTime(note.createdAt)}</p></article>)}</div></Panel></div>
     <div className="mt-8"><MarketControls applicationId={application.id} applicationStatus={application.status} sellerVerified={parsedVerification.data.verified} market={market} /></div>
     <PhaseFourSummary state={parsedPhaseFour.data} />
-    <TestPaymentPanel applicationId={application.id} state={parsedPayment.data} />
     <ComplaintAdminPanel complaints={complaints} />
     <PhaseFourControls applicationId={application.id} caseState={caseState} condition={application.condition} />
     {market.listingId && <section className="mt-8 rounded-2xl border border-slate-200 p-6"><h2 className="text-xl font-black">Alle biedingen</h2><p className="mt-2 text-sm text-slate-600">Na 24 uur wordt maximaal één hoogste bieder gereserveerd. Dat opent de vervolgroute, maar is nog geen koop.</p>{market.bids.length ? <div className="mt-4 overflow-x-auto"><table className="w-full text-left text-sm"><thead><tr><th className="py-2">Bedrijf</th><th className="py-2">Bedrag</th><th className="py-2">Tijdstip</th></tr></thead><tbody>{market.bids.map((bid) => <tr key={bid.id} className="border-t border-slate-200"><td className="py-3">{bid.companyName}</td><td className="py-3 font-bold">{formatEuroCents(bid.amountCents)}{bid.isHighest && <span className="ml-2 rounded-full bg-emerald-100 px-2 py-1 text-xs text-emerald-900">hoogste</span>}</td><td className="py-3">{formatAmsterdamDateTime(bid.createdAt)}</td></tr>)}</tbody></table></div> : <p className="mt-4 text-slate-500">Er zijn nog geen biedingen.</p>}</section>}

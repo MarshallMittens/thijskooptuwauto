@@ -7,7 +7,6 @@ import { claimSellerApplicationAction } from "@/app/mijn-aanvraag/actions";
 import { ApplicationUpdateForm } from "@/components/seller/application-update-form";
 import { SellerAccessForm } from "@/components/seller/access-form";
 import { SellerPhaseFourControls, type SellerPhaseFourState } from "@/components/seller/phase-four-controls";
-import { SellerTestPaymentControls } from "@/components/seller/test-payment-controls";
 import { ComplaintPanel } from "@/components/complaints/complaint-panel";
 import { Button } from "@/components/ui/button";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -147,7 +146,6 @@ export default async function SellerPortalPage({ searchParams }: { searchParams:
             <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{dossier.photos.map((photo) => <div key={photo.id} className="overflow-hidden rounded-xl border border-slate-200">{photo.signedUrl ? <Image src={photo.signedUrl} alt="Eigen voertuigfoto" width={640} height={480} unoptimized className="aspect-[4/3] w-full object-cover" /> : <div className="grid aspect-[4/3] place-items-center bg-slate-100 text-sm text-slate-500">Foto niet beschikbaar</div>}<p className="p-3 text-xs font-semibold text-slate-600">Controle: {photo.reviewStatus}</p></div>)}</div>
             {dossier.status === "needs_information" ? <><h3 className="mt-8 text-xl font-black">Vul de gevraagde informatie aan</h3><p className="mt-2 text-sm text-slate-600">Na opslaan gaat de aanvraag automatisch terug naar ‘In controle’.</p><ApplicationUpdateForm applicationId={dossier.id} condition={dossier.condition} desiredSaleDate={dossier.desiredSaleDate} /></> : null}
             <SellerPhaseFourControls applicationId={dossier.id} state={dossier.phaseFour} />
-            <SellerTestPaymentControls applicationId={dossier.id} state={dossier.payment} />
             <ComplaintPanel mode="seller" targetId={dossier.id} complaints={dossier.complaints} />
           </article>)}
         </div>
