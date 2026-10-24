@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { PortalHeader } from "@/components/portal/portal-header";
 import { ListingViewers } from "@/components/admin/listing-viewers";
 import { LicensePlate } from "@/components/public/license-plate";
 import { notFound } from "next/navigation";
@@ -106,8 +107,8 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
   })));
 
   return <main className="portal-page"><section className="portal-panel max-w-6xl">
-    <Link href="/beheer/aanvragen" className="font-bold text-[#a64b00] underline">← Alle aanvragen</Link>
-    <Button asChild className="ml-4"><Link href="/beheer/veilingen">Lopende veilingen</Link></Button>
+    <PortalHeader area="beheer" />
+    <Button asChild variant="outline"><Link href="/beheer/aanvragen">← Alle aanvragen</Link></Button>
     <ListingViewers applicationId={application.id} />
     <div className="mt-5"><Button asChild><a href="#autogegevens-aanpassen">Autogegevens aanpassen</a></Button><p className="mt-2 text-sm text-slate-600">Pas de kilometerstand, sleutels, schade, techniek, onderhoud en opmerkingen van deze aanmelding aan.</p></div>
     <div className="mt-6 flex flex-wrap justify-between gap-4"><div><h1 className="mt-2"><LicensePlate registration={application.vehicle.registration} /></h1><p className="mt-2 text-slate-600">{application.vehicle.make} {application.vehicle.model} {application.vehicle.variant}</p></div><div className="rounded-xl bg-slate-100 px-4 py-3 font-bold">Status: {application.status}</div></div>

@@ -43,12 +43,12 @@ export async function adminComplaintAction(input: unknown): Promise<OperationAct
 export async function createIncidentAction(input: unknown): Promise<OperationActionResult> {
   await requireAdmin();
   const parsed = z.object({ severity: z.enum(["low", "medium", "high", "critical"]), summary: z.string().trim().min(10).max(300), impact: z.string().trim().min(10).max(4000) }).safeParse(input);
-  if (!parsed.success) return { ok: false, message: "Omschrijf de storing en impact duidelijk." };
+  if (!parsed.success) return { ok: false, message: "Omschrijf het probleem en de gevolgen voor gebruikers duidelijk." };
   const supabase = await createClient();
   const { error } = await supabase.rpc("admin_create_incident", { p_severity: parsed.data.severity, p_summary: parsed.data.summary, p_impact: parsed.data.impact });
-  if (error) return { ok: false, message: "Het incident kon niet worden opgeslagen." };
+  if (error) return { ok: false, message: "Het probleem kon niet worden opgeslagen." };
   refresh();
-  return { ok: true, message: "Incident geregistreerd in het auditspoor." };
+  return { ok: true, message: "Probleem opgeslagen. Je kunt de voortgang volgen bij ‘Open problemen’." };
 }
 
 export async function updateIncidentAction(input: unknown): Promise<OperationActionResult> {
@@ -57,9 +57,9 @@ export async function updateIncidentAction(input: unknown): Promise<OperationAct
   if (!parsed.success || (parsed.data.status === "resolved" && parsed.data.resolution.length < 10)) return { ok: false, message: "Geef bij oplossen minimaal tien tekens toelichting." };
   const supabase = await createClient();
   const { error } = await supabase.rpc("admin_update_incident", { p_incident_id: parsed.data.incidentId, p_status: parsed.data.status, p_resolution: parsed.data.resolution });
-  if (error) return { ok: false, message: "De incidentstatus kon niet worden gewijzigd." };
+  if (error) return { ok: false, message: "De status van het probleem kon niet worden gewijzigd." };
   refresh();
-  return { ok: true, message: "Incidentstatus bijgewerkt." };
+  return { ok: true, message: "De status van het probleem is bijgewerkt." };
 }
 
 export async function createTestInvoiceRecordAction(input: unknown): Promise<OperationActionResult> {

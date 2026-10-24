@@ -123,7 +123,8 @@ De onderstaande oorspronkelijke voortgang blijft als technische historie behoude
 - [x] Klachtberichten, bewijs, tweede beoordeling, status en uitkomst krijgen auditregistratie zonder bewijsinhoud naar technische logs te kopiëren.
 - [x] Platformfactuur- en correctierecords staan los van de autokoop en blijven `draft_blocked`, `test`, €0 en fiscaal `unconfigured`.
 - [x] De outbox-worker gebruikt leases, `SKIP LOCKED`, provider-idempotentie, maximaal acht pogingen en oplopende retrytermijnen.
-- [x] Operationeel beheer toont wachtrijen, klachten, incidenten, betaalreconciliatie, worker-runs en herstelbewijs.
+- [x] ‘Meldingen & controles’ toont de e-mailwachtrij, mislukte verzendingen, klachten, open problemen en herstelcontroles in begrijpelijke taal. Oude testbetalingen en testdocumenten staan niet meer in dit overzicht.
+- [x] Dealer- en beheerpagina’s delen dezelfde navigatieknoppen: oranje omlijnd, huidige pagina gevuld, met een aparte ingang voor Kosten & facturen en een aanraakvriendelijke mobiele indeling.
 - [x] Een strikt lokaal script heeft een database-export naar een tijdelijke database en een private Storage-checksumherstel aantoonbaar doorlopen.
 - [~] Resend-bezorging, periodieke jobs en dagelijkse reconciliatie zijn voorbereid maar default-off tot hosting en afzender zijn goedgekeurd.
 - [ ] Productieback-upretentie, versleutelde opslag, externe uptimebewaking, storingscontact en onafhankelijke herstelcontrole blijven livegangblokkades.
