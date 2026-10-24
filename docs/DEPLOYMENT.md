@@ -19,6 +19,8 @@ Gebruik per omgeving afzonderlijke sleutels. Kies bij inrichting nabijgelegen on
 - `DRAFT_TOKEN_SECRET`: een afzonderlijke willekeurige waarde van minimaal 32 tekens waarmee stabiele, IP-onafhankelijke conceptcapabilities worden afgeleid.
 - `RDW_APP_TOKEN`: optioneel; openbare RDW-opvragen werken zonder token binnen de actuele limieten.
 - `RESEND_API_KEY`: pas instellen na eigen account- en domeinverificatie. De app gebruikt standaard `Thijskooptuwauto <info@thijskooptuwauto.nl>` als afzender; `RESEND_FROM_EMAIL` is alleen een optionele overschrijving.
+
+De particuliere ontvangstbevestiging gebruikt de banner `public/emails/bedankt-autoaanmelding.png`, een persoonlijk bericht, voertuiggegevens, een kentekenweergave en de tekstuele e-mailhandtekening van Thijs. Zowel directe verzending als de outbox-worker gebruiken dezelfde sjabloon en een tekstversie zonder afbeeldingen. `APP_URL` moet naar de publiek bereikbare website wijzen, zodat mailprogramma’s de banner kunnen laden. Antwoorden gaan naar `info@thijskooptuwauto.nl`. De banner bevat geen verkopersgegevens; private voertuigfoto’s worden niet publiek gemaakt of als openbare e-mailafbeelding gebruikt.
 - `PAYMENT_SIMULATOR_ENABLED`: uitsluitend lokaal `true`; in preview/productie leeg of `false`.
 - `PAYMENT_SIMULATOR_WEBHOOK_SECRET`: afzonderlijk lokaal geheim van minimaal 32 tekens; nooit hergebruiken voor een echte provider.
 - `OPERATIONS_JOB_SECRET`: minimaal 32 willekeurige tekens, alleen server-naar-server voor operationele routes.

@@ -2,9 +2,11 @@ import "server-only";
 
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { getAppUrl } from "@/lib/config/app-url";
 import { getOperationsConfig } from "@/lib/env";
+import { loadApplicationConfirmationEmail } from "@/lib/email/application-confirmation-content";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 const itemSchema = z.object({
@@ -37,7 +39,7 @@ function escapeHtml(value: string) {
   })[character] ?? character);
 }
 
-async function deliver(item: z.infer<typeof itemSchema>, apiKey: string, from: string) {
+async function deliver(item: z.infer<typeof itemSchema>, apiKey: string, from: string, admin: SupabaseClient) {
   const subject = subjects[item.event_type] ?? "Er is een update in je dossier";
   const payload = item.payload && typeof item.payload === "object" && !Array.isArray(item.payload)
     ? item.payload as Record<string, unknown>
@@ -54,6 +56,9 @@ async function deliver(item: z.infer<typeof itemSchema>, apiKey: string, from: s
   const html = item.event_type === "bid.outbid"
     ? `<h1>Je bent overboden</h1><p>Een andere garage heeft een hoger bod geplaatst op een auto waarop jouw bedrijf heeft geboden.</p><p>Wil je nog meebieden? Bekijk het actuele hoogste bod en de resterende tijd in het dealerportaal.</p><p><a href="${escapeHtml(portalUrl)}">Bekijk de auto en bied opnieuw</a></p><p>Deze melding is geen toewijzing of koopovereenkomst.</p>`
     : `<p>${escapeHtml(subject)}.</p><p><a href="${escapeHtml(portalUrl)}">Open het beveiligde dossier</a> voor de actuele status.</p><p>Reageer niet met wachtwoorden, bankgegevens of identiteitsdocumenten.</p>`;
+  const content = item.event_type === "application.received"
+    ? await loadApplicationConfirmationEmail(admin, item.entity_id, item.payload)
+    : { subject, html };
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
@@ -64,8 +69,8 @@ async function deliver(item: z.infer<typeof itemSchema>, apiKey: string, from: s
     body: JSON.stringify({
       from,
       to: [item.recipient],
-      subject,
-      html,
+      ...content,
+      reply_to: "info@thijskooptuwauto.nl",
     }),
     signal: AbortSignal.timeout(8_000),
   });
@@ -90,7 +95,7 @@ export async function runOutboxBatch(limit = 25) {
       let sent = false;
       let deliveryError: string | null = null;
       try {
-        await deliver(item, config.resendApiKey, config.resendFromEmail);
+        await deliver(item, config.resendApiKey, config.resendFromEmail, admin);
         sent = true;
       } catch (error) {
         failed += 1;
