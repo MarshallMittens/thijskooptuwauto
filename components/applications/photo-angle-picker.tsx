@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Camera, CarFront, Car, Armchair, Gauge, CircleGauge, TriangleAlert, Check } from "lucide-react";
+import { Camera, CarFront, Car, Armchair, Gauge, CircleGauge, TriangleAlert, Check, Plus } from "lucide-react";
+import { PhotoAngleIllustration } from "@/components/applications/photo-angle-illustration";
 
 const angles = [
   { name: "Schuin van voren (linksvoor)", hint: "Hele auto en leesbaar kenteken", Icon: CarFront },
@@ -15,12 +16,12 @@ const angles = [
 export function PhotoAnglePicker({ photos, onSelect }: { photos: File[]; onSelect: (file: File, prefix: string) => void }) {
   const [active, setActive] = useState<number | null>(null);
   return <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3" aria-label="Foto’s per autohoek">
-    {angles.map(({ name, hint, Icon }, index) => {
+    {angles.map(({ name, hint }, index) => {
       const prefix = `hoek-${index + 1}-`;
       const selected = photos.find((photo) => photo.name.startsWith(prefix));
       return <div key={name} className={`overflow-hidden rounded-2xl border-2 ${selected ? "border-orange-400 bg-orange-50" : "border-slate-200 bg-white"}`}>
-        <button type="button" aria-expanded={active === index} onClick={() => setActive(active === index ? null : index)} className="flex min-h-44 w-full flex-col items-center justify-center gap-2 p-5 text-center transition-colors hover:bg-orange-50 focus-visible:outline-2 focus-visible:outline-orange-500 active:bg-orange-100">
-          <Icon aria-hidden="true" className="size-14 text-[#a64b00]" strokeWidth={1.5} />
+        <button type="button" aria-expanded={active === index} onClick={() => setActive(active === index ? null : index)} className="group flex min-h-44 w-full flex-col items-center justify-center gap-2 p-5 text-center transition-colors hover:bg-orange-50 focus-visible:outline-2 focus-visible:outline-orange-500 active:bg-orange-100">
+          <span className="relative grid place-items-center rounded-xl border border-dashed border-slate-300 bg-white"><PhotoAngleIllustration angle={index} /><span className={`absolute grid size-10 place-items-center rounded-full text-white shadow-sm transition-colors group-hover:bg-[#f7941e] group-focus-visible:bg-[#f7941e] group-active:bg-[#c55f00] ${selected ? "bg-[#f7941e]" : "bg-[#003f8f]"}`}>{selected ? <Check className="size-6" aria-hidden="true" /> : <Plus className="size-6" aria-hidden="true" />}</span></span>
           <span className="font-bold">{name}</span><span className="text-xs text-slate-600">{hint}</span>
           {selected ? <span className="flex max-w-full items-center gap-1 text-xs font-bold text-[#a64b00]"><Check className="size-4 shrink-0" /><span className="truncate">Foto toegevoegd · wijzigen</span></span> : <span className="text-sm font-bold text-[#a64b00]">Foto toevoegen</span>}
         </button>
