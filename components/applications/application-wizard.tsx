@@ -304,7 +304,7 @@ export function ApplicationWizard({ initialRegistration, autoLookup = false }: {
           <h3 id="step-4" className="text-xl font-bold">Laat je auto duidelijk zien</h3>
           <p className="mt-2 max-w-3xl leading-7 text-slate-600">Met duidelijke foto’s kunnen aangesloten garages je auto beter beoordelen. Maak bij voorkeur de onderstaande beelden en voeg aparte detailfoto’s toe van schade. We gebruiken geen AI om schade of ontbrekende delen in foto’s aan te vullen.</p>
           <p className="mt-4 rounded-xl bg-orange-50 p-4 font-semibold text-[#854000]">Wees zo zorgvuldig mogelijk om misverstanden te voorkomen. Controleer je gegevens en voeg duidelijke foto’s toe die de huidige staat van je auto laten zien.</p>
-          <PhotoAnglePicker photos={photos} onSelect={(file, prefix) => {
+          <PhotoAnglePicker photos={photos} onRemove={(file) => setPhotos((current) => current.filter((photo) => photo !== file))} onSelect={(file, prefix) => {
             if (!CAMERA_PHOTO_TYPES.has(file.type.toLowerCase()) || file.size > MAX_PHOTO_BYTES) { setError("Kies een geschikte foto van maximaal 10 MB."); return; }
             const selected = [...photos.filter((photo) => !photo.name.startsWith(prefix)), file];
             if (selected.length > MAX_PHOTOS) { setError(`Selecteer maximaal ${MAX_PHOTOS} foto’s.`); return; }
