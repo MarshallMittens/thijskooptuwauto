@@ -1,5 +1,7 @@
 import "server-only";
 
+import { getEmailSender } from "@/lib/email/sender";
+
 type SupabasePublicConfig = {
   url: string;
   publishableKey: string;
@@ -70,9 +72,9 @@ export function getOperationsConfig(): OperationsConfig {
   if (!jobSecret || jobSecret.length < 32) throw new Error("OPERATIONS_JOB_SECRET moet minimaal 32 tekens bevatten.");
   const deliveryEnabled = process.env.OUTBOX_DELIVERY_ENABLED === "true";
   const resendApiKey = process.env.RESEND_API_KEY ?? "";
-  const resendFromEmail = process.env.RESEND_FROM_EMAIL ?? "";
-  if (deliveryEnabled && (!resendApiKey || !resendFromEmail)) {
-    throw new Error("Outboxbezorging vereist RESEND_API_KEY en RESEND_FROM_EMAIL.");
+  const resendFromEmail = getEmailSender();
+  if (deliveryEnabled && !resendApiKey) {
+    throw new Error("Outboxbezorging vereist RESEND_API_KEY.");
   }
   return { jobSecret, deliveryEnabled, resendApiKey, resendFromEmail };
 }

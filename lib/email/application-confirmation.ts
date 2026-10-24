@@ -3,6 +3,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { formatRegistration } from "@/lib/applications/schema";
+import { getEmailSender } from "@/lib/email/sender";
 
 function escapeHtml(value: string) {
   return value.replace(/[&<>'"]/g, (character) => ({
@@ -19,8 +20,8 @@ export async function trySendApplicationConfirmation(
   applicationId: string,
 ) {
   const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.RESEND_FROM_EMAIL;
-  if (!apiKey || !from) return { sent: false, reason: "not_configured" } as const;
+  if (!apiKey) return { sent: false, reason: "not_configured" } as const;
+  const from = getEmailSender();
 
   const { data: notification, error } = await admin
     .from("notification_outbox")

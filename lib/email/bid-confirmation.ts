@@ -3,11 +3,12 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { formatEuroCents } from "@/lib/bids/amount";
+import { getEmailSender } from "@/lib/email/sender";
 
 export async function trySendBidConfirmation(admin: SupabaseClient, bidId: string) {
   const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.RESEND_FROM_EMAIL;
-  if (!apiKey || !from) return { sent: false, reason: "not_configured" } as const;
+  if (!apiKey) return { sent: false, reason: "not_configured" } as const;
+  const from = getEmailSender();
 
   const { data: notification, error } = await admin
     .from("notification_outbox")

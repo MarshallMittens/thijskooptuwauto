@@ -18,7 +18,7 @@ Gebruik per omgeving afzonderlijke sleutels. Kies bij inrichting nabijgelegen on
 - `REQUEST_FINGERPRINT_SECRET`: een willekeurige waarde van minimaal 32 tekens per omgeving voor gehashte rate-limitidentifiers.
 - `DRAFT_TOKEN_SECRET`: een afzonderlijke willekeurige waarde van minimaal 32 tekens waarmee stabiele, IP-onafhankelijke conceptcapabilities worden afgeleid.
 - `RDW_APP_TOKEN`: optioneel; openbare RDW-opvragen werken zonder token binnen de actuele limieten.
-- `RESEND_API_KEY` en `RESEND_FROM_EMAIL`: pas instellen na eigen account- en domeinverificatie.
+- `RESEND_API_KEY`: pas instellen na eigen account- en domeinverificatie. De app gebruikt standaard `Thijskooptuwauto <info@thijskooptuwauto.nl>` als afzender; `RESEND_FROM_EMAIL` is alleen een optionele overschrijving.
 - `PAYMENT_SIMULATOR_ENABLED`: uitsluitend lokaal `true`; in preview/productie leeg of `false`.
 - `PAYMENT_SIMULATOR_WEBHOOK_SECRET`: afzonderlijk lokaal geheim van minimaal 32 tekens; nooit hergebruiken voor een echte provider.
 - `OPERATIONS_JOB_SECRET`: minimaal 32 willekeurige tekens, alleen server-naar-server voor operationele routes.

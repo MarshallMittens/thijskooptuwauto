@@ -88,8 +88,8 @@ export function getVercelDeploymentEnvironmentErrors(env: DeploymentEnvironment)
     errors.push("PAYMENT_SIMULATOR_ENABLED moet op Vercel uitgeschakeld blijven.");
   }
 
-  if (env.OUTBOX_DELIVERY_ENABLED === "true" && (!env.RESEND_API_KEY || !env.RESEND_FROM_EMAIL)) {
-    errors.push("Actieve e-mailbezorging vereist RESEND_API_KEY en RESEND_FROM_EMAIL.");
+  if (env.OUTBOX_DELIVERY_ENABLED === "true" && !env.RESEND_API_KEY) {
+    errors.push("Actieve e-mailbezorging vereist RESEND_API_KEY.");
   }
 
   if (vercelEnvironment === "production" && env.PRODUCTION_DEPLOYMENT_APPROVED !== "true") {
