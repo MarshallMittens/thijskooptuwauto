@@ -16,7 +16,13 @@ const angles = [
 
 function PhotoPreview({ file }: { file: File }) {
   const [url, setUrl] = useState("");
-  useEffect(() => { const objectUrl = URL.createObjectURL(file); setUrl(objectUrl); return () => URL.revokeObjectURL(objectUrl); }, [file]);
+  useEffect(() => {
+    const objectUrl = URL.createObjectURL(file);
+    const preview = new window.Image();
+    preview.onload = () => setUrl(objectUrl);
+    preview.src = objectUrl;
+    return () => { preview.onload = null; URL.revokeObjectURL(objectUrl); };
+  }, [file]);
   return url ? <Image src={url} alt="Geselecteerde autofoto" width={480} height={320} unoptimized className="h-36 w-full rounded-xl object-cover" /> : null;
 }
 
