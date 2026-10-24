@@ -9,6 +9,21 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      bids: {
+        Row: {
+          id: string;
+          bid_round_id: string;
+          company_id: string;
+          placed_by: string;
+          amount_cents: number;
+          idempotency_key: string;
+          previous_bid_id: string | null;
+          created_at: string;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
       companies: {
         Row: {
           id: string;

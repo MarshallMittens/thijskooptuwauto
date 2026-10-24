@@ -9,6 +9,7 @@ import { BidForm } from "@/components/dealer/bid-form";
 import { DealerHeader } from "@/components/dealer/dealer-header";
 import { requireDealer } from "@/lib/auth/dal";
 import { formatEuroCents } from "@/lib/bids/amount";
+import { getAdminBidderNames } from "@/lib/bids/admin-bidder-names";
 import { createClient } from "@/lib/supabase/server";
 import { formatAmsterdamDateTime } from "@/lib/time/format";
 
@@ -35,6 +36,7 @@ export default async function DealerListingPage({ params }: { params: Promise<{ 
   const parsed = detailSchema.safeParse(data);
   if (error || !parsed.success) notFound();
   const listing = parsed.data;
+  const bidderNames = await getAdminBidderNames(listing.round.id);
   const photos = await Promise.all(listing.photos.map(async (photo) => {
     const { data: signed } = await supabase.storage.from("vehicle-photos").createSignedUrl(photo.storagePath, 300);
     return { ...photo, url: signed?.signedUrl ?? null };
@@ -56,8 +58,8 @@ export default async function DealerListingPage({ params }: { params: Promise<{ 
     <div className="mt-8">{listing.round.status === "active" ? <BidForm listingId={listing.id} roundId={listing.round.id} highestBidCents={listing.highestBidCents} nextMinimumBidCents={listing.nextMinimumBidCents} minimumIncrementCents={listing.round.minimumIncrementCents} /> : <p className="rounded-2xl bg-amber-50 p-5 font-semibold text-amber-900">Op dit moment kan niet op deze auto worden geboden. Een gesloten winnaarreservering is nog geen definitieve koop.</p>}</div>
     <section className="mt-8 rounded-2xl border border-slate-200 p-6">
       <h2 className="text-xl font-black">Zichtbare biedhistorie</h2>
-      <p className="mt-2 text-sm text-slate-600">Iedere goedgekeurde garage ziet dezelfde bedragen en tijdstippen. Bedrijfsnamen blijven verborgen; je eigen biedingen zijn gemarkeerd.</p>
-      {listing.bidHistory.length ? <div className="mt-4 overflow-x-auto"><table className="w-full text-left text-sm"><thead><tr><th className="py-2">Bedrag</th><th className="py-2">Geplaatst</th><th className="py-2">Herkomst</th></tr></thead><tbody>{listing.bidHistory.map((bid) => <tr key={bid.id} className="border-t border-slate-200"><td className="py-3 font-bold">{formatEuroCents(bid.amountCents)} {bid.isHighest && <span className="ml-2 rounded-full bg-emerald-100 px-2 py-1 text-xs text-emerald-900">hoogste</span>}</td><td className="py-3">{formatAmsterdamDateTime(bid.createdAt)}</td><td className="py-3">{bid.isOwnCompany ? "Jouw bedrijf" : "Andere garage"}</td></tr>)}</tbody></table></div> : <p className="mt-4 text-slate-500">Er zijn nog geen biedingen.</p>}
+      <p className="mt-2 text-sm text-slate-600">{bidderNames !== null ? "Je ziet de bedrijfsnamen omdat je bent ingelogd als admin. Voor andere dealers blijven deze namen verborgen." : "Iedere goedgekeurde garage ziet dezelfde bedragen en tijdstippen. Bedrijfsnamen blijven verborgen; je eigen biedingen zijn gemarkeerd."}</p>
+      {listing.bidHistory.length ? <div className="mt-4 overflow-x-auto"><table className="w-full text-left text-sm"><thead><tr><th className="py-2">Bedrag</th><th className="py-2">Geplaatst</th><th className="py-2">{bidderNames !== null ? "Garage / bieder" : "Herkomst"}</th></tr></thead><tbody>{listing.bidHistory.map((bid) => <tr key={bid.id} className="border-t border-slate-200"><td className="py-3 font-bold">{formatEuroCents(bid.amountCents)} {bid.isHighest && <span className="ml-2 rounded-full bg-emerald-100 px-2 py-1 text-xs text-emerald-900">hoogste</span>}</td><td className="py-3">{formatAmsterdamDateTime(bid.createdAt)}</td><td className="py-3">{bidderNames !== null ? (bidderNames.get(bid.id) ?? "Naam niet beschikbaar") : bid.isOwnCompany ? "Jouw bedrijf" : "Andere garage"}{bidderNames !== null && bid.isOwnCompany && <span className="ml-2 text-xs text-slate-500">(jouw bedrijf)</span>}</td></tr>)}</tbody></table></div> : <p className="mt-4 text-slate-500">Er zijn nog geen biedingen.</p>}
     </section>
   </section></main>;
 }
