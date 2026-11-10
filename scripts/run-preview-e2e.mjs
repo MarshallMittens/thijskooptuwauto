@@ -1,4 +1,5 @@
 import { spawn } from "node:child_process";
+import { createRequire } from "node:module";
 
 const baseUrl = process.env.E2E_BASE_URL;
 if (!baseUrl) {
@@ -22,10 +23,10 @@ if (
   process.exit(1);
 }
 
-const executable = process.platform === "win32" ? "npx.cmd" : "npx";
+const playwrightCli = createRequire(import.meta.url).resolve("@playwright/test/cli");
 const child = spawn(
-  executable,
-  ["playwright", "test", "e2e/public-and-access.spec.ts"],
+  process.execPath,
+  [playwrightCli, "test", "e2e/public-and-access.spec.ts"],
   { stdio: "inherit", env: process.env },
 );
 

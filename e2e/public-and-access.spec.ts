@@ -133,9 +133,10 @@ test("RDW-uitval laat handmatige invoer toe zonder contactgegevens op te slaan",
   await page.locator("#mileage").fill("42000");
   await page.getByRole("button", { name: "1 sleutel" }).click();
   await expect(page.getByRole("button", { name: "1 sleutel" })).toHaveAttribute("aria-pressed", "true");
-  await page.getByRole("button", { name: "4 van 5 sterren voor beoordeling buitenkant" }).click();
-  await page.getByRole("button", { name: "3 van 5 sterren voor beoordeling interieur" }).click();
-  await page.getByRole("button", { name: "Geen schade" }).click();
+  await page.getByRole("group", { name: "Staat buitenkant" }).getByRole("button", { name: "Zo goed als nieuw" }).click();
+  await page.getByRole("group", { name: "Staat interieur" }).getByRole("button", { name: "Normale gebruikssporen" }).click();
+  await page.getByLabel("Toelichting buitenkant (optioneel)").fill("Fictieve kras op rechterdeur");
+  await page.getByLabel("Toelichting interieur (optioneel)").fill("Fictieve slijtage aan stoel");
   await page.getByRole("button", { name: "Geen gebreken" }).click();
   await page.getByRole("button", { name: "Vakgarage" }).click();
   await page.getByRole("button", { name: "Volgende" }).click();
@@ -153,7 +154,10 @@ test("RDW-uitval laat handmatige invoer toe zonder contactgegevens op te slaan",
   await page.getByRole("button", { name: "Volgende" }).click();
 
   await expect(page.getByRole("heading", { name: "Klaar om je aanvraag te versturen?" })).toBeVisible();
-  await expect(page.getByText("Buitenkant 4/5 · Interieur 3/5")).toBeVisible();
+  await expect(page.getByText("Buitenkant: Zo goed als nieuw · Interieur: Normale gebruikssporen")).toBeVisible();
+  await expect(page.getByText("Buitenkant: Fictieve kras op rechterdeur")).toBeVisible();
+  await expect(page.getByText("Interieur: Fictieve slijtage aan stoel")).toBeVisible();
+  await expect(page.getByText("1 foto(’s) geselecteerd")).toBeVisible();
   const savedDraft = await page.evaluate(() => sessionStorage.getItem("thijskooptuauto.application.v1"));
   expect(savedDraft).not.toContain("proefpersoon@example.test");
   expect(savedDraft).not.toContain("0612345678");

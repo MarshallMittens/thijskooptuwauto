@@ -1,6 +1,6 @@
 # Publicatie, migraties en herstel
 
-De applicatie is nog niet gepubliceerd. Geen van onderstaande stappen mag zonder expliciete toestemming worden uitgevoerd.
+De productieomgeving is nog niet vrijgegeven. Geen van onderstaande publicatiestappen mag zonder expliciete toestemming worden uitgevoerd. Voor het behoud van het bestaande webadres staat de voorbereiding in [DOMEINOVERDRACHT.md](DOMEINOVERDRACHT.md).
 
 ## Omgevingen
 
