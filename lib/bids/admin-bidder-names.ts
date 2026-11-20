@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 /** Keep identities on the server and use the session's existing RLS permissions. */
 export async function getAdminBidderNames(roundId: string): Promise<Map<string, string> | null> {
   const context = await getAccessContext();
-  if (!context?.isStaff || context.staffRole !== "admin" || context.assuranceLevel !== "aal2") return null;
+  if (!context?.isStaff || context.staffRole !== "admin") return null;
 
   const names = new Map<string, string>();
   const client = await createClient();

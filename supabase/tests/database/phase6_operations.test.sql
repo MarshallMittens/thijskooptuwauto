@@ -68,7 +68,7 @@ reset role;
 
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000006a1","role":"authenticated","aal":"aal2"}', true);
-select lives_ok($$ select public.admin_set_platform_affiliation('10000000-0000-0000-0000-0000000006d1', true) $$, 'admin met MFA markeert platformverbonden koper');
+select lives_ok($$ select public.admin_set_platform_affiliation('10000000-0000-0000-0000-0000000006d1', true) $$, 'admin markeert platformverbonden koper');
 select results_eq($$ select count(*)::bigint from public.audit_log where action='company.platform_affiliation_changed' and entity_id='10000000-0000-0000-0000-0000000006d1' $$, $$ values(1::bigint) $$, 'platformverbinding heeft auditspoor');
 reset role;
 
@@ -113,14 +113,14 @@ reset role;
 
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000006a1","role":"authenticated","aal":"aal1"}', true);
-select throws_ok($$ select public.get_admin_complaint_state('40000000-0000-0000-0000-000000000601') $$, 'P0001', 'staff_aal2_required', 'beheer zonder MFA kan klachten niet lezen');
-select throws_ok($$ select public.admin_update_complaint((select complaint_id from phase6_state), 'resolved', 'Fictieve klacht volledig afgehandeld.') $$, 'P0001', 'staff_aal2_required', 'beheer zonder MFA kan klacht niet sluiten');
-select is(public.can_upload_complaint_evidence((select complaint_id from phase6_state)), false, 'beheer zonder MFA mag geen bewijsupload voorbereiden');
+select results_eq($$ select jsonb_array_length(public.get_admin_complaint_state('40000000-0000-0000-0000-000000000601')) $$, $$ values(1) $$, 'beheer met alleen wachtwoord kan klachten lezen');
+select throws_ok($$ select public.admin_update_complaint((select complaint_id from phase6_state), 'resolved', 'Fictieve klacht volledig afgehandeld.') $$, 'P0001', 'independent_second_reviewer_required', 'beheer met alleen wachtwoord kan platformklacht niet zonder tweede beoordeling sluiten');
+select is(public.can_upload_complaint_evidence((select complaint_id from phase6_state)), true, 'beheer met alleen wachtwoord mag bewijsupload voorbereiden');
 reset role;
 
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000006a1","role":"authenticated","aal":"aal2"}', true);
-select results_eq($$ select jsonb_array_length(public.get_admin_complaint_state('40000000-0000-0000-0000-000000000601')) $$, $$ values(1) $$, 'beheer met MFA ziet klacht');
+select results_eq($$ select jsonb_array_length(public.get_admin_complaint_state('40000000-0000-0000-0000-000000000601')) $$, $$ values(1) $$, 'beheer ziet klacht');
 select throws_ok($$ select public.admin_update_complaint((select complaint_id from phase6_state), 'resolved', 'Fictieve klacht volledig afgehandeld.') $$, 'P0001', 'independent_second_reviewer_required', 'platformklacht kan niet zonder tweede beoordeling sluiten');
 select lives_ok($$ select public.admin_review_complaint((select complaint_id from phase6_state), 'Onafhankelijke fictieve controle van alle gebeurtenissen uitgevoerd.') $$, 'eerste medewerker legt onafhankelijke beoordeling vast');
 select throws_ok($$ select public.admin_update_complaint((select complaint_id from phase6_state), 'resolved', 'Fictieve klacht volledig afgehandeld.') $$, 'P0001', 'independent_second_reviewer_required', 'dezelfde medewerker kan beoordeling niet zelf aftekenen');

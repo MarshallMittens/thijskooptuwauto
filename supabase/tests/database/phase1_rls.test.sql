@@ -89,18 +89,18 @@ reset role;
 
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000a1","role":"authenticated","aal":"aal1"}', true);
-select throws_ok(
+select lives_ok(
   $$ select public.set_company_status('10000000-0000-0000-0000-0000000000b1', 'approved') $$,
-  'P0001', 'mfa_required',
-  'beheer zonder MFA kan niet goedkeuren'
+  'beheer met alleen wachtwoord kan goedkeuren'
 );
 reset role;
 
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000a1","role":"authenticated","aal":"aal2"}', true);
-select lives_ok(
-  $$ select public.set_company_status('10000000-0000-0000-0000-0000000000b1', 'approved') $$,
-  'beheer met MFA kan goedkeuren'
+select results_eq(
+  $$ select approved_by::text from public.companies where id = '10000000-0000-0000-0000-0000000000b1' $$,
+  $$ values ('00000000-0000-0000-0000-0000000000a1'::text) $$,
+  'goedkeuring bewaart de bevoegde beheerder als actor'
 );
 select results_eq(
   $$ select status::text from public.companies where id = '10000000-0000-0000-0000-0000000000b1' $$,

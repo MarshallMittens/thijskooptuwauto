@@ -65,7 +65,7 @@ set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000d3","role":"authenticated","aal":"aal2"}', true);
 select throws_ok($$ select public.list_dealer_listings(null, null, null) $$, 'P0001', 'approved_company_required', 'pending bedrijf kan aanbod niet ophalen');
 select throws_ok($$ select public.place_bid((select round_id from phase3_state), 1000000, '70000000-0000-0000-0000-000000000001') $$, 'P0001', 'approved_company_required', 'pending bedrijf kan niet bieden');
-select throws_ok($$ select public.list_admin_active_auctions() $$, 'P0001', 'staff_aal2_required', 'dealer kan het beheer-overzicht met bedrijfsnamen niet lezen');
+select throws_ok($$ select public.list_admin_active_auctions() $$, 'P0001', 'staff_required', 'dealer kan het beheer-overzicht met bedrijfsnamen niet lezen');
 reset role;
 
 set local role authenticated;
@@ -129,23 +129,24 @@ select results_eq($$ select count(*)::bigint from public.audit_log where action 
 
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000d1","role":"authenticated","aal":"aal2"}', true);
-select throws_ok($$ select public.admin_restart_bid_round('40000000-0000-0000-0000-000000000001', 'Biedingen waren onvoldoende.', '71000000-0000-0000-0000-000000000001') $$, 'P0001', 'staff_aal2_required', 'dealer kan een gesloten biedronde niet herstarten');
+select throws_ok($$ select public.admin_restart_bid_round('40000000-0000-0000-0000-000000000001', 'Biedingen waren onvoldoende.', '71000000-0000-0000-0000-000000000001') $$, 'P0001', 'staff_required', 'dealer kan een gesloten biedronde niet herstarten');
 reset role;
 
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000a1","role":"authenticated","aal":"aal1"}', true);
-select throws_ok($$ select public.admin_restart_bid_round('40000000-0000-0000-0000-000000000001', 'Biedingen waren onvoldoende.', '71000000-0000-0000-0000-000000000002') $$, 'P0001', 'staff_aal2_required', 'beheer zonder MFA kan een gesloten biedronde niet herstarten');
+select lives_ok($$
+  update phase3_state
+  set second_round_id = (public.admin_restart_bid_round(
+    '40000000-0000-0000-0000-000000000001',
+    'De hoogste bieding sluit onvoldoende aan bij de verwachte marktwaarde.',
+    '71000000-0000-0000-0000-000000000004'
+  )->>'bid_round_id')::uuid
+$$, 'beheer met alleen wachtwoord kan een gesloten biedronde herstarten');
 reset role;
 
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000a1","role":"authenticated","aal":"aal2"}', true);
 select throws_ok($$ select public.admin_restart_bid_round('40000000-0000-0000-0000-000000000001', 'te kort', '71000000-0000-0000-0000-000000000003') $$, 'P0001', 'restart_reason_required', 'beheer moet een duidelijke herstartreden vastleggen');
-update phase3_state
-set second_round_id = (public.admin_restart_bid_round(
-  '40000000-0000-0000-0000-000000000001',
-  'De hoogste bieding sluit onvoldoende aan bij de verwachte marktwaarde.',
-  '71000000-0000-0000-0000-000000000004'
-)->>'bid_round_id')::uuid;
 select ok((select second_round_id is not null and second_round_id <> round_id from phase3_state), 'herstart maakt een afzonderlijke nieuwe biedronde');
 select results_eq($$ select extract(epoch from (ends_at - starts_at))::bigint from public.bid_rounds where id = (select second_round_id from phase3_state) $$, $$ values (86400::bigint) $$, 'herstart duurt opnieuw exact 86400 seconden');
 select results_eq($$ select status::text from public.bid_rounds where id = (select second_round_id from phase3_state) $$, $$ values ('active'::text) $$, 'herstart begint direct actief');

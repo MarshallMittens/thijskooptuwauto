@@ -13,7 +13,7 @@
 
 - Default deny: trek grants in en voeg alleen noodzakelijke RLS-policies toe.
 - Vertrouw geen browserwaarden voor rollen, bedrijven, bedragen, tijdstippen of statussen.
-- Beheeracties vereisen staff-lidmaatschap en `aal2`.
+- Beheeracties vereisen een geverifieerde ingelogde sessie en actief staff-lidmaatschap. De eigenaar heeft op 20 november 2026 expliciet gekozen voor inloggen met alleen e-mailadres en wachtwoord, zonder verplichte authenticator. Rol-, accountblokkade- en garagegoedkeuringscontroles blijven verplicht.
 - Dealers mogen nooit verkopersgegevens, interne notities of biedingen van andere bedrijven lezen.
 - Biedingen worden later uitsluitend append-only via één transactionele databasefunctie geplaatst.
 - Gebruik `service_role` alleen in server-only, afgebakende taken; nooit in browsercode.

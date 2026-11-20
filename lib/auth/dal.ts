@@ -30,8 +30,6 @@ export const getAccessContext = cache(async (): Promise<AccessContext | null> =>
 
   return {
     userId: subject,
-    assuranceLevel:
-      claimsData?.claims?.aal === "aal2" ? "aal2" : "aal1",
     isStaff: parsed.data.is_staff,
     staffRole: parsed.data.staff_role,
     canUseDealerPortal: parsed.data.can_use_dealer_portal,
@@ -54,7 +52,6 @@ export async function requireDealer() {
   if (context.companyStatus === "pending") redirect("/dealer/wachten");
   if (context.companyStatus === "blocked") redirect("/dealer/geblokkeerd");
   if (context.companyStatus !== "approved") redirect("/geen-toegang");
-  if (context.assuranceLevel !== "aal2") redirect("/auth/mfa?next=/dealer");
 
   return context;
 }
@@ -62,7 +59,6 @@ export async function requireDealer() {
 export async function requireAdmin() {
   const context = await requireUser("/beheer");
   if (!context.isStaff) redirect("/geen-toegang");
-  if (context.assuranceLevel !== "aal2") redirect("/auth/mfa");
   return context;
 }
 

@@ -138,10 +138,10 @@ select throws_ok(
   '42501', null,
   'browserrol kan de rate-limitfunctie niet rechtstreeks aanroepen'
 );
-select throws_ok(
-  $$ select public.list_admin_applications() $$,
-  'P0001', 'staff_aal2_required',
-  'beheer zonder MFA kan aanvragen niet ophalen'
+select results_eq(
+  $$ select count(*)::bigint from jsonb_array_elements(public.list_admin_applications()) item where (item->>'id')::uuid = (select (final_result->>'application_id')::uuid from phase2_state) $$,
+  $$ values (1::bigint) $$,
+  'beheer met alleen wachtwoord kan de aanvraag ophalen'
 );
 reset role;
 
@@ -150,7 +150,7 @@ select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000
 select results_eq(
   $$ select count(*)::bigint from jsonb_array_elements(public.list_admin_applications()) item where (item->>'id')::uuid = (select (final_result->>'application_id')::uuid from phase2_state) $$,
   $$ values (1::bigint) $$,
-  'beheer met MFA ziet de aanvraag'
+  'beheer ziet de aanvraag'
 );
 select lives_ok(
   $$ select public.admin_update_application_status((select (final_result->>'application_id')::uuid from phase2_state), 'in_review') $$,

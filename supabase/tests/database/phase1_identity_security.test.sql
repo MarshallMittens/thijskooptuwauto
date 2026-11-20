@@ -78,10 +78,10 @@ select lives_ok(
 
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"01000000-0000-0000-0000-0000000000f1","role":"authenticated","aal":"aal1"}', true);
-select throws_ok(
-  $$ select public.list_dealer_listings(null, null, null) $$,
-  'P0001', 'approved_company_required',
-  'ook de platformeigenaar heeft MFA nodig voor dealerrechten'
+select results_eq(
+  $$ select count(*)::bigint from jsonb_array_elements(public.list_dealer_listings(null, null, null)) item where item->>'id' = '61000000-0000-0000-0000-000000000001' $$,
+  $$ values (1::bigint) $$,
+  'de expliciet aangewezen platformeigenaar ziet met alleen wachtwoord het goedgekeurde dealeraanbod'
 );
 reset role;
 
@@ -95,7 +95,7 @@ select results_eq(
 select results_eq(
   $$ select count(*)::bigint from jsonb_array_elements(public.list_dealer_listings(null, null, null)) item where item->>'id' = '61000000-0000-0000-0000-000000000001' $$,
   $$ values (1::bigint) $$,
-  'de tweede expliciet aangewezen admin ziet met MFA het goedgekeurde dealeraanbod'
+  'de tweede expliciet aangewezen admin ziet het goedgekeurde dealeraanbod'
 );
 reset role;
 
@@ -103,18 +103,17 @@ set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"01000000-0000-0000-0000-0000000000d1","role":"authenticated","aal":"aal1"}', true);
 select results_eq(
   $$ select count(*)::bigint from public.listings where id = '61000000-0000-0000-0000-000000000001' $$,
-  $$ values (0::bigint) $$,
-  'goedgekeurde dealer zonder MFA ziet geen aanbod via RLS'
+  $$ values (1::bigint) $$,
+  'goedgekeurde dealer met alleen wachtwoord ziet aanbod via RLS'
 );
-select throws_ok(
-  $$ select public.list_dealer_listings(null, null, null) $$,
-  'P0001', 'approved_company_required',
-  'goedgekeurde dealer zonder MFA kan dealer-RPC niet gebruiken'
+select results_eq(
+  $$ select count(*)::bigint from jsonb_array_elements(public.list_dealer_listings(null, null, null)) item where item->>'id' = '61000000-0000-0000-0000-000000000001' $$,
+  $$ values (1::bigint) $$,
+  'goedgekeurde dealer met alleen wachtwoord kan dealer-RPC gebruiken'
 );
-select throws_ok(
+select lives_ok(
   $$ select public.place_bid('71000000-0000-0000-0000-000000000001', 100000, '81000000-0000-0000-0000-000000000001') $$,
-  'P0001', 'approved_company_required',
-  'goedgekeurde dealer zonder MFA kan niet bieden'
+  'goedgekeurde dealer met alleen wachtwoord kan gecontroleerd bieden'
 );
 reset role;
 
@@ -128,7 +127,7 @@ select results_eq(
 select results_eq(
   $$ select count(*)::bigint from jsonb_array_elements(public.list_dealer_listings(null, null, null)) item where item->>'id' = '61000000-0000-0000-0000-000000000001' $$,
   $$ values (1::bigint) $$,
-  'de platformeigenaar ziet met MFA het goedgekeurde dealeraanbod'
+  'de platformeigenaar ziet het goedgekeurde dealeraanbod'
 );
 reset role;
 
@@ -143,11 +142,12 @@ select set_config('request.jwt.claims', '{"sub":"01000000-0000-0000-0000-0000000
 select results_eq(
   $$ select count(*)::bigint from jsonb_array_elements(public.list_dealer_listings(null, null, null)) item where item->>'id' = '61000000-0000-0000-0000-000000000001' $$,
   $$ values (1::bigint) $$,
-  'goedgekeurde dealer met MFA ziet gepubliceerd aanbod'
+  'goedgekeurde dealer ziet gepubliceerd aanbod'
 );
-select lives_ok(
-  $$ select public.place_bid('71000000-0000-0000-0000-000000000001', 100000, '81000000-0000-0000-0000-000000000001') $$,
-  'goedgekeurde dealer met MFA kan gecontroleerd bieden'
+select results_eq(
+  $$ select (public.place_bid('71000000-0000-0000-0000-000000000001', 100000, '81000000-0000-0000-0000-000000000001')->>'created')::boolean $$,
+  $$ values (false) $$,
+  'herhaling van het wachtwoordbod maakt geen tweede bod'
 );
 select results_eq(
   $$ select count(*)::bigint from public.auction_policy_versions $$,
@@ -160,7 +160,7 @@ set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"01000000-0000-0000-0000-0000000000f1","role":"authenticated","aal":"aal2"}', true);
 select lives_ok(
   $$ select public.place_bid('71000000-0000-0000-0000-000000000001', 110000, '81000000-0000-0000-0000-000000000002') $$,
-  'de platformeigenaar kan met MFA namens het gekoppelde bedrijf bieden'
+  'de platformeigenaar kan namens het gekoppelde bedrijf bieden'
 );
 reset role;
 
@@ -185,7 +185,7 @@ select set_config('request.jwt.claims', '{"sub":"01000000-0000-0000-0000-0000000
 select results_eq(
   $$ select count(*)::bigint from public.auction_policy_versions where version = 1 $$,
   $$ values (1::bigint) $$,
-  'beheer met MFA kan testbeleid controleren'
+  'beheer kan testbeleid controleren'
 );
 reset role;
 

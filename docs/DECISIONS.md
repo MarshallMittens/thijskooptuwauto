@@ -1,5 +1,11 @@
 # Ontwerpkeuzes en open punten
 
+## Eigenaarbesluit — 20 november 2026
+
+De volledige dealer- en beheeromgeving gebruikt alleen e-mail en wachtwoord. De eigenaar heeft het verhoogde risico door het ontbreken van een tweede factor expliciet geaccepteerd. De eerdere verplichte TOTP-/`aal2`-keuze en alle daarop gebaseerde MFA-aannames hieronder zijn vervangen; rollen, handmatige garagegoedkeuring, account- en bedrijfsblokkades, actieve lidmaatschappen en eigenaarschap blijven gehandhaafd.
+
+Applicatie en SQL ondersteunen een geldige sessie zonder TOTP. Voor uitrol wordt eerst de nieuwe voorwaartse migratie `202611200001_password_only_portal_access.sql` toegepast en daarna de applicatie gepubliceerd; oude migraties blijven ongewijzigd. Lokale MFA-configuratie wijzigt hosted Auth niet automatisch en bestaande factorrecords worden niet verwijderd. Vervallen betaal- en simulatoronderdelen blijven buiten gebruik. Dit besluit is geen bewijs van deployment of voltooide controles.
+
 ## Vastgelegde keuzes
 
 1. **Eén Next.js-applicatie.** Geen microservices; publieke website, dealerportaal en beheer delen één codebasis.
@@ -7,8 +13,8 @@
 3. **Supabase als gegevensplatform.** PostgreSQL, Auth en private Storage; SQL-migraties zijn leidend.
 4. **Geen extra ORM.** De Supabase-client en gegenereerde databasetypen voorkomen een tweede schemasysteem.
 5. **Server én database controleren toegang.** De DAL bewaakt routes; grants, RLS en databasefuncties blijven de definitieve grens.
-6. **Handmatige bedrijfsgoedkeuring.** Een registratie is altijd `pending`; alleen een admin met MFA kan goedkeuren of blokkeren.
-7. **MFA via TOTP voor gevoelige rollen.** Beheer en goedgekeurde dealers gebruiken `aal2`; geen betaalde sms-afhankelijkheid.
+6. **Handmatige bedrijfsgoedkeuring.** Een registratie is altijd `pending`; alleen een bevoegde admin kan goedkeuren of blokkeren.
+7. **Alleen e-mail en wachtwoord voor dealers en beheer.** Dit vervangt sinds 20 november 2026 de eerdere verplichte TOTP-/`aal2`-keuze voor gevoelige rollen. Het ontbreken van een tweede factor is een expliciet geaccepteerd eigenaarsrisico.
 8. **Append-only biedingen en auditlog.** Wijzigen of verwijderen wordt geen normale applicatiefunctie.
 9. **UTC in opslag, Europe/Amsterdam in presentatie.** Geldbedragen worden gehele eurocenten.
 10. **Foutbestendige e-mail.** Domeinhandelingen worden opgeslagen vóór een e-mailpoging; notificaties krijgen een duurzame outbox.
@@ -35,7 +41,7 @@
 31. **Fase-4-voorwaarden blijven test-only.** De lokale versie `phase4-concept-v1` mag de workflow aantonen, maar activeert geen betaling en is geen goedgekeurd productiecontract.
 32. **Geen automatische tweede winnaar.** Een afwijzing, no-show of vastgelopen vervolgroute maakt een beheertaak; de tweede bieder wordt niet automatisch koper.
 33. **Betalingen zitten achter een adapter.** Fase 5 kent alleen de providernaam `simulated` in omgeving `test`. Een toekomstige echte provider krijgt een afzonderlijke adapter en goedkeuringspad; de simulator wordt nooit als operationele provider gepresenteerd.
-34. **Simulator is default-off en productieverboden.** De databasemigratie zet hem uit. Alleen beheer met MFA kan hem via servercode activeren wanneer lokale simulatorvariabelen aanwezig zijn; de server weigert dit in een productie-runtime.
+34. **Historische simulator blijft buiten gebruik.** Het oorspronkelijke sandboxontwerp was default-off en productieverboden. Die beschrijving geeft geen toestemming de vervallen simulator opnieuw te activeren; de eerdere MFA-aanname is vervangen door keuze 7.
 35. **Geen verzonnen behandelingskosten.** Zowel de particuliere klant als de garage betaalt de eigen platformkosten rechtstreeks en exclusief aan Thijskooptuauto. De bedragen, btw-behandeling, het verschuldigdheidsmoment en restitutieregels zijn nog niet vastgesteld; daarom gebruikt de testsimulator €0 vergoeding en de blijvende markering `test_unconfigured` en blijven fiscale facturen geblokkeerd.
 36. **Providerbericht is de betaalautoriteit.** Een terugkeerpagina of browseractie bewijst geen betaling. Alleen een tijdgebonden HMAC-ondertekend bericht wordt verwerkt, waarna PostgreSQL bedrag, EUR-valuta, ontvanger en toegestane statusvolgorde opnieuw controleert.
 37. **Ontvangst, vrijgave en uitbetaling zijn verschillende feiten.** Volledig ontvangen geld krijgt `received_held`; vrijgave vereist dubbele overdrachtsbevestiging en beheercontrole; provideracceptatie en uiteindelijke uitbetaling blijven afzonderlijke events.
@@ -54,8 +60,8 @@
 50. **De eerste hostingstap is uitsluitend Preview.** Node blijft op 22.x; Preview gebruikt een eigen Supabase-project en afzonderlijke geheimen. De build weigert localhost, voorbeeldwaarden, hergebruikte private geheimen, een actieve betaalsimulator en productie zonder de afzonderlijke schakelaar `PRODUCTION_DEPLOYMENT_APPROVED=true`.
 51. **Statuscontrole is minimaal en gelaagd.** `/api/health` toont openbaar alleen dat de Next.js-app reageert. Databasecontrole vereist het server-only operationele geheim en geeft geen queryresultaten, foutdetails of configuratie terug.
 52. **Cryptografische extensiefuncties zijn expliciet gekwalificeerd.** Hosted Supabase bewaart `gen_random_bytes` in schema `extensions`. De fase-6-migratie gebruikt daarom `extensions.gen_random_bytes`; deze correctie is gemaakt nadat de eerste acceptatiepoging transactioneel was teruggedraaid en voordat migratie 12 ooit remote als toegepast werd geregistreerd.
-53. **Uitsluitend expliciet aangewezen platformadmins mogen een gecombineerde admin-/dealeridentiteit gebruiken.** Dit is een per account ingestelde uitzondering via `staff_memberships.can_use_dealer_portal`, uitsluitend mogelijk voor `admin`. De uitzondering vereist nog steeds MFA, een actief bedrijfslidmaatschap en een goedgekeurd, niet-geblokkeerd bedrijf. Iedere aangewezen admin handelt alleen namens het eigen gekoppelde bedrijf. Gewone staff- en dealeridentiteiten blijven door triggers gescheiden. Omdat dezelfde sessie ook adminrechten heeft, is dit geen technische functiescheiding; platformaffiliatie, expliciete aanwijzing en auditregistratie blijven daarom verplicht.
-54. **Een slechte uitslag wordt niet overschreven maar krijgt een nieuwe ronde.** Alleen beheer met MFA kan een definitief afgesloten biedronde gemotiveerd opnieuw aanbieden. Oude biedingen en de oude uitslag blijven onveranderlijk bewaard, een nog niet opgevolgde winnaarreservering wordt vrijgegeven en de nieuwe ronde start leeg voor exact 24 uur. Zodra afspraak, koopafhandeling, geschil of een verkoopdossier bestaat, wordt herstart geweigerd.
+53. **Uitsluitend expliciet aangewezen platformadmins mogen een gecombineerde admin-/dealeridentiteit gebruiken.** Dit is een per account ingestelde uitzondering via `staff_memberships.can_use_dealer_portal`, uitsluitend mogelijk voor `admin`. De uitzondering vereist een actief bedrijfslidmaatschap en een goedgekeurd, niet-geblokkeerd bedrijf; de eerdere MFA-eis is vervangen door keuze 7. Iedere aangewezen admin handelt alleen namens het eigen gekoppelde bedrijf. Gewone staff- en dealeridentiteiten blijven door triggers gescheiden. Omdat dezelfde sessie ook adminrechten heeft, is dit geen technische functiescheiding; platformaffiliatie, expliciete aanwijzing en auditregistratie blijven daarom verplicht.
+54. **Een slechte uitslag wordt niet overschreven maar krijgt een nieuwe ronde.** Alleen bevoegd beheer kan een definitief afgesloten biedronde gemotiveerd opnieuw aanbieden. Oude biedingen en de oude uitslag blijven onveranderlijk bewaard, een nog niet opgevolgde winnaarreservering wordt vrijgegeven en de nieuwe ronde start leeg voor exact 24 uur. Zodra afspraak, koopafhandeling, geschil of een verkoopdossier bestaat, wordt herstart geweigerd.
 55. **Er geldt geen maximumaantal aangesloten garages.** Iedere afzonderlijk geregistreerde en goedgekeurde garage kan deelnemen; beveiliging, filters en notificaties mogen geen impliciete limiet van vijf bedrijven introduceren.
 56. **Transport is een expliciete keuze in de afhandeling.** Wanneer de transport-/ophaalservice wordt gekozen is het afgesproken tarief €250. Betaler, btw-behandeling, annuleringsregels en het precieze factuurmoment blijven open en daarom wordt dit bedrag nog niet geïnd of gefactureerd.
 57. **Toegang en platformrelatie zijn verschillende beheeracties.** Goedkeuren/blokkeren bepaalt dealerportaaltoegang. De markering platformkoper is uitsluitend voor belangenconflicten en functiescheiding en verandert de toegang niet; de beheerinterface benoemt en scheidt deze acties zichtbaar.
@@ -80,5 +86,5 @@
 - Exacte platformkosten per klant en garage, btw-/factuurbehandeling, betaalmoment, restitutie en een eventuele minimale openingsbieding. De staffel voor minimumverhogingen is wel vastgesteld.
 - Bewaartermijnen en verwijderprocedure per gegevenscategorie.
 - Definitief KvK-nummer, juridische bedrijfsidentiteit, privacy- en voorwaardeninhoud. Het vestigingsadres, telefoonnummer en algemene e-mailadres zijn door de ondernemer aangeleverd voor de contactpagina.
-- Productiebeheerder(s), MFA-herstelprocedure en functiescheiding.
+- Productiebeheerder(s), gecontroleerd wachtwoord- en bevoegdheidsherstel en functiescheiding.
 - Bedrijfsdomein, e-mailafzenders en EU-regio’s voor Supabase en Vercel.

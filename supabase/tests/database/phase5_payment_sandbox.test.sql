@@ -1,10 +1,11 @@
 begin;
 
 create extension if not exists pgtap with schema extensions;
-select plan(57);
+select plan(84);
 
-select is((select enabled from public.payment_runtime_config where provider = 'simulated'), false, 'betaalsimulator staat na migratie standaard uit');
-update public.payment_runtime_config set enabled = true where provider = 'simulated';
+-- De simulator is definitief buiten gebruik; geen enkele test activeert hem.
+select is((select enabled from public.payment_runtime_config where provider = 'simulated'), false, 'betaalsimulator staat na migratie uit');
+select is(private.test_payment_simulator_enabled(), false, 'simulatorhelper blijft definitief uitgeschakeld');
 
 insert into auth.users (
   instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
@@ -24,17 +25,6 @@ insert into public.companies(id, legal_name, kvk_number, street, house_number, p
 insert into public.company_memberships(company_id, user_id, role) values
   ('10000000-0000-0000-0000-0000000005d1', '00000000-0000-0000-0000-0000000005d1', 'owner'),
   ('10000000-0000-0000-0000-0000000005d2', '00000000-0000-0000-0000-0000000005d2', 'owner');
-
-set local role authenticated;
-select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000005a1","role":"authenticated","aal":"aal2"}', true);
-select throws_ok($$ select public.set_test_payment_simulator_enabled(true, '00000000-0000-0000-0000-0000000005a1') $$, '42501', 'permission denied for function set_test_payment_simulator_enabled', 'beheerbrowser kan simulatorfunctie niet rechtstreeks aanroepen');
-reset role;
-set local role service_role;
-select set_config('request.jwt.claims', '{"role":"service_role"}', true);
-select throws_ok($$ select public.set_test_payment_simulator_enabled(true, '00000000-0000-0000-0000-0000000005d1') $$, 'P0001', 'staff_actor_required', 'servicefunctie weigert een verzonnen niet-staffactor');
-select lives_ok($$ select public.set_test_payment_simulator_enabled(true, '00000000-0000-0000-0000-0000000005a1') $$, 'servicefunctie accepteert echte staffactor');
-reset role;
-select results_eq($$ select count(*)::bigint from public.audit_log where actor_id='00000000-0000-0000-0000-0000000005a1' and action='payment.test_simulator_enabled' $$, $$ values (1::bigint) $$, 'simulatoractivatie heeft herleidbare auditactor');
 
 insert into public.seller_contacts(id, full_name, email, phone, postal_code) values
   ('20000000-0000-0000-0000-000000000501', 'Fictieve Verkoper Vijf', 'seller5@example.test', '0633333333', '9999ZZ');
@@ -61,141 +51,179 @@ insert into public.inspections(id, appointment_id, application_id, company_id, s
 insert into public.sale_agreements(id, winner_reservation_id, inspection_id, application_id, vehicle_revision_id, original_bid_cents, agreed_price_cents, terms_version, terms_status, status, dealer_confirmed_at, seller_confirmed_at) values
   ('c0000000-0000-0000-0000-000000000501', '90000000-0000-0000-0000-000000000501', 'b0000000-0000-0000-0000-000000000501', '40000000-0000-0000-0000-000000000501', '50000000-0000-0000-0000-000000000501', 1250000, 1250000, 'phase4-concept-v1', 'test', 'agreed', now(), now());
 
-create temporary table phase5_state(payment_order_id uuid, provider_reference text, recipient_reference text);
-grant all on table phase5_state to authenticated, service_role;
-
-set local role authenticated;
-select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000005e2","role":"authenticated","aal":"aal1"}', true);
-select throws_ok($$ select public.get_seller_test_payment_state('40000000-0000-0000-0000-000000000501') $$, 'P0001', 'application_access_denied', 'andere verkoper kan betaalstatus niet lezen');
-reset role;
-
-set local role authenticated;
-select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000005e1","role":"authenticated","aal":"aal1"}', true);
-select results_eq($$ select public.seller_start_test_payment_onboarding('40000000-0000-0000-0000-000000000501', 'd0000000-0000-0000-0000-000000000501')->>'status' $$, $$ values ('pending'::text) $$, 'verkoper start herkenbare testonboarding');
-select results_eq($$ select (public.seller_start_test_payment_onboarding('40000000-0000-0000-0000-000000000501', 'd0000000-0000-0000-0000-000000000501')->>'created')::boolean $$, $$ values (false) $$, 'dubbele onboarding is idempotent');
-select results_eq($$ select public.seller_complete_test_payment_onboarding('40000000-0000-0000-0000-000000000501')->>'status' $$, $$ values ('verified'::text) $$, 'testontvanger wordt expliciet geverifieerd');
-reset role;
-
-set local role authenticated;
-select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000005d2","role":"authenticated","aal":"aal2"}', true);
-select throws_ok($$ select public.dealer_create_test_payment('c0000000-0000-0000-0000-000000000501', 'd1000000-0000-0000-0000-000000000501') $$, 'P0001', 'agreed_sale_required', 'andere dealer kan geen betaalverzoek maken');
-reset role;
-
-set local role authenticated;
-select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000005d1","role":"authenticated","aal":"aal2"}', true);
-insert into phase5_state(payment_order_id)
-select (public.dealer_create_test_payment('c0000000-0000-0000-0000-000000000501', 'd1000000-0000-0000-0000-000000000501')->>'payment_order_id')::uuid;
-select ok((select payment_order_id is not null from phase5_state), 'winnaar maakt lokaal testbetaalverzoek');
-select results_eq($$ select (public.dealer_create_test_payment('c0000000-0000-0000-0000-000000000501', 'd1000000-0000-0000-0000-000000000501')->>'created')::boolean $$, $$ values (false) $$, 'dubbel checkoutverzoek is idempotent');
-select is(public.get_dealer_test_payment_cases()#>>'{0,payment,feeConfigurationStatus}', 'test_unconfigured', 'onbesliste vergoeding blijft herkenbaar test-ongeconfigureerd');
-select results_eq($$ select (public.get_dealer_test_payment_cases()#>>'{0,payment,buyerChargeCents}')::bigint $$, $$ values (1250000::bigint) $$, 'testcheckout rekent geen verzonnen behandelingskosten');
-select results_eq($$ select count(*)::bigint from public.payment_orders $$, $$ values (0::bigint) $$, 'dealer kan betalingstabellen niet rechtstreeks lezen');
-select throws_ok(
-  $$ select public.process_simulated_payment_event('evt_forbidden_0001', 'test', 'payment.received', 1, 'EUR', 'test', now(), repeat('a', 64)) $$,
-  '42501', 'permission denied for function process_simulated_payment_event', 'dealer kan providerwebhookfunctie niet aanroepen'
+-- Fictieve historische records: voldoende compleet voor vrijgave en refund,
+-- zodat uitsluitend de definitieve buitengebruikstelling deze acties blokkeert.
+insert into public.seller_payment_onboarding (
+  id, application_id, seller_user_id, recipient_reference, status, idempotency_key, verified_at
+) values (
+  'd0000000-0000-0000-0000-000000000501', '40000000-0000-0000-0000-000000000501',
+  '00000000-0000-0000-0000-0000000005e1', 'test_recipient_phase5_retired', 'verified',
+  'd0000000-0000-0000-0000-000000000501', now() - interval '1 day'
 );
-reset role;
+insert into public.payment_orders (
+  id, sale_agreement_id, application_id, company_id, onboarding_id, status,
+  vehicle_amount_cents, platform_fee_cents, fee_configuration_status,
+  buyer_charge_cents, seller_payout_cents, received_cents, recipient_reference,
+  provider_payment_reference, created_by, idempotency_key, received_at
+) values (
+  'e0000000-0000-0000-0000-000000000501', 'c0000000-0000-0000-0000-000000000501',
+  '40000000-0000-0000-0000-000000000501', '10000000-0000-0000-0000-0000000005d1',
+  'd0000000-0000-0000-0000-000000000501', 'received_held', 1250000, 0,
+  'test_unconfigured', 1250000, 1250000, 1250000, 'test_recipient_phase5_retired',
+  'sim_phase5_retired_payment', '00000000-0000-0000-0000-0000000005d1',
+  'd1000000-0000-0000-0000-000000000501', now() - interval '1 hour'
+);
+insert into public.handovers (
+  payment_order_id, seller_confirmed_at, dealer_confirmed_at,
+  vrijwaring_verified_at, vrijwaring_verified_by
+) values (
+  'e0000000-0000-0000-0000-000000000501', now() - interval '1 hour',
+  now() - interval '1 hour', now() - interval '1 hour',
+  '00000000-0000-0000-0000-0000000005a1'
+);
+insert into private.simulated_provider_payments (
+  provider_payment_reference, status, amount_cents, currency, recipient_reference
+) values (
+  'sim_phase5_retired_payment', 'received_held', 1250000, 'EUR', 'test_recipient_phase5_retired'
+);
 
-update phase5_state s set provider_reference = p.provider_payment_reference, recipient_reference = p.recipient_reference
-from public.payment_orders p where p.id = s.payment_order_id;
+-- Bewaar ook tijdstempels en overige velden om onbedoelde bijwerkingen te vinden.
+create temporary view phase5_current_state as
+select jsonb_build_object(
+  'runtime_config', (select coalesce(jsonb_agg(to_jsonb(record) order by record.provider), '[]'::jsonb) from public.payment_runtime_config record),
+  'onboarding', (select coalesce(jsonb_agg(to_jsonb(record) order by record.id), '[]'::jsonb) from public.seller_payment_onboarding record),
+  'orders', (select coalesce(jsonb_agg(to_jsonb(record) order by record.id), '[]'::jsonb) from public.payment_orders record),
+  'handovers', (select coalesce(jsonb_agg(to_jsonb(record) order by record.id), '[]'::jsonb) from public.handovers record),
+  'events', (select coalesce(jsonb_agg(to_jsonb(record) order by record.id), '[]'::jsonb) from public.payment_events record),
+  'refunds', (select coalesce(jsonb_agg(to_jsonb(record) order by record.id), '[]'::jsonb) from public.payment_refunds record),
+  'provider_payments', (select coalesce(jsonb_agg(to_jsonb(record) order by record.provider_payment_reference), '[]'::jsonb) from private.simulated_provider_payments record),
+  'reconciliation_runs', (select coalesce(jsonb_agg(to_jsonb(record) order by record.id), '[]'::jsonb) from public.payment_reconciliation_runs record),
+  'reconciliation_items', (select coalesce(jsonb_agg(to_jsonb(record) order by record.id), '[]'::jsonb) from public.payment_reconciliation_items record),
+  'audit', (select coalesce(jsonb_agg(to_jsonb(record) order by record.id), '[]'::jsonb) from public.audit_log record),
+  'outbox', (select coalesce(jsonb_agg(to_jsonb(record) order by record.id), '[]'::jsonb) from public.notification_outbox record),
+  'tasks', (select coalesce(jsonb_agg(to_jsonb(record) order by record.id), '[]'::jsonb) from public.workflow_tasks record),
+  'idempotency', (select coalesce(jsonb_agg(to_jsonb(record) order by record.scope, record.actor_key, record.idempotency_key), '[]'::jsonb) from public.request_idempotency record)
+) as state;
+create temporary table phase5_baseline as select state from phase5_current_state;
 
-set local role authenticated;
-select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000005e1","role":"authenticated","aal":"aal1"}', true);
-select results_eq($$ select count(*)::bigint from public.payment_orders $$, $$ values (0::bigint) $$, 'verkoper kan betalingstabellen niet rechtstreeks lezen');
-select is(public.get_seller_test_payment_state('40000000-0000-0000-0000-000000000501')#>>'{payment,status}', 'checkout_pending', 'verkoper ziet eigen testbetaalstatus via gecontroleerde functie');
-reset role;
-
-set local role service_role;
-select set_config('request.jwt.claims', '{"role":"service_role"}', true);
-select throws_ok(format('select public.process_simulated_payment_event(%L,%L,%L,%s,%L,%L,now(),%L)', 'evt_currency_0001', (select provider_reference from phase5_state), 'payment.received', 1250000, 'USD', (select recipient_reference from phase5_state), repeat('a',64)), 'P0001', 'payment_currency_mismatch', 'verkeerde valuta wordt geweigerd');
-select throws_ok(format('select public.process_simulated_payment_event(%L,%L,%L,%s,%L,%L,now(),%L)', 'evt_recipient_0001', (select provider_reference from phase5_state), 'payment.received', 1250000, 'EUR', 'test_recipient_wrong', repeat('b',64)), 'P0001', 'payment_recipient_mismatch', 'verkeerde ontvanger wordt geweigerd');
-select throws_ok(format('select public.process_simulated_payment_event(%L,%L,%L,%s,%L,%L,now(),%L)', 'evt_amount_000001', (select provider_reference from phase5_state), 'payment.received', 1250001, 'EUR', (select recipient_reference from phase5_state), repeat('c',64)), 'P0001', 'payment_amount_mismatch', 'te hoog providerbedrag wordt geweigerd');
-select throws_ok(format($sql$do $block$ begin perform public.process_simulated_payment_event(%L,%L,%L,0,%L,%L,now(),%L); if (select status from public.payment_orders where id=%L::uuid) <> 'failed' then raise exception 'wrong_test_state'; end if; raise exception 'rollback_marker'; end $block$$sql$, 'evt_failed_00001', (select provider_reference from phase5_state), 'payment.failed', 'EUR', (select recipient_reference from phase5_state), repeat('d',64), (select payment_order_id from phase5_state)), 'P0001', 'rollback_marker', 'mislukte betaling heeft eigen status');
-select throws_ok(format($sql$do $block$ begin perform public.process_simulated_payment_event(%L,%L,%L,0,%L,%L,now(),%L); if (select status from public.payment_orders where id=%L::uuid) <> 'expired' then raise exception 'wrong_test_state'; end if; raise exception 'rollback_marker'; end $block$$sql$, 'evt_expired_0001', (select provider_reference from phase5_state), 'payment.expired', 'EUR', (select recipient_reference from phase5_state), repeat('e',64), (select payment_order_id from phase5_state)), 'P0001', 'rollback_marker', 'verlopen betaling heeft eigen status');
-select results_eq(format('select public.process_simulated_payment_event(%L,%L,%L,%s,%L,%L,now(),%L)->>''status''', 'evt_partial_0001', (select provider_reference from phase5_state), 'payment.received', 500000, 'EUR', (select recipient_reference from phase5_state), repeat('f',64)), $$ values ('partially_paid'::text) $$, 'gedeeltelijke betaling krijgt eigen status');
-select results_eq($$ select received_cents from public.payment_orders where id=(select payment_order_id from phase5_state) $$, $$ values (500000::bigint) $$, 'gedeeltelijk ontvangen bedrag is exact opgeslagen');
-select throws_ok(format('select public.process_simulated_payment_event(%L,%L,%L,%s,%L,%L,now(),%L)', 'evt_early_payout1', (select provider_reference from phase5_state), 'payment.paid_out', 1250000, 'EUR', (select recipient_reference from phase5_state), repeat('1',64)), 'P0001', 'invalid_payment_event_order', 'onlogische eventvolgorde wordt geweigerd');
-select results_eq(format('select public.process_simulated_payment_event(%L,%L,%L,%s,%L,%L,now(),%L)->>''status''', 'evt_received_0001', (select provider_reference from phase5_state), 'payment.received', 1250000, 'EUR', (select recipient_reference from phase5_state), repeat('2',64)), $$ values ('received_held'::text) $$, 'volledig bedrag wordt als ontvangen en vastgehouden verwerkt');
-select results_eq(format('select (public.process_simulated_payment_event(%L,%L,%L,%s,%L,%L,now(),%L)->>''created'')::boolean', 'evt_received_0001', (select provider_reference from phase5_state), 'payment.received', 1250000, 'EUR', (select recipient_reference from phase5_state), repeat('2',64)), $$ values (false) $$, 'dubbel providerevent is idempotent');
-select results_eq($$ select received_cents from public.payment_orders where id=(select payment_order_id from phase5_state) $$, $$ values (1250000::bigint) $$, 'alleen exact bevestigd providerbedrag staat als ontvangen');
-reset role;
-
-set local role authenticated;
-select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000005a1","role":"authenticated","aal":"aal2"}', true);
-select throws_ok($$ select public.admin_request_test_release((select payment_order_id from phase5_state)) $$, 'P0001', 'verified_handover_required', 'vrijgave zonder overdracht en vrijwaring wordt geweigerd');
+set local role anon;
+select set_config('request.jwt.claims', '{"role":"anon"}', true);
+select throws_ok($$ select public.set_test_payment_simulator_enabled(true, '00000000-0000-0000-0000-0000000005a1') $$, '42501', null, 'anoniem kan de gepensioneerde simulator niet activeren');
+select throws_ok($$ select public.seller_start_test_payment_onboarding('40000000-0000-0000-0000-000000000501', 'd0000000-0000-0000-0000-000000000501') $$, '42501', null, 'anoniem kan geen testonboarding starten');
+select throws_ok($$ select public.seller_complete_test_payment_onboarding('40000000-0000-0000-0000-000000000501') $$, '42501', null, 'anoniem kan geen testonboarding voltooien');
+select throws_ok($$ select public.dealer_create_test_payment('c0000000-0000-0000-0000-000000000501', 'd1000000-0000-0000-0000-000000000501') $$, '42501', null, 'anoniem kan geen testbetaling starten');
+select throws_ok($$ select public.seller_confirm_test_handover('e0000000-0000-0000-0000-000000000501') $$, '42501', null, 'anoniem kan geen verkopersoverdracht bevestigen');
+select throws_ok($$ select public.dealer_confirm_test_handover('e0000000-0000-0000-0000-000000000501') $$, '42501', null, 'anoniem kan geen dealeroverdracht bevestigen');
+select throws_ok($$ select public.admin_verify_test_handover('e0000000-0000-0000-0000-000000000501') $$, '42501', null, 'anoniem kan geen testvrijwaring verifiëren');
+select throws_ok($$ select public.admin_request_test_release('e0000000-0000-0000-0000-000000000501') $$, '42501', null, 'anoniem kan geen testbetaling vrijgeven');
+select throws_ok($$ select public.admin_request_test_refund('e0000000-0000-0000-0000-000000000501', 1250000, 'Fictieve volledige terugbetaling van een oude testbetaling.', 'e1000000-0000-0000-0000-000000000501') $$, '42501', null, 'anoniem kan geen testrefund aanvragen');
+select throws_ok($$ select public.process_simulated_payment_event('evt_retired_received', 'sim_phase5_retired_payment', 'payment.received', 1250000, 'EUR', 'test_recipient_phase5_retired', now(), repeat('a', 64)) $$, '42501', null, 'anoniem kan geen gesimuleerd providerevent verwerken');
+select throws_ok($$ select public.run_test_payment_reconciliation() $$, '42501', null, 'anoniem kan geen testreconciliatie starten');
+select throws_ok($$ select count(*) from public.payment_orders $$, '42501', null, 'anoniem kan geen betalingstabellen lezen');
 reset role;
 
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000005e2","role":"authenticated","aal":"aal1"}', true);
-select throws_ok($$ select public.seller_confirm_test_handover((select payment_order_id from phase5_state)) $$, 'P0001', 'payment_access_denied', 'andere verkoper kan overdracht niet bevestigen');
+select throws_ok($$ select public.set_test_payment_simulator_enabled(true, '00000000-0000-0000-0000-0000000005a1') $$, '42501', null, 'gewone gebruiker kan de simulator niet heractiveren');
+select throws_ok($$ select public.seller_start_test_payment_onboarding('40000000-0000-0000-0000-000000000501', 'd0000000-0000-0000-0000-000000000501') $$, 'P0001', 'test_payment_simulator_disabled', 'gewone gebruiker kan geen testonboarding starten');
+select throws_ok($$ select public.seller_complete_test_payment_onboarding('40000000-0000-0000-0000-000000000501') $$, 'P0001', 'test_payment_simulator_disabled', 'gewone gebruiker kan geen testonboarding voltooien');
+select throws_ok($$ select public.dealer_create_test_payment('c0000000-0000-0000-0000-000000000501', 'd1000000-0000-0000-0000-000000000501') $$, 'P0001', 'test_payment_simulator_disabled', 'gewone gebruiker kan geen testbetaling starten');
+select throws_ok($$ select public.seller_confirm_test_handover('e0000000-0000-0000-0000-000000000501') $$, 'P0001', 'test_payment_simulator_disabled', 'gewone gebruiker kan geen testoverdracht bevestigen');
+select throws_ok($$ select public.dealer_confirm_test_handover('e0000000-0000-0000-0000-000000000501') $$, 'P0001', 'test_payment_simulator_disabled', 'gewone gebruiker kan geen testontvangst bevestigen');
+select throws_ok($$ select public.admin_verify_test_handover('e0000000-0000-0000-0000-000000000501') $$, 'P0001', 'staff_required', 'gewone gebruiker krijgt geen staffrechten voor testvrijwaring');
+select throws_ok($$ select public.admin_request_test_release('e0000000-0000-0000-0000-000000000501') $$, 'P0001', 'staff_required', 'gewone gebruiker krijgt geen staffrechten voor vrijgave');
+select throws_ok($$ select public.admin_request_test_refund('e0000000-0000-0000-0000-000000000501', 1250000, 'Fictieve volledige terugbetaling van een oude testbetaling.', 'e1000000-0000-0000-0000-000000000501') $$, 'P0001', 'staff_required', 'gewone gebruiker krijgt geen staffrechten voor refunds');
+select throws_ok($$ select public.process_simulated_payment_event('evt_retired_received', 'sim_phase5_retired_payment', 'payment.received', 1250000, 'EUR', 'test_recipient_phase5_retired', now(), repeat('a', 64)) $$, '42501', null, 'browserrol kan providerwebhookfunctie niet aanroepen');
+select throws_ok($$ select public.run_test_payment_reconciliation() $$, '42501', null, 'browserrol kan testreconciliatie niet aanroepen');
+select throws_ok($$ select public.get_seller_test_payment_state('40000000-0000-0000-0000-000000000501') $$, 'P0001', 'application_access_denied', 'andere verkoper kan historische betaalstatus niet lezen');
+select results_eq($$ select count(*)::bigint from public.payment_orders $$, $$ values (0::bigint) $$, 'gewone gebruiker kan betalingstabellen niet rechtstreeks lezen');
+reset role;
+
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000005d1","role":"authenticated","aal":"aal1"}', true);
+select throws_ok($$ select public.set_test_payment_simulator_enabled(true, '00000000-0000-0000-0000-0000000005a1') $$, '42501', null, 'goedgekeurde dealer met alleen wachtwoord kan de simulator niet activeren');
+select throws_ok($$ select public.dealer_create_test_payment('c0000000-0000-0000-0000-000000000501', 'd1000000-0000-0000-0000-000000000501') $$, 'P0001', 'test_payment_simulator_disabled', 'goedgekeurde winnaar met alleen wachtwoord kan geen testbetaling starten');
+select throws_ok($$ select public.dealer_confirm_test_handover('e0000000-0000-0000-0000-000000000501') $$, 'P0001', 'test_payment_simulator_disabled', 'goedgekeurde winnaar kan geen oude testoverdracht bevestigen');
+select throws_ok($$ select public.admin_request_test_release('e0000000-0000-0000-0000-000000000501') $$, 'P0001', 'staff_required', 'goedgekeurde dealer kan geen testbetaling vrijgeven');
+select throws_ok($$ select public.admin_request_test_refund('e0000000-0000-0000-0000-000000000501', 1250000, 'Fictieve volledige terugbetaling van een oude testbetaling.', 'e1000000-0000-0000-0000-000000000501') $$, 'P0001', 'staff_required', 'goedgekeurde dealer kan geen testrefund aanvragen');
+select results_eq($$ select count(*)::bigint from public.payment_orders $$, $$ values (0::bigint) $$, 'dealer kan oude betalingstabellen niet rechtstreeks lezen');
 reset role;
 
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000005e1","role":"authenticated","aal":"aal1"}', true);
-select lives_ok($$ select public.seller_confirm_test_handover((select payment_order_id from phase5_state)) $$, 'verkoper bevestigt eigen overdracht');
+select throws_ok($$ select public.seller_start_test_payment_onboarding('40000000-0000-0000-0000-000000000501', 'd0000000-0000-0000-0000-000000000501') $$, 'P0001', 'test_payment_simulator_disabled', 'bevoegde verkoper kan geen nieuwe testonboarding starten');
+select throws_ok($$ select public.seller_complete_test_payment_onboarding('40000000-0000-0000-0000-000000000501') $$, 'P0001', 'test_payment_simulator_disabled', 'bevoegde verkoper kan oude testonboarding niet opnieuw voltooien');
+select throws_ok($$ select public.seller_confirm_test_handover('e0000000-0000-0000-0000-000000000501') $$, 'P0001', 'test_payment_simulator_disabled', 'bevoegde verkoper kan geen oude testoverdracht bevestigen');
+select is((public.get_seller_test_payment_state('40000000-0000-0000-0000-000000000501')->>'simulatorEnabled')::boolean, false, 'verkoper ziet dat de simulator definitief uitstaat');
+select is(public.get_seller_test_payment_state('40000000-0000-0000-0000-000000000501')#>>'{payment,status}', 'received_held', 'verkoper kan uitsluitend de onveranderde historische eigen betaalstatus lezen');
+select results_eq($$ select count(*)::bigint from public.payment_orders $$, $$ values (0::bigint) $$, 'verkoper kan betalingstabellen niet rechtstreeks lezen');
 reset role;
 
 set local role authenticated;
-select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000005d2","role":"authenticated","aal":"aal2"}', true);
-select throws_ok($$ select public.dealer_confirm_test_handover((select payment_order_id from phase5_state)) $$, 'P0001', 'payment_access_denied', 'andere dealer kan overdracht niet bevestigen');
-reset role;
-
-set local role authenticated;
-select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000005d1","role":"authenticated","aal":"aal2"}', true);
-select lives_ok($$ select public.dealer_confirm_test_handover((select payment_order_id from phase5_state)) $$, 'winnende dealer bevestigt ontvangst');
-select is(public.get_dealer_test_payment_cases()#>>'{0,payment,status}', 'received_held', 'winnende dealer ziet alleen eigen betaalstatus');
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000005d2","role":"authenticated","aal":"aal1"}', true);
+select results_eq($$ select jsonb_array_length(public.get_dealer_test_payment_cases()) $$, $$ values (0) $$, 'andere dealer ziet geen historische betaling van de winnaar');
 reset role;
 
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000005a1","role":"authenticated","aal":"aal1"}', true);
-select throws_ok($$ select public.admin_verify_test_handover((select payment_order_id from phase5_state)) $$, 'P0001', 'staff_aal2_required', 'beheer zonder MFA kan vrijwaring niet verifiëren');
+select throws_ok($$ select public.set_test_payment_simulator_enabled(true, '00000000-0000-0000-0000-0000000005a1') $$, '42501', null, 'staff met alleen wachtwoord kan de simulator niet heractiveren');
+select throws_ok($$ select public.dealer_create_test_payment('c0000000-0000-0000-0000-000000000501', 'd1000000-0000-0000-0000-000000000501') $$, 'P0001', 'test_payment_simulator_disabled', 'staff met alleen wachtwoord kan geen testbetaling starten');
+select throws_ok($$ select public.admin_verify_test_handover('e0000000-0000-0000-0000-000000000501') $$, 'P0001', 'test_payment_simulator_disabled', 'staff met alleen wachtwoord kan geen oude testvrijwaring verifiëren');
+select throws_ok($$ select public.admin_request_test_release('e0000000-0000-0000-0000-000000000501') $$, 'P0001', 'test_payment_simulator_disabled', 'staff met alleen wachtwoord kan geen oude testbetaling vrijgeven');
+select throws_ok($$ select public.admin_request_test_refund('e0000000-0000-0000-0000-000000000501', 1250000, 'Fictieve volledige terugbetaling van een oude testbetaling.', 'e1000000-0000-0000-0000-000000000501') $$, 'P0001', 'test_payment_simulator_disabled', 'staff met alleen wachtwoord kan geen oude testbetaling refunden');
+select is((public.get_admin_test_payment_state('40000000-0000-0000-0000-000000000501')->>'simulatorEnabled')::boolean, false, 'beheer met alleen wachtwoord ziet de uitgeschakelde simulator');
+select is(public.get_admin_test_payment_state('40000000-0000-0000-0000-000000000501')#>>'{payment,status}', 'received_held', 'beheer met alleen wachtwoord kan historische betaalstatus lezen');
+select throws_ok($$ update public.payment_runtime_config set enabled = true where provider = 'simulated' $$, '42501', null, 'staff kan de simulatorvlag niet rechtstreeks wijzigen');
 reset role;
 
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000005a1","role":"authenticated","aal":"aal2"}', true);
-select lives_ok($$ select public.admin_verify_test_handover((select payment_order_id from phase5_state)) $$, 'beheer met MFA verifieert testvrijwaring');
-select results_eq($$ select public.admin_request_test_release((select payment_order_id from phase5_state))->>'status' $$, $$ values ('release_pending'::text) $$, 'vrijgave start pas na alle overdrachtscontroles');
+select throws_ok($$ select public.set_test_payment_simulator_enabled(true, '00000000-0000-0000-0000-0000000005a1') $$, '42501', null, 'oude AAL2-staffsessie kan de simulator niet heractiveren');
+select throws_ok($$ select public.dealer_create_test_payment('c0000000-0000-0000-0000-000000000501', 'd1000000-0000-0000-0000-000000000501') $$, 'P0001', 'test_payment_simulator_disabled', 'oude AAL2-staffsessie kan geen testbetaling starten');
+select throws_ok($$ select public.admin_verify_test_handover('e0000000-0000-0000-0000-000000000501') $$, 'P0001', 'test_payment_simulator_disabled', 'oude AAL2-staffsessie kan geen testvrijwaring verifiëren');
+select throws_ok($$ select public.admin_request_test_release('e0000000-0000-0000-0000-000000000501') $$, 'P0001', 'test_payment_simulator_disabled', 'oude AAL2-staffsessie kan geen testbetaling vrijgeven');
+select throws_ok($$ select public.admin_request_test_refund('e0000000-0000-0000-0000-000000000501', 1250000, 'Fictieve volledige terugbetaling van een oude testbetaling.', 'e1000000-0000-0000-0000-000000000501') $$, 'P0001', 'test_payment_simulator_disabled', 'oude AAL2-staffsessie kan geen testbetaling refunden');
 reset role;
 
 set local role service_role;
 select set_config('request.jwt.claims', '{"role":"service_role"}', true);
-select results_eq(format('select public.process_simulated_payment_event(%L,%L,%L,%s,%L,%L,now(),%L)->>''status''', 'evt_release_00001', (select provider_reference from phase5_state), 'payment.release_accepted', 1250000, 'EUR', (select recipient_reference from phase5_state), repeat('3',64)), $$ values ('payout_pending'::text) $$, 'provideracceptatie start afzonderlijke uitbetalingsstatus');
-select results_eq(format('select public.process_simulated_payment_event(%L,%L,%L,%s,%L,%L,now(),%L)->>''status''', 'evt_payout_000001', (select provider_reference from phase5_state), 'payment.paid_out', 1250000, 'EUR', (select recipient_reference from phase5_state), repeat('4',64)), $$ values ('paid_out'::text) $$, 'providerbevestiging markeert uitbetaling');
-select ok((select paid_out_at is not null from public.payment_orders where id=(select payment_order_id from phase5_state)), 'uitbetaald tijdstip blijft afzonderlijk bewaard');
-select results_eq(format('select public.process_simulated_payment_event(%L,%L,%L,%s,%L,%L,now(),%L)->>''status''', 'evt_dispute_00001', (select provider_reference from phase5_state), 'payment.disputed', 1250000, 'EUR', (select recipient_reference from phase5_state), repeat('5',64)), $$ values ('disputed'::text) $$, 'geschil krijgt eigen status, ook na uitbetaling');
-select ok((select paid_out_at is not null from public.payment_orders where id=(select payment_order_id from phase5_state)), 'geschil doet eerdere uitbetaling niet alsof die nooit bestond');
-reset role;
-
-set local role authenticated;
-select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000005a1","role":"authenticated","aal":"aal2"}', true);
-select results_eq($$ select public.admin_request_test_refund((select payment_order_id from phase5_state), 1250000, 'Volledige testterugbetaling na geschil.', 'e0000000-0000-0000-0000-000000000501')->>'status' $$, $$ values ('pending'::text) $$, 'beheer vraagt traceerbare testrefund aan');
-select results_eq($$ select (public.admin_request_test_refund((select payment_order_id from phase5_state), 1250000, 'Volledige testterugbetaling na geschil.', 'e0000000-0000-0000-0000-000000000501')->>'created')::boolean $$, $$ values (false) $$, 'dubbele refundaanvraag is idempotent');
+select throws_ok($$ select public.set_test_payment_simulator_enabled(true, '00000000-0000-0000-0000-0000000005a1') $$, '42501', null, 'ook service_role kan de simulator niet activeren met een geldige staffactor');
+select throws_ok($$ select public.set_test_payment_simulator_enabled(true, '00000000-0000-0000-0000-0000000005d1') $$, '42501', null, 'service_role krijgt ook met een dealeractor geen activatierechten');
+select throws_ok($$ select public.seller_start_test_payment_onboarding('40000000-0000-0000-0000-000000000501', 'd0000000-0000-0000-0000-000000000501') $$, 'P0001', 'test_payment_simulator_disabled', 'service_role kan geen testonboarding starten');
+select throws_ok($$ select public.seller_complete_test_payment_onboarding('40000000-0000-0000-0000-000000000501') $$, 'P0001', 'test_payment_simulator_disabled', 'service_role kan geen testonboarding voltooien');
+select throws_ok($$ select public.dealer_create_test_payment('c0000000-0000-0000-0000-000000000501', 'd1000000-0000-0000-0000-000000000501') $$, 'P0001', 'test_payment_simulator_disabled', 'service_role kan geen testbetaling starten');
+select throws_ok($$ select public.seller_confirm_test_handover('e0000000-0000-0000-0000-000000000501') $$, 'P0001', 'test_payment_simulator_disabled', 'service_role kan geen testoverdracht bevestigen');
+select throws_ok($$ select public.dealer_confirm_test_handover('e0000000-0000-0000-0000-000000000501') $$, 'P0001', 'test_payment_simulator_disabled', 'service_role kan geen testontvangst bevestigen');
+select throws_ok($$ select public.admin_verify_test_handover('e0000000-0000-0000-0000-000000000501') $$, 'P0001', 'staff_required', 'service_role is geen ingelogde medewerker voor testvrijwaring');
+select throws_ok($$ select public.admin_request_test_release('e0000000-0000-0000-0000-000000000501') $$, 'P0001', 'staff_required', 'service_role kan geen staffvrijgave uitvoeren');
+select throws_ok($$ select public.admin_request_test_refund('e0000000-0000-0000-0000-000000000501', 1250000, 'Fictieve volledige terugbetaling van een oude testbetaling.', 'e1000000-0000-0000-0000-000000000501') $$, 'P0001', 'staff_required', 'service_role kan geen staffrefund uitvoeren');
+select throws_ok($$ select public.process_simulated_payment_event('evt_retired_received', 'sim_phase5_retired_payment', 'payment.received', 1250000, 'EUR', 'test_recipient_phase5_retired', now(), repeat('a', 64)) $$, 'P0001', 'test_payment_simulator_disabled', 'service_role kan geen gesimuleerde ontvangst verwerken');
+select throws_ok($$ select public.process_simulated_payment_event('evt_retired_release', 'sim_phase5_retired_payment', 'payment.release_accepted', 1250000, 'EUR', 'test_recipient_phase5_retired', now(), repeat('a', 64)) $$, 'P0001', 'test_payment_simulator_disabled', 'service_role kan geen gesimuleerde vrijgave verwerken');
+select throws_ok($$ select public.process_simulated_payment_event('evt_retired_payout', 'sim_phase5_retired_payment', 'payment.paid_out', 1250000, 'EUR', 'test_recipient_phase5_retired', now(), repeat('a', 64)) $$, 'P0001', 'test_payment_simulator_disabled', 'service_role kan geen gesimuleerde uitbetaling verwerken');
+select throws_ok($$ select public.process_simulated_payment_event('evt_retired_refund', 'sim_phase5_retired_payment', 'payment.refunded', 1250000, 'EUR', 'test_recipient_phase5_retired', now(), repeat('a', 64)) $$, 'P0001', 'test_payment_simulator_disabled', 'service_role kan geen gesimuleerde refund verwerken');
+select throws_ok($$ select public.run_test_payment_reconciliation() $$, 'P0001', 'test_payment_simulator_disabled', 'service_role kan de gepensioneerde testreconciliatie niet starten');
 reset role;
 
 set local role service_role;
-select set_config('request.jwt.claims', '{"role":"service_role"}', true);
-select throws_ok(format('select public.process_simulated_payment_event(%L,%L,%L,%s,%L,%L,now(),%L)', 'evt_refund_wrong1', (select provider_reference from phase5_state), 'payment.refunded', 1200000, 'EUR', (select recipient_reference from phase5_state), repeat('6',64)), 'P0001', 'payment_amount_mismatch', 'providerrefund met verkeerd bedrag wordt geweigerd');
-select results_eq(format('select public.process_simulated_payment_event(%L,%L,%L,%s,%L,%L,now(),%L)->>''status''', 'evt_refunded_0001', (select provider_reference from phase5_state), 'payment.refunded', 1250000, 'EUR', (select recipient_reference from phase5_state), repeat('7',64)), $$ values ('refunded'::text) $$, 'correcte providerrefund wordt verwerkt');
-select results_eq(format('select (public.process_simulated_payment_event(%L,%L,%L,%s,%L,%L,now(),%L)->>''created'')::boolean', 'evt_refunded_0001', (select provider_reference from phase5_state), 'payment.refunded', 1250000, 'EUR', (select recipient_reference from phase5_state), repeat('7',64)), $$ values (false) $$, 'dubbel refundevent is idempotent');
-select results_eq($$ select refunded_cents from public.payment_orders where id=(select payment_order_id from phase5_state) $$, $$ values (1250000::bigint) $$, 'terugbetaald bedrag wordt afzonderlijk bijgehouden');
-select results_eq($$ select (public.run_test_payment_reconciliation()->>'mismatch_count')::integer $$, $$ values (0) $$, 'reconciliatie vindt geen verschil bij gelijke providerstatus');
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000005a1","role":"service_role","aal":"aal2"}', true);
+select throws_ok($$ select public.admin_verify_test_handover('e0000000-0000-0000-0000-000000000501') $$, 'P0001', 'staff_required', 'service_role met staff-sub is geen geauthenticeerde staffsessie');
+select throws_ok($$ select public.admin_request_test_release('e0000000-0000-0000-0000-000000000501') $$, 'P0001', 'staff_required', 'service_role met staff-sub kan geen testbetaling vrijgeven');
+select throws_ok($$ select public.admin_request_test_refund('e0000000-0000-0000-0000-000000000501', 1250000, 'Fictieve volledige terugbetaling van een oude testbetaling.', 'e1000000-0000-0000-0000-000000000501') $$, 'P0001', 'staff_required', 'service_role met staff-sub kan geen testbetaling refunden');
 reset role;
 
-update private.simulated_provider_payments set amount_cents = 42 where provider_payment_reference=(select provider_reference from phase5_state);
-set local role service_role;
-select set_config('request.jwt.claims', '{"role":"service_role"}', true);
-select results_eq($$ select (public.run_test_payment_reconciliation()->>'mismatch_count')::integer $$, $$ values (1) $$, 'reconciliatie detecteert afwijking van provideradministratie');
-reset role;
-
-select ok((select count(*) >= 2 from public.notification_outbox where entity_id=(select payment_order_id from phase5_state) and event_type='payment.status_changed'), 'betaalstatussen schrijven duurzame outboxmeldingen');
-select results_eq($$ select count(*)::bigint from public.payment_events where payment_order_id=(select payment_order_id from phase5_state) $$, $$ values (6::bigint) $$, 'alleen geldige unieke providerevents blijven bewaard');
-select results_eq($$ select count(*)::bigint from public.workflow_tasks where application_id='40000000-0000-0000-0000-000000000501' and task_type='payment_disputed' $$, $$ values (1::bigint) $$, 'geschil maakt precies één beheertaak');
-select is((select environment from public.payment_orders where id=(select payment_order_id from phase5_state)), 'test', 'iedere lokale betaling blijft herkenbaar test');
-select is((select provider from public.payment_orders where id=(select payment_order_id from phase5_state)), 'simulated', 'geen testbetaling presenteert zich als echte providerbetaling');
-
-set local role anon;
-select throws_ok($$ select count(*) from public.payment_orders $$, '42501', 'permission denied for table payment_orders', 'anoniem kan geen betalingstabellen lezen');
-reset role;
+select results_eq($$ select state->'runtime_config' from phase5_current_state $$, $$ select state->'runtime_config' from phase5_baseline $$, 'simulatorconfiguratie blijft volledig ongewijzigd');
+select results_eq($$ select state->'onboarding' from phase5_current_state $$, $$ select state->'onboarding' from phase5_baseline $$, 'oude ontvanger blijft geverifieerd zonder nieuwe onboarding');
+select results_eq($$ select state->'orders' from phase5_current_state $$, $$ select state->'orders' from phase5_baseline $$, 'oude betaalorder en bedragen blijven ongewijzigd zonder nieuwe betaling');
+select results_eq($$ select state->'handovers' from phase5_current_state $$, $$ select state->'handovers' from phase5_baseline $$, 'oude overdrachtsbevestigingen en verificatie blijven ongewijzigd');
+select results_eq($$ select state->'events' from phase5_current_state $$, $$ select state->'events' from phase5_baseline $$, 'geblokkeerde providerevents worden niet opgeslagen');
+select results_eq($$ select state->'refunds' from phase5_current_state $$, $$ select state->'refunds' from phase5_baseline $$, 'geblokkeerde refunds maken geen terugbetalingsrecords');
+select results_eq($$ select state->'provider_payments' from phase5_current_state $$, $$ select state->'provider_payments' from phase5_baseline $$, 'gesimuleerde provideradministratie blijft ongewijzigd');
+select results_eq($$ select state->'reconciliation_runs' from phase5_current_state $$, $$ select state->'reconciliation_runs' from phase5_baseline $$, 'geblokkeerde reconciliatie maakt geen run');
+select results_eq($$ select state->'reconciliation_items' from phase5_current_state $$, $$ select state->'reconciliation_items' from phase5_baseline $$, 'geblokkeerde reconciliatie maakt geen afwijkingsrecords');
+select results_eq($$ select state->'audit' from phase5_current_state $$, $$ select state->'audit' from phase5_baseline $$, 'geblokkeerde simulatoracties schrijven geen succesaudit');
+select results_eq($$ select state->'outbox' from phase5_current_state $$, $$ select state->'outbox' from phase5_baseline $$, 'geblokkeerde betaalstatuswijzigingen maken geen berichten');
+select results_eq($$ select state->'tasks' from phase5_current_state $$, $$ select state->'tasks' from phase5_baseline $$, 'geblokkeerde betaalacties maken geen beheertaken');
+select results_eq($$ select state->'idempotency' from phase5_current_state $$, $$ select state->'idempotency' from phase5_baseline $$, 'geblokkeerde betaalacties registreren geen idempotentieverzoeken');
 
 select * from finish();
 rollback;

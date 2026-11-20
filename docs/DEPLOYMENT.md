@@ -21,8 +21,8 @@ Gebruik per omgeving afzonderlijke sleutels. Kies bij inrichting nabijgelegen on
 - `RESEND_API_KEY`: pas instellen na eigen account- en domeinverificatie. De app gebruikt standaard `Thijskooptuwauto <info@thijskooptuwauto.nl>` als afzender; `RESEND_FROM_EMAIL` is alleen een optionele overschrijving.
 
 De particuliere ontvangstbevestiging gebruikt de banner `public/emails/bedankt-autoaanmelding.png`, een persoonlijk bericht, voertuiggegevens, een kentekenweergave en de tekstuele e-mailhandtekening van Thijs. Zowel directe verzending als de outbox-worker gebruiken dezelfde sjabloon en een tekstversie zonder afbeeldingen. `APP_URL` moet naar de publiek bereikbare website wijzen, zodat mailprogramma’s de banner kunnen laden. Antwoorden gaan naar `info@thijskooptuwauto.nl`. De banner bevat geen verkopersgegevens; private voertuigfoto’s worden niet publiek gemaakt of als openbare e-mailafbeelding gebruikt.
-- `PAYMENT_SIMULATOR_ENABLED`: uitsluitend lokaal `true`; in preview/productie leeg of `false`.
-- `PAYMENT_SIMULATOR_WEBHOOK_SECRET`: afzonderlijk lokaal geheim van minimaal 32 tekens; nooit hergebruiken voor een echte provider.
+- `PAYMENT_SIMULATOR_ENABLED`: blijft leeg of `false`; vervallen betaal- en simulatoronderdelen worden niet opnieuw geactiveerd.
+- `PAYMENT_SIMULATOR_WEBHOOK_SECRET`: historische sandboxvariabele; voor deze wijziging niet activeren of hergebruiken voor een echte provider.
 - `OPERATIONS_JOB_SECRET`: minimaal 32 willekeurige tekens, alleen server-naar-server voor operationele routes.
 - `OUTBOX_DELIVERY_ENABLED`: standaard `false`; pas `true` na afzenderverificatie, sjablooncontrole en planning van de worker.
 - `PRODUCTION_DEPLOYMENT_APPROVED`: blijft `false` voor lokaal en Preview. Een Vercel-productiebouw wordt zonder een later, expliciet livegangbesluit technisch geblokkeerd.
@@ -33,17 +33,17 @@ De concrete, niet-productieve eerste Vercel-proef staat in `docs/VERCEL_PREVIEW.
 
 ## Voor publicatie
 
-1. Bedrijfsaccounts onder eigendom van Thijskooptuauto maken en MFA activeren.
+1. Infrastructuuraccounts onder eigendom van Thijskooptuauto maken en afzonderlijk beveiligen. Eventuele MFA op hosting- of leveranciersaccounts staat los van de password-only applicatie-inlog voor dealers en beheer.
 2. Privérepository koppelen; branch protection en review instellen.
 3. Alle migraties eerst op acceptatie toepassen en database-tests uitvoeren.
 4. Vercel-variabelen per Development, Preview en Production instellen. Voeg in Supabase Auth uitsluitend de eigen HTTPS-origin met `/auth/callback` toe aan de toegestane redirect-URL’s; de lokale callback blijft beperkt tot localhost/127.0.0.1.
-5. Productiebeheerder gecontroleerd bootstrappen en TOTP verifiëren.
+5. Productiebeheerder gecontroleerd bootstrappen en de staff-/adminrol verifiëren. Dealer en beheer gebruiken sinds het eigenaarbesluit van 20 november 2026 alleen e-mail en wachtwoord; er is geen verplichte TOTP-stap.
 6. Resend-domein met SPF/DKIM verifiëren; API-key alleen server-side opslaan.
 7. Juridische teksten, privacyregister en bewaartermijnen laten beoordelen.
 8. Onafhankelijke beveiligingscontrole en volledige besloten proef uitvoeren.
 9. `agreement_terms_versions` bevat voor lokaal testen alleen een concept. Laat het contract juridisch beoordelen, voeg een expliciet goedgekeurde versie toe en controleer dat UI en database exact die versie gebruiken voordat een betaal- of productiestroom wordt toegestaan.
 
-Fase 5 bevat uitsluitend een lokale testsimulator. De betaalprovider, uitbetalingsroute, kostenbetaler en het juridische bindingsmoment blokkeren productie, maar niet de lokale fout-, status- en reconciliatietests.
+De fase-5-beschrijving betreft historische sandboxfunctionaliteit. Vervallen betaal- en simulatoronderdelen blijven buiten gebruik; een gewijzigde inlogvoorwaarde maakt ze niet opnieuw beschikbaar. De betaalprovider, uitbetalingsroute, kostenbetaler en het juridische bindingsmoment blijven afzonderlijke productiekeuzes.
 
 Vóór een echte providersandbox:
 
@@ -59,6 +59,19 @@ Vóór een echte providersandbox:
 - Migraties zijn voorwaarts, genummerd en worden nooit achteraf aangepast nadat ze gedeeld zijn.
 - Iedere RLS- of functieaanpassing bevat een negatieve database-test.
 - Maak vóór risicovolle productie-migraties een herstelpunt en leg de terugvalprocedure vast.
+
+### Password-only toegang — 20 november 2026
+
+De eigenaar heeft voor de volledige dealer- en beheeromgeving alleen e-mail en wachtwoord gekozen en het verhoogde risico door het ontbreken van een tweede factor geaccepteerd. De eerdere verplichte TOTP-/`aal2`-aannames zijn vervangen; rollen, garagegoedkeuring, account- en bedrijfsblokkades, actieve lidmaatschappen en eigenaarschap blijven vereist.
+
+1. Voer de vereiste applicatie- en negatieve databasecontroles uit en leg de resultaten vast. De gerichte browserproef `e2e/password-only-access.spec.ts` draait uitsluitend na lokale opt-in met `E2E_PASSWORD_ONLY_ACCESS=true` en weigert niet-lokale bestemmingen.
+2. Pas op de doelomgeving eerst de nieuwe voorwaartse migratie `202611200001_password_only_portal_access.sql` toe. Oude migraties worden niet aangepast. De nieuwe migratie laat een geldige sessie zonder TOTP toe en houdt vervallen betaalfuncties ontoegankelijk.
+3. Publiceer daarna de bijbehorende applicatieversie. Controleer directe password-only toegang voor bevoegde dealers en staff, weigering voor verkeerde rollen, pending/geblokkeerde garages en vreemde dossiers, en de veilige interne redirect van `/auth/mfa`.
+4. Controleer hosted Supabase Auth-instellingen afzonderlijk waar dat voor de doelomgeving nodig is. `supabase/config.toml` configureert de lokale runtime en wijzigt hosted MFA-instellingen niet automatisch. De migratie en applicatiewijziging verwijderen geen bestaande factorrecords; voer daarvoor geen Auth API-verwijderactie uit.
+
+Lokale controle op 20 november 2026: `npm run lint`, `npm run typecheck`, `npm run test` (17 bestanden, 69 tests) en `npm run build` zijn geslaagd. De volledige SQL-suite slaagt geïsoleerd lokaal met 11 bestanden en 398 controles. De gerichte Playwright password-only toegangstest slaagt met 1 test voor admin, operator, goedgekeurde/pending/geblokkeerde dealer, anonieme toegang en veilige legacyredirects. De volledige historische koop-/betaalworkflow is hiermee niet opnieuw getest.
+
+Status: lokaal getest, nog niet online. Er is geen remote migratie of applicatie-uitrol uitgevoerd; de hostingauthenticatie voor publicatie wacht nog op de gebruiker. Voer migratie en applicatie-uitrol in de bovenstaande volgorde uit en leg daarna de online toegangscontrole afzonderlijk vast. Heractiveer geen vervallen betaalroute of simulator tijdens deze uitrol.
 
 ## Back-up en herstel
 

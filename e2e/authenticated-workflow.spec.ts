@@ -4,7 +4,7 @@ import { spawnSync } from "node:child_process";
 import { createClient } from "@supabase/supabase-js";
 import { expect, test, type BrowserContext, type Page } from "@playwright/test";
 
-import { enrollMfa, getLatestMailLink, signIn } from "./helpers/local-acceptance";
+import { getLatestMailLink, signIn } from "./helpers/local-acceptance";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -13,7 +13,7 @@ const runAcceptance = process.env.E2E_ACCEPTANCE === "true";
 test.describe("lokale acceptatieroute met gescheiden identiteiten", () => {
   test.skip(!runAcceptance, "Zet E2E_ACCEPTANCE=true uitsluitend voor de lokale acceptatieproef.");
 
-  test("volledige fictieve route van aanmelding tot akkoord en klacht", async ({ browser }) => {
+  test("volledige fictieve route met alleen e-mail en wachtwoord van aanmelding tot akkoord en klacht", async ({ browser }) => {
     test.setTimeout(120_000);
     if (!supabaseUrl || !serviceRoleKey) throw new Error("Lokale Supabase-variabelen ontbreken.");
     const admin = createClient(supabaseUrl, serviceRoleKey, {
@@ -57,7 +57,9 @@ test.describe("lokale acceptatieroute met gescheiden identiteiten", () => {
 
       const administrator = await newPage();
       await signIn(administrator, adminEmail, password, "/beheer");
-      await enrollMfa(administrator, "/beheer");
+      await expect(administrator).toHaveURL(/\/beheer$/);
+      await administrator.goto("/auth/mfa?next=https://example.test");
+      await expect(administrator).toHaveURL(/\/beheer$/);
       for (const email of [dealerOneEmail, dealerTwoEmail]) {
         const row = administrator.getByRole("row").filter({ hasText: email });
         await expect(row).toContainText("pending");
@@ -66,10 +68,12 @@ test.describe("lokale acceptatieroute met gescheiden identiteiten", () => {
       }
 
       await dealerOne.goto("/dealer");
-      await enrollMfa(dealerOne, "/dealer");
+      await expect(dealerOne).toHaveURL(/\/dealer$/);
+      await dealerOne.goto("/auth/mfa?next=/beheer");
+      await expect(dealerOne).toHaveURL(/\/dealer$/);
       await expect(dealerOne.getByRole("heading", { name: "Beschikbare auto’s" })).toBeVisible();
       await dealerTwo.goto("/dealer");
-      await enrollMfa(dealerTwo, "/dealer");
+      await expect(dealerTwo).toHaveURL(/\/dealer$/);
       await expect(dealerTwo.getByRole("heading", { name: "Beschikbare auto’s" })).toBeVisible();
 
       const seller = await newPage(`192.0.2.${(Date.now() % 250) + 1}`);

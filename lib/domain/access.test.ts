@@ -10,7 +10,6 @@ import {
 
 const base: AccessContext = {
   userId: "user-1",
-  assuranceLevel: "aal1",
   isStaff: false,
   staffRole: null,
   canUseDealerPortal: false,
@@ -19,20 +18,25 @@ const base: AccessContext = {
 };
 
 describe("toegangsregels", () => {
-  it("weigert pending en geblokkeerde bedrijven", () => {
-    expect(canAccessDealerPortal(base)).toBe(false);
-    expect(canBid({ ...base, companyStatus: "blocked" })).toBe(false);
+  it.each(["pending", "blocked", null] as const)("weigert bedrijven met status %s", (companyStatus) => {
+    expect(canAccessDealerPortal({ ...base, companyStatus })).toBe(false);
+    expect(canBid({ ...base, companyStatus })).toBe(false);
   });
 
-  it("vereist een goedgekeurd bedrijf en MFA voor het dealerportaal", () => {
-    expect(canAccessDealerPortal({ ...base, companyStatus: "approved" })).toBe(false);
+  it("geeft een ingelogd goedgekeurd bedrijf direct toegang tot het dealerportaal", () => {
     expect(
       canAccessDealerPortal({
         ...base,
         companyStatus: "approved",
-        assuranceLevel: "aal2",
       }),
     ).toBe(true);
+    expect(canBid({ ...base, companyStatus: "approved" })).toBe(true);
+  });
+
+  it("vereist een bedrijf voor dealertoegang en bieden", () => {
+    const context = { ...base, companyId: null, companyStatus: "approved" as const };
+    expect(canAccessDealerPortal(context)).toBe(false);
+    expect(canBid(context)).toBe(false);
   });
 
   it("laat een beheeridentiteit nooit als dealer bieden", () => {
@@ -40,7 +44,6 @@ describe("toegangsregels", () => {
       canBid({
         ...base,
         companyStatus: "approved",
-        assuranceLevel: "aal2",
         isStaff: true,
         staffRole: "admin",
       }),
@@ -52,7 +55,6 @@ describe("toegangsregels", () => {
       canBid({
         ...base,
         companyStatus: "approved",
-        assuranceLevel: "aal2",
         isStaff: true,
         staffRole: "admin",
         canUseDealerPortal: true,
@@ -63,7 +65,6 @@ describe("toegangsregels", () => {
       canBid({
         ...base,
         companyStatus: "approved",
-        assuranceLevel: "aal2",
         isStaff: true,
         staffRole: "operator",
         canUseDealerPortal: false,
@@ -71,16 +72,14 @@ describe("toegangsregels", () => {
     ).toBe(false);
   });
 
-  it("vereist admin én aal2 voor bedrijfsgoedkeuring", () => {
+  it("geeft alleen een ingelogde staff-admin toegang tot bedrijfsgoedkeuring", () => {
     const admin = { ...base, isStaff: true, staffRole: "admin" as const };
-    expect(canManageCompanies(admin)).toBe(false);
-    expect(
-      canManageCompanies({ ...admin, assuranceLevel: "aal2" }),
-    ).toBe(true);
+    expect(canManageCompanies(admin)).toBe(true);
+    expect(canManageCompanies({ ...admin, isStaff: false })).toBe(false);
+    expect(canManageCompanies(base)).toBe(false);
     expect(
       canManageCompanies({
         ...admin,
-        assuranceLevel: "aal2",
         staffRole: "operator",
       }),
     ).toBe(false);

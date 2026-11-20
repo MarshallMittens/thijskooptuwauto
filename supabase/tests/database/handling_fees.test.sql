@@ -3,7 +3,7 @@ create extension if not exists pgtap with schema extensions;
 select plan(3);
 set local role authenticated;
 select set_config('request.jwt.claims', '{"role":"authenticated","aal":"aal1"}', true);
-select throws_ok($$ select public.admin_handling_fees(10000,20000,21) $$, 'P0001', 'staff_aal2_required', 'onbevoegde gebruiker kan geen tarieven wijzigen');
+select throws_ok($$ select public.admin_handling_fees(10000,20000,21) $$, 'P0001', 'staff_required', 'onbevoegde gebruiker kan geen tarieven wijzigen');
 select throws_ok($$ select * from public.handling_fee_invoices $$, '42501', null, 'facturen zijn niet rechtstreeks toegankelijk');
 select throws_ok($$ insert into public.handling_fee_settings(seller_cents,buyer_cents,vat_percent,created_by) values(0,0,0,null) $$, '42501', null, 'directe tariefwijzigingen zijn geblokkeerd');
 reset role;

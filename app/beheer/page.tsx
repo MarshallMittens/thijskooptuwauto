@@ -25,12 +25,12 @@ export default async function AdminPage() {
           <div>
             <p className="eyebrow">Beheeromgeving</p>
             <h1 className="mt-3 text-4xl font-black tracking-[-0.05em]">Autobedrijven</h1>
-            <p className="mt-3 leading-7 text-slate-600">Alle aanmeldingen staan in deze lijst. Er geldt geen maximum voor het aantal garages. Alleen beheerders met tweestapsverificatie kunnen toegang goedkeuren of blokkeren.</p>
+            <p className="mt-3 leading-7 text-slate-600">Alle aanmeldingen staan in deze lijst. Er geldt geen maximum voor het aantal garages. Alleen gebruikers met de beheerdersrol kunnen toegang goedkeuren of blokkeren.</p>
           </div>
         </div>
 
         <div className="mt-6 inline-flex rounded-full bg-emerald-50 px-3 py-1 text-sm font-bold text-emerald-800">
-          MFA actief · rol {context.staffRole}
+          Ingelogd · rol {context.staffRole}
         </div>
 
         {!error ? <div className="mt-6 grid gap-3 sm:grid-cols-3"><div className="rounded-xl border border-slate-200 bg-slate-50 p-4"><p className="text-xs font-bold uppercase tracking-wide text-slate-500">Wacht op controle</p><p className="mt-1 text-2xl font-black">{pendingCount}</p></div><div className="rounded-xl border border-slate-200 bg-slate-50 p-4"><p className="text-xs font-bold uppercase tracking-wide text-slate-500">Goedgekeurd</p><p className="mt-1 text-2xl font-black">{approvedCount}</p></div><div className="rounded-xl border border-slate-200 bg-slate-50 p-4"><p className="text-xs font-bold uppercase tracking-wide text-slate-500">Totaal aangemeld</p><p className="mt-1 text-2xl font-black">{companies?.length ?? 0}</p></div></div> : null}

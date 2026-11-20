@@ -3,7 +3,6 @@ export type CompanyStatus = (typeof companyStatuses)[number];
 
 export type AccessContext = {
   userId: string;
-  assuranceLevel: "aal1" | "aal2";
   isStaff: boolean;
   staffRole: "admin" | "operator" | null;
   canUseDealerPortal: boolean;
@@ -14,18 +13,13 @@ export type AccessContext = {
 export function canAccessDealerPortal(context: AccessContext) {
   return (
     (!context.isStaff || context.canUseDealerPortal) &&
-    context.assuranceLevel === "aal2" &&
     context.companyStatus === "approved" &&
     Boolean(context.companyId)
   );
 }
 
 export function canManageCompanies(context: AccessContext) {
-  return (
-    context.isStaff &&
-    context.staffRole === "admin" &&
-    context.assuranceLevel === "aal2"
-  );
+  return context.isStaff && context.staffRole === "admin";
 }
 
 export function canBid(context: AccessContext) {

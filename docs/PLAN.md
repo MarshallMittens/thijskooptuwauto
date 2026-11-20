@@ -2,6 +2,19 @@
 
 Legenda: `[x]` gebouwd en lokaal geverifieerd, `[~]` gebouwd maar nog niet volledig end-to-end of extern gekoppeld, `[ ]` nog niet gebouwd.
 
+## Inlogkeuze eigenaar — 20 november 2026
+
+- [x] De volledige dealer- en beheeromgeving gebruikt alleen e-mail en wachtwoord. Applicatie en de nieuwe SQL-migratie ondersteunen sessies zonder TOTP; de eigenaar accepteert expliciet het verhoogde risico van een ontbrekende tweede factor.
+- [x] Rollen, handmatige garagegoedkeuring, account- en bedrijfsblokkades, actieve lidmaatschappen en eigenaarschap blijven vereist. De volledige lokale SQL-suite slaagt met 11 bestanden en 398 controles in een geïsoleerde omgeving.
+- [x] `npm run lint`, `npm run typecheck`, `npm run test` (17 bestanden, 69 tests) en `npm run build` zijn lokaal geslaagd op 20 november 2026.
+- [x] De gerichte Playwright password-only toegangstest slaagt lokaal: 1 test met admin, operator, goedgekeurde/pending/geblokkeerde dealer, anonieme toegang en veilige legacyredirects. Dit is geen herhaling van de volledige historische koop-/betaalworkflow.
+- [x] Het oude `/auth/mfa`-pad verwijst intern naar het rolgebonden portaal. De lokale MFA-configuratie wijzigt hosted Supabase Auth-instellingen niet automatisch en verwijdert geen bestaande factorrecords.
+- [ ] Eerst `202611200001_password_only_portal_access.sql` toepassen op de doelomgeving, daarna de applicatie uitrollen en de toegangscontroles controleren. Oude migraties blijven ongewijzigd; de lokale resultaten bevestigen geen online deployment of online toegangscontrole.
+
+Status: lokaal getest, nog niet online. Remote migratie en applicatie-uitrol zijn niet uitgevoerd; de hostingauthenticatie voor publicatie wacht nog op de gebruiker.
+
+De onderstaande historische MFA-/`aal2`-aannames zijn door dit eigenaarbesluit vervangen. Historische betaal- en simulatoronderdelen blijven buiten gebruik en worden door deze inlogwijziging niet opnieuw geactiveerd.
+
 ## Verwerking praktijktestfeedback — 12 oktober 2026
 
 - [x] Bedankpagina toont het kenteken als herkenbare dossiernaam; de onvoorspelbare referentie blijft alleen als technische beveiligingscode beschikbaar.
@@ -27,11 +40,11 @@ Legenda: `[x]` gebouwd en lokaal geverifieerd, `[~]` gebouwd maar nog niet volle
 
 - [x] Fase 0: bestaande repository, UI, koppelingen, infrastructuur en testcommando's vastgelegd in `docs/INVENTARISATIE.md`.
 - [x] Fase 1: nieuwe staff/dealer-rolvermenging wordt door databasetriggers geweigerd; bestaande gecombineerde identiteit krijgt geen dealer-RPC- of biedrechten.
-- [x] Fase 1: goedgekeurde dealers vereisen TOTP/`aal2` in zowel DAL, RLS als dealer-RPC's.
+- [x] Historisch fase 1: TOTP/`aal2` was vereist in DAL, RLS en dealer-RPC's; vervangen door het inlogbesluit van 20 november 2026.
 - [x] Fase 1: wachtwoordherstel en globale sessie-intrekking na wachtwoordwijziging toegevoegd.
 - [x] Fase 1: versieerbare veilingpolicy toegevoegd met exact 86400 seconden, uitsluitend een testminimumstap en een harde blokkade op onvolledig goedgekeurde kosteninstellingen.
-- [x] Fase 1: negatieve unit- en database-tests voor MFA, identiteitsscheiding en testbeleid toegevoegd.
-- [x] Fase 1: gecontroleerde admin-/dealeruitzondering voor expliciet aangewezen platformadmins toegevoegd; per account standaard uit, admin-only, MFA-verplicht, bedrijfsgescheiden en negatief getest.
+- [x] Historisch fase 1: negatieve unit- en database-tests voor MFA, identiteitsscheiding en testbeleid toegevoegd. De oude verplichte MFA-verwachtingen zijn vervangen door de password-only keuze; identiteitsscheiding en testbeleid blijven vereist.
+- [x] Fase 1: gecontroleerde admin-/dealeruitzondering voor expliciet aangewezen platformadmins toegevoegd; per account standaard uit, admin-only, bedrijfsgescheiden en negatief getest. De eerdere MFA-verplichting is vervangen door het inlogbesluit van 20 november 2026.
 - [x] Nieuwe fase 2: wachtwoordloze verkoperverificatie en beveiligd eigen dossier boven op de bestaande aanmeldwizard.
 - [x] Nieuwe fase 2: verkoper ziet uitsluitend eigen aanvraag en private foto’s via vijf minuten geldige links; andere verkopers, dealers en staff-identiteiten kunnen niet koppelen.
 - [x] Nieuwe fase 2: aanvullen is alleen mogelijk bij `needs_information`; daarna gaat het dossier gecontroleerd terug naar `in_review`.
@@ -52,7 +65,7 @@ De onderstaande oorspronkelijke voortgang blijft als technische historie behoude
 - [x] Gegevensmodel en gescheiden statusmodellen.
 - [x] Supabase SSR-adapter en sessieverversing.
 - [x] Dealeraccount, bedrijfsregistratie met status `pending` en wachtroute.
-- [x] Beheerrol, TOTP/MFA-poort en bedrijfsgoedkeuring/blokkering.
+- [x] Beheerrol en bedrijfsgoedkeuring/blokkering. De oorspronkelijke TOTP/MFA-poort is historische functionaliteit, vervangen door het inlogbesluit van 20 november 2026.
 - [x] Default-deny grants, RLS en gecontroleerde databasefuncties.
 - [x] Unit-tests voor toegangsregels.
 - [x] PostgreSQL/RLS-tests draaien tegen de lokale Supabase/PostgreSQL-runtime.
@@ -101,6 +114,8 @@ De onderstaande oorspronkelijke voortgang blijft als technische historie behoude
 - [~] Voorwaarden zijn bewust `test`; contractreview, browser-E2E, externe beveiligingsreview en daadwerkelijke herstelproef blijven vóór livegang verplicht.
 
 ## Fase 5 — betaaladapter en sandbox
+
+Deze voortgang beschrijft de historische sandboxbouw. Vervallen betaal- en simulatorfuncties blijven buiten gebruik; de password-only wijziging activeert ze niet opnieuw.
 
 - [x] Providerneutrale adaptergrens met uitsluitend een lokale `simulated/test`-implementatie.
 - [x] Simulator staat database-side standaard uit en wordt door de server geweigerd in een productie-runtime.
