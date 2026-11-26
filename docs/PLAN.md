@@ -2,19 +2,23 @@
 
 Legenda: `[x]` gebouwd en lokaal geverifieerd, `[~]` gebouwd maar nog niet volledig end-to-end of extern gekoppeld, `[ ]` nog niet gebouwd.
 
-## Publicatie op eigen domein — 26 november 2026
+## Gratis prototype en latere publicatie — 26 november 2026
 
-- [x] De eigenaar heeft publicatie uitdrukkelijk toegestaan. Het password-only besluit voor dealer en beheer blijft gelden; alleen de keuze voor betaalde hosting staat nog open. Er is geen abonnement aangepast.
+- [x] De eigenaar heeft publicatie toegestaan en vervolgens om gratis testen gevraagd. De huidige stap blijft uitsluitend een niet-commercieel prototype met fictieve aanvragen en biedingen op bestaande acceptatie/Preview. Het password-only besluit blijft gelden; er is geen abonnement geactiveerd en deze stap wijzigt productie of het eigen domein niet.
 - [x] Vercel CLI-login geslaagd; project `prj_GP6uLZmzi6epfLjNtn66QAghXCsR` is aan `MarshallMittens/thijskooptuwauto`, branch `main`, gekoppeld. De projectinstelling Node.js is van 24.x naar 22.x gezet.
 - [x] Repositorycontrole (312 bestanden), lint, TypeScript, 69 unit-tests en build zijn op 26 november geslaagd. SQL-tests zijn niet herhaald omdat de Docker-engine niet beschikbaar is; de 398 geïsoleerde SQL-controles en gerichte password-only browserproef van 20 november blijven eerder lokaal bewijs voor dezelfde code.
 - [~] DNS voor apex (`64.29.17.1`, `216.198.79.1`) en `www` (`7f9993a3a650ace3.vercel-dns-017.com.`) bereikt Vercel. HTTP geeft echter `404 DEPLOYMENT_NOT_FOUND` en de HTTPS-handshake mislukt; de website werkt nog niet op het eigen domein.
-- [ ] Commercieel geschikte hosting kiezen. Het team is nog Hobby, dat volgens de [Vercel-voorwaarden](https://vercel.com/legal/terms#hobby-plan) uitsluitend voor persoonlijk/niet-commercieel gebruik is. De keuze voor Pro is nog open; [Pricing](https://vercel.com/pricing) vermeldt $20 per maand exclusief btw met mogelijk aanvullende verbruikskosten.
-- [ ] Release `d49a6d9` naar de gekoppelde repository brengen; GitHub staat nog op `773f743`. De acceptatiealias geeft HTTP 200 voor de oude versie `b90be6c`.
+- [x] Gratis prototypepad bevestigd: [Vercel-medewerker Anshuman Bhardwaj](https://community.vercel.com/t/is-hobby-plan-suitable-for-a-saas-prototype/7205) staat ideeën en prototypes op Hobby toe. Een Pro-keuze blokkeert dit niet-commerciële testen niet. Voor echte commerciële livegang blijft passende hosting afzonderlijk nodig volgens de [Vercel-voorwaarden](https://vercel.com/legal/terms#hobby-plan).
+- [x] Nieuwe Preview voor GitHub-codebasis `3e45e61` is `READY` als `dpl_4R872wv8a8ZaNDF4P3Sc1hkV57qN`: [deployment-URL](https://thijskooptuwauto-nq9nhfohd-jeroenderaef-6403.vercel.app), Node.js 22.x, functieregio `fra1`. De [acceptatiealias](https://thijskooptuwauto-acceptatie.vercel.app/) is aan deze nieuwe versie gekoppeld; GitHub bevat dezelfde code.
+- [x] Health retourneert HTTP 200 met `status: ok`; alle zeven publieke Playwright-proeven slagen in 23,7 seconden, inclusief formulier tot bevestiging, mobiel/layout en beschermde redirects. Geen echte aanvraag ingediend of e-mail verstuurd. De alias is publiek bereikbaar; er is geen private Vercel-toegangslaag aangetoond. Authenticatie en RLS blijven dealer-/beheerdata afschermen.
+- [x] Een afzonderlijke, niet-gemockte RDW-POST op acceptatie gaf HTTP 200 met `found: true` en `unavailable: false`.
+- [ ] Ingelogde online E2E en mailbezorging afzonderlijk testen; deze zijn niet uitgevoerd. `RESEND_API_KEY` ontbreekt nog. De 398 SQL-controles van 20 november zijn door de ontbrekende Docker-engine niet opnieuw uitgevoerd.
+- [ ] Voor latere commerciële livegang een geschikt plan of andere geschikte hosting kiezen; [Pricing](https://vercel.com/pricing) vermeldt Pro vanaf $20 per maand exclusief btw met mogelijk aanvullende verbruikskosten. Deze betaalde keuze is geen voorwaarde voor de huidige prototypeproef.
 - [ ] Productievariabelen, Supabase, mail en exacte Auth-callbacks inrichten. Alle tien aangetroffen Vercel-variabelen hebben alleen scope Preview; Production heeft geen eigen variabelen en `RESEND_API_KEY` ontbreekt als variabelenaam.
-- [ ] Password-only migratie `202611200001_password_only_portal_access.sql` remote toepassen vóór uitrol van de nieuwe applicatie. Deze migratie is nog niet remote uitgevoerd.
+- [x] Password-only migratie `202611200001_password_only_portal_access.sql` succesvol toegepast op het bestaande acceptatie-Supabase-project vóór de nieuwe Preview; de gelezen migratielijst bevestigt deze versie lokaal en remote. Rollen, blokkades, objectrechten en bestaande factorrecords blijven behouden. Productie is hiermee niet gemigreerd.
 - [ ] Een geslaagde productie-deployment maken: de laatste staat op `ERROR` met `npm run build exited 1`. Toevoegen van het hoofddomein werd met HTTP 400 geweigerd omdat deze deployment is mislukt. Alleen `thijskooptuwauto.vercel.app` is nu gekoppeld; daarna apex en `www` toevoegen en HTTPS, redirects, aanvragen, foto’s, rollen en mailbezorging controleren.
 
-De oudere planningsregels hieronder zijn historie. Zij vragen geen hernieuwde publicatietoestemming; de actuele technische status en nog open betaalde hostingkeuze hierboven gaan voor. Vervallen betaal- en simulatoronderdelen blijven uit.
+De oudere planningsregels hieronder zijn historie. Zij vragen geen hernieuwde publicatietoestemming; de actuele prototypevoortgang hierboven gaat voor. De latere commerciële hostingkeuze blokkeert gratis niet-commercieel testen niet. Vervallen betaal- en simulatoronderdelen blijven uit.
 
 ## Inlogkeuze eigenaar — 20 november 2026
 
@@ -23,9 +27,9 @@ De oudere planningsregels hieronder zijn historie. Zij vragen geen hernieuwde pu
 - [x] `npm run lint`, `npm run typecheck`, `npm run test` (17 bestanden, 69 tests) en `npm run build` zijn lokaal geslaagd op 20 november 2026.
 - [x] De gerichte Playwright password-only toegangstest slaagt lokaal: 1 test met admin, operator, goedgekeurde/pending/geblokkeerde dealer, anonieme toegang en veilige legacyredirects. Dit is geen herhaling van de volledige historische koop-/betaalworkflow.
 - [x] Het oude `/auth/mfa`-pad verwijst intern naar het rolgebonden portaal. De lokale MFA-configuratie wijzigt hosted Supabase Auth-instellingen niet automatisch en verwijdert geen bestaande factorrecords.
-- [ ] Eerst `202611200001_password_only_portal_access.sql` toepassen op de doelomgeving, daarna de applicatie uitrollen en de toegangscontroles controleren. Oude migraties blijven ongewijzigd; de lokale resultaten bevestigen geen online deployment of online toegangscontrole.
+- [x] `202611200001_password_only_portal_access.sql` is op 26 november remote op acceptatie toegepast en de bijbehorende Preview is `READY`. Health en zeven publieke online proeven slagen; ingelogde online toegangscontrole is niet uitgevoerd. Oude migraties blijven ongewijzigd en productie is niet gemigreerd.
 
-Status op 26 november: lokaal getest; de password-only versie en migratie zijn nog niet online. Hostingauthenticatie is geslaagd. De nog open hostingkeuze en technische vervolgstappen staan bovenaan dit document.
+Status op 26 november: acceptatiemigratie toegepast, Preview `READY` en nieuwe app via de acceptatiealias bereikbaar. Health en zeven publieke online proeven slagen; ingelogde online E2E en mail zijn niet getest. Geen abonnement geactiveerd; commerciële productie en eigen domein blijven buiten deze gratis prototypestap.
 
 De onderstaande historische MFA-/`aal2`-aannames zijn door dit eigenaarbesluit vervangen. Historische betaal- en simulatoronderdelen blijven buiten gebruik en worden door deze inlogwijziging niet opnieuw geactiveerd.
 
