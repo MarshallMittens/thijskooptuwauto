@@ -1,6 +1,18 @@
 # Publicatie, migraties en herstel
 
-De productieomgeving is nog niet vrijgegeven. Geen van onderstaande publicatiestappen mag zonder expliciete toestemming worden uitgevoerd. Voor het behoud van het bestaande webadres staat de voorbereiding in [DOMEINOVERDRACHT.md](DOMEINOVERDRACHT.md).
+De eigenaar heeft op 26 november 2026 expliciet toestemming gegeven voor publicatie op het eigen domein. De productieomgeving werkt daar nog niet; alleen de betaalde hostingkeuze wacht nog op de gebruiker. Er is geen abonnement aangepast. De technische voorbereidingen hieronder vallen binnen de gegeven publicatieopdracht; historische verwijzingen naar een nog te vragen publicatieakkoord zijn daarmee vervangen. De actuele domein- en hostingstatus staat in [DOMEINOVERDRACHT.md](DOMEINOVERDRACHT.md).
+
+## Publicatiestatus — 26 november 2026
+
+- Vercel CLI-login geslaagd. Het bestaande project `prj_GP6uLZmzi6epfLjNtn66QAghXCsR` is verbonden met `MarshallMittens/thijskooptuwauto`, branch `main`. Node.js is via de project-API van 24.x naar 22.x gewijzigd.
+- Teamplan is nog Hobby. De [Vercel-voorwaarden](https://vercel.com/legal/terms#hobby-plan) staan Hobby uitsluitend voor persoonlijk/niet-commercieel gebruik toe. De Pro-keuze is nog open; [Pricing](https://vercel.com/pricing) vermeldt $20 per maand exclusief btw en mogelijk aanvullende verbruikskosten. Geen betaald plan starten zonder die keuze.
+- De laatste productie-deployment is `ERROR` (`npm run build exited 1`). Alle tien aangetroffen variabelen hebben alleen scope Preview; Production heeft nog geen eigen variabelen. Er is geen `RESEND_API_KEY`-variabelenaam aangetroffen. Productie-Supabase, geheimen, mailbezorging, live `APP_URL` en exacte Auth-callbacks moeten nog worden ingericht en gecontroleerd.
+- DNS voor apex en `www` bereikt Vercel, maar HTTP geeft `404 DEPLOYMENT_NOT_FOUND` en de HTTPS-handshake mislukt. Alleen `thijskooptuwauto.vercel.app` is aan het project gekoppeld. Toevoegen van het hoofddomein werd geweigerd met HTTP 400 omdat de laatste productie-deployment is mislukt; apex en `www` zijn nog niet gekoppeld.
+- Lokale releasecommit is `d49a6d9`; GitHub staat nog op `773f743`. De acceptatiealias geeft HTTP 200 voor de oudere versie `b90be6c`. De password-only migratie `202611200001_password_only_portal_access.sql` is nog niet remote toegepast.
+
+Werkvolgorde: hostingkeuze afronden, actuele release vastleggen in de gekoppelde repository, productieconfiguratie en database voorbereiden, migraties toepassen, daarna de applicatie deployen. Maak eerst een geslaagde productie-deployment, koppel vervolgens het hoofddomein en `www` en verifieer HTTPS en de volledige aanvraag-/login-/mailroute. Omgevingsvalidatie en rol-/RLS-controles blijven actief; testbetalingen worden niet hersteld.
+
+Lokaal op 26 november geslaagd: repositorycontrole met 312 bestanden, lint, TypeScript, 69 unit-tests en build. SQL-tests zijn niet herhaald omdat de Docker-engine niet beschikbaar was. De 398 SQL-controles en gerichte password-only browserproef van 20 november zijn eerder lokaal bewijs voor dezelfde code, geen nieuwe controle van de hosted omgeving.
 
 ## Omgevingen
 
@@ -25,7 +37,7 @@ De particuliere ontvangstbevestiging gebruikt de banner `public/emails/bedankt-a
 - `PAYMENT_SIMULATOR_WEBHOOK_SECRET`: historische sandboxvariabele; voor deze wijziging niet activeren of hergebruiken voor een echte provider.
 - `OPERATIONS_JOB_SECRET`: minimaal 32 willekeurige tekens, alleen server-naar-server voor operationele routes.
 - `OUTBOX_DELIVERY_ENABLED`: standaard `false`; pas `true` na afzenderverificatie, sjablooncontrole en planning van de worker.
-- `PRODUCTION_DEPLOYMENT_APPROVED`: blijft `false` voor lokaal en Preview. Een Vercel-productiebouw wordt zonder een later, expliciet livegangbesluit technisch geblokkeerd.
+- `PRODUCTION_DEPLOYMENT_APPROVED`: blijft `false` voor lokaal en Preview. Voor de door de eigenaar op 26 november toegestane productiepublicatie wordt deze in de productieconfiguratie expliciet `true`; de overige validatievoorwaarden blijven vereist.
 
 Zet geheimen nooit in Git, browsercode of chat. Gebruik aparte waarden voor development, preview en productie.
 
@@ -71,7 +83,7 @@ De eigenaar heeft voor de volledige dealer- en beheeromgeving alleen e-mail en w
 
 Lokale controle op 20 november 2026: `npm run lint`, `npm run typecheck`, `npm run test` (17 bestanden, 69 tests) en `npm run build` zijn geslaagd. De volledige SQL-suite slaagt geïsoleerd lokaal met 11 bestanden en 398 controles. De gerichte Playwright password-only toegangstest slaagt met 1 test voor admin, operator, goedgekeurde/pending/geblokkeerde dealer, anonieme toegang en veilige legacyredirects. De volledige historische koop-/betaalworkflow is hiermee niet opnieuw getest.
 
-Status: lokaal getest, nog niet online. Er is geen remote migratie of applicatie-uitrol uitgevoerd; de hostingauthenticatie voor publicatie wacht nog op de gebruiker. Voer migratie en applicatie-uitrol in de bovenstaande volgorde uit en leg daarna de online toegangscontrole afzonderlijk vast. Heractiveer geen vervallen betaalroute of simulator tijdens deze uitrol.
+Status op 26 november: lokaal getest; de password-only versie en migratie zijn nog niet online. Vercel-login is inmiddels geslaagd, de commerciële hostingkeuze en productie-inrichting staan nog open. Voer migratie en applicatie-uitrol in de bovenstaande volgorde uit en leg daarna de online toegangscontrole afzonderlijk vast. Heractiveer geen vervallen betaalroute of simulator tijdens deze uitrol.
 
 ## Back-up en herstel
 

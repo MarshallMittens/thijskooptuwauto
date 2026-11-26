@@ -2,6 +2,20 @@
 
 Legenda: `[x]` gebouwd en lokaal geverifieerd, `[~]` gebouwd maar nog niet volledig end-to-end of extern gekoppeld, `[ ]` nog niet gebouwd.
 
+## Publicatie op eigen domein — 26 november 2026
+
+- [x] De eigenaar heeft publicatie uitdrukkelijk toegestaan. Het password-only besluit voor dealer en beheer blijft gelden; alleen de keuze voor betaalde hosting staat nog open. Er is geen abonnement aangepast.
+- [x] Vercel CLI-login geslaagd; project `prj_GP6uLZmzi6epfLjNtn66QAghXCsR` is aan `MarshallMittens/thijskooptuwauto`, branch `main`, gekoppeld. De projectinstelling Node.js is van 24.x naar 22.x gezet.
+- [x] Repositorycontrole (312 bestanden), lint, TypeScript, 69 unit-tests en build zijn op 26 november geslaagd. SQL-tests zijn niet herhaald omdat de Docker-engine niet beschikbaar is; de 398 geïsoleerde SQL-controles en gerichte password-only browserproef van 20 november blijven eerder lokaal bewijs voor dezelfde code.
+- [~] DNS voor apex (`64.29.17.1`, `216.198.79.1`) en `www` (`7f9993a3a650ace3.vercel-dns-017.com.`) bereikt Vercel. HTTP geeft echter `404 DEPLOYMENT_NOT_FOUND` en de HTTPS-handshake mislukt; de website werkt nog niet op het eigen domein.
+- [ ] Commercieel geschikte hosting kiezen. Het team is nog Hobby, dat volgens de [Vercel-voorwaarden](https://vercel.com/legal/terms#hobby-plan) uitsluitend voor persoonlijk/niet-commercieel gebruik is. De keuze voor Pro is nog open; [Pricing](https://vercel.com/pricing) vermeldt $20 per maand exclusief btw met mogelijk aanvullende verbruikskosten.
+- [ ] Release `d49a6d9` naar de gekoppelde repository brengen; GitHub staat nog op `773f743`. De acceptatiealias geeft HTTP 200 voor de oude versie `b90be6c`.
+- [ ] Productievariabelen, Supabase, mail en exacte Auth-callbacks inrichten. Alle tien aangetroffen Vercel-variabelen hebben alleen scope Preview; Production heeft geen eigen variabelen en `RESEND_API_KEY` ontbreekt als variabelenaam.
+- [ ] Password-only migratie `202611200001_password_only_portal_access.sql` remote toepassen vóór uitrol van de nieuwe applicatie. Deze migratie is nog niet remote uitgevoerd.
+- [ ] Een geslaagde productie-deployment maken: de laatste staat op `ERROR` met `npm run build exited 1`. Toevoegen van het hoofddomein werd met HTTP 400 geweigerd omdat deze deployment is mislukt. Alleen `thijskooptuwauto.vercel.app` is nu gekoppeld; daarna apex en `www` toevoegen en HTTPS, redirects, aanvragen, foto’s, rollen en mailbezorging controleren.
+
+De oudere planningsregels hieronder zijn historie. Zij vragen geen hernieuwde publicatietoestemming; de actuele technische status en nog open betaalde hostingkeuze hierboven gaan voor. Vervallen betaal- en simulatoronderdelen blijven uit.
+
 ## Inlogkeuze eigenaar — 20 november 2026
 
 - [x] De volledige dealer- en beheeromgeving gebruikt alleen e-mail en wachtwoord. Applicatie en de nieuwe SQL-migratie ondersteunen sessies zonder TOTP; de eigenaar accepteert expliciet het verhoogde risico van een ontbrekende tweede factor.
@@ -11,7 +25,7 @@ Legenda: `[x]` gebouwd en lokaal geverifieerd, `[~]` gebouwd maar nog niet volle
 - [x] Het oude `/auth/mfa`-pad verwijst intern naar het rolgebonden portaal. De lokale MFA-configuratie wijzigt hosted Supabase Auth-instellingen niet automatisch en verwijdert geen bestaande factorrecords.
 - [ ] Eerst `202611200001_password_only_portal_access.sql` toepassen op de doelomgeving, daarna de applicatie uitrollen en de toegangscontroles controleren. Oude migraties blijven ongewijzigd; de lokale resultaten bevestigen geen online deployment of online toegangscontrole.
 
-Status: lokaal getest, nog niet online. Remote migratie en applicatie-uitrol zijn niet uitgevoerd; de hostingauthenticatie voor publicatie wacht nog op de gebruiker.
+Status op 26 november: lokaal getest; de password-only versie en migratie zijn nog niet online. Hostingauthenticatie is geslaagd. De nog open hostingkeuze en technische vervolgstappen staan bovenaan dit document.
 
 De onderstaande historische MFA-/`aal2`-aannames zijn door dit eigenaarbesluit vervangen. Historische betaal- en simulatoronderdelen blijven buiten gebruik en worden door deze inlogwijziging niet opnieuw geactiveerd.
 
@@ -151,5 +165,5 @@ Deze voortgang beschrijft de historische sandboxbouw. Vervallen betaal- en simul
 - [x] Vercel-build weigert ontbrekende/onjuiste Preview-waarden, localhost, hergebruikte geheimen, de betaalsimulator en een niet-goedgekeurde productiedeployment.
 - [x] Niet-schrijvende Preview-smoketest, minimale statusroute, repositoryscan en GitHub-controle zijn voorbereid.
 - [x] Het draaiboek voor een afzonderlijke acceptatieomgeving staat in `docs/VERCEL_PREVIEW.md`.
-- [ ] Bedrijfsaccounts, privérepository, acceptatie-Supabase en afgeschermde Vercel Preview worden pas na afzonderlijke toestemming extern ingericht.
+- [~] Historische voorbereiding: bedrijfsaccounts, privérepository, acceptatie-Supabase en afgeschermde Vercel Preview. De publicatieopdracht is op 26 november expliciet gegeven; de actuele hostingstatus en resterende technische stappen staan bovenaan dit document.
 - [ ] Gebruikersproef, onafhankelijke beveiligingsreview, provideracceptatie en juridische/commerciële keuzes blijven livegangblokkades.
