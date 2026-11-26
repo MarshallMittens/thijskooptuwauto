@@ -4,6 +4,7 @@ Legenda: `[x]` gebouwd en lokaal geverifieerd, `[~]` gebouwd maar nog niet volle
 
 ## Gratis prototype en latere publicatie — 26 november 2026
 
+- [x] Taalmenu-overlap hersteld: alleen bij een geopende taalkeuze komt de voordelenbalk vóór de vaste header. Gecontroleerd op 390, 768, 850 en 1440 pixels, op de home- en contactpagina; alle talen blijven zichtbaar en het hoofdmenu blijft vaststaan. Lint, TypeScript, 69 unit-tests en build geslaagd. Geen databasewijziging of nieuwe SQL-test; Docker was niet beschikbaar.
 - [x] De eigenaar heeft publicatie toegestaan en vervolgens om gratis testen gevraagd. De huidige versie blijft uitsluitend een niet-commercieel prototype met fictieve aanvragen en biedingen op bestaande acceptatie/Preview, nu ook via hoofddomein en `www` als directe deploymentaliases. Het password-only besluit blijft gelden; er is geen abonnement of nieuwe Production-build geactiveerd.
 - [x] Vercel CLI-login geslaagd; project `prj_GP6uLZmzi6epfLjNtn66QAghXCsR` is aan `MarshallMittens/thijskooptuwauto`, branch `main`, gekoppeld. De projectinstelling Node.js is van 24.x naar 22.x gezet.
 - [x] Repositorycontrole (312 bestanden), lint, TypeScript, 69 unit-tests en build zijn op 26 november geslaagd. SQL-tests zijn niet herhaald omdat de Docker-engine niet beschikbaar is; de 398 geïsoleerde SQL-controles en gerichte password-only browserproef van 20 november blijven eerder lokaal bewijs voor dezelfde code.
