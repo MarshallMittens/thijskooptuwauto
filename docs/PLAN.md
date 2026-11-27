@@ -1,5 +1,13 @@
 # Bouwplan en voortgang
 
+## Eén handeling voor accepteren en fotokruisjes — 27 november 2026
+
+- [x] In het aanvraagdossier staat `Auto goedkeuren en aanbieden`: statusstappen, beoordeling van overgebleven pending foto's en publicatie gebeuren samen. De veiling begint direct voor 24 uur. Afgewezen of verwijderde foto's worden overgeslagen.
+- [x] De expliciete eerdere keuze dat de particulier geen extra bevestiging hoeft te doen, is verwerkt: beheeracceptatie autoriseert publicatie. Het e-mailadres wordt niet als geverifieerd gemarkeerd en er ontstaat geen automatische toegang tot een verkopersdossier.
+- [x] Elke foto heeft een aanraakvriendelijk kruisje. De foto verdwijnt uit de aanvraagweergaven en dealer-aanbod; een afgeschermd historisch record blijft bewaard. De laatste goedgekeurde foto van een aangeboden, niet-gearchiveerde auto kan niet zomaar weg.
+- [x] Lint, TypeScript, 69 unit-tests en build slagen. De volledige lokale SQL-suite slaagt met 508 controles in 14 bestanden, waaronder 47 nieuwe controles op toegang, complete gegevens, publicatie, rollback, fotofilters, Storage en audit.
+- [x] De gerichte lokale browserproef slaagt: foto met één klik weghalen, aanvraag met één klik publiceren zonder verkopersverificatie, dealer ziet auto en alleen de bedoelde foto, laatste gepubliceerde foto blijft beschermd. Online publicatiebewijs volgt in `docs/DEPLOYMENT.md`. Tests wijzigen uitsluitend fictieve lokale aanvragen; mailbezorging wordt hiermee niet geactiveerd.
+
 ## Eenvoudige veilingherstart — 27 november 2026
 
 - [x] Na afloop verschijnt `Opnieuw starten voor 24 uur` direct in het aanvragenoverzicht en bij de biedronde in het dossier. De bevestiging bevat een aanpasbare voorgestelde reden.

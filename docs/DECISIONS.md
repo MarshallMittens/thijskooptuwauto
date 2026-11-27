@@ -1,5 +1,11 @@
 # Ontwerpkeuzes en open punten
 
+## Eén keer accepteren; foto's weghalen — 27 november 2026
+
+De gebruiker wil dat Thijs een auto met één knop accepteert en aanbiedt aan dealers, en foto's met een kruisje weghaalt. Daarom combineert `admin_approve_and_publish_application` de bestaande status-, foto- en publicatiehandelingen transactioneel, zonder extra bevestigingsdialoog. De knop benoemt uitdrukkelijk dat alle overgebleven nog te controleren foto's samen worden goedgekeurd. Afgewezen foto's worden niet alsnog goedgekeurd. Basisgegevens en minimaal één bruikbare foto zijn vereist.
+
+De eerder expliciet gekozen afwezigheid van particuliere e-mailbevestiging geldt ook hier: vastgelegde staff-acceptatie is een alternatieve publicatievoorwaarde. Dit is geen verificatie van het e-mailadres en geeft geen dossierinzage. De bestaande geverifieerde verkopersautorisatie blijft intact. Fotoverwijdering haalt foto's uit zichtbare aanvraag- en aanbodqueries met een verwijdermarkering en audit, zonder historische opslag stilzwijgend te vernietigen. Een aangeboden auto houdt minimaal één goedgekeurde foto; na archiveren mag ook de laatste foto uit de aanvraag worden gehaald.
+
 ## Eenvoudige herstart na afloop — 27 november 2026
 
 De gebruiker wil dat Thijs eenvoudig een afgelopen veiling opnieuw 24 uur laat lopen. Daarom hoeft de uitslag niet eerst met een aparte knop te worden vastgelegd. Eén bevestiging met een voorgestelde, aanpasbare reden start een nieuwe lege ronde; afsluiten en herstarten vormen één databasetransactie. De eerdere ronde, biedingen en audit blijven behouden. Een lopende afspraak, koopafhandeling, geschil of archivering blijft een blokkade; er wordt geen koop of afspraak automatisch ongedaan gemaakt.

@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { LoaderCircle } from "lucide-react";
 
-import { closeBidRoundAction, publishApplicationAction, type MarketActionResult } from "@/app/beheer/aanvragen/market-actions";
+import { closeBidRoundAction, type MarketActionResult } from "@/app/beheer/aanvragen/market-actions";
 import { Button } from "@/components/ui/button";
 import { RestartAuctionButton } from "@/components/admin/restart-auction-button";
 import { formatEuroCents } from "@/lib/bids/amount";
@@ -23,14 +23,9 @@ type MarketState = {
   feeConfigurationConfirmed: boolean;
 };
 
-export function MarketControls({ applicationId, applicationStatus, sellerVerified, market }: { applicationId: string; applicationStatus: string; sellerVerified: boolean; market: MarketState }) {
+export function MarketControls({ applicationId, market }: { applicationId: string; market: MarketState }) {
   const [result, setResult] = useState<MarketActionResult | null>(null);
   const [pending, startTransition] = useTransition();
-
-  function publish() {
-    if (!window.confirm("Publiceren opent direct een biedronde van exact 24 uur. Doorgaan?")) return;
-    startTransition(async () => setResult(await publishApplicationAction({ applicationId })));
-  }
 
   function close() {
     if (!market.roundId) return;
@@ -58,10 +53,7 @@ export function MarketControls({ applicationId, applicationStatus, sellerVerifie
           </div>}
         </div>
       ) : (
-        <div className="mt-4 space-y-4">
-          <p className="text-sm leading-6 text-slate-600">Publiceren legt een onveranderlijke voertuigversie vast en opent direct een biedronde van exact 24 uur. De verkoper moet geverifieerd zijn, minimaal één foto moet zijn goedgekeurd en de aanvraag moet de status ‘Gereed’ hebben.</p>
-          <p className={`rounded-lg p-3 text-sm font-semibold ${sellerVerified ? "bg-emerald-50 text-emerald-900" : "bg-red-50 text-red-900"}`}>E-mail verkoper: {sellerVerified ? "geverifieerd" : "nog niet geverifieerd"}</p>
-          <Button type="button" onClick={publish} disabled={pending || applicationStatus !== "ready" || !sellerVerified}>{pending && <LoaderCircle className="animate-spin" />}Publiceren en 24 uur openen</Button>
+        <div className="mt-4 space-y-4"><p className="text-sm leading-6 text-slate-600">Controleer de aanvraag en gebruik ‘Auto goedkeuren en aanbieden’ boven de foto’s om de auto direct 24 uur bij dealers aan te bieden.</p>
         </div>
       )}
       {result && <p className={`mt-4 rounded-lg p-3 text-sm font-semibold ${result.ok ? "bg-emerald-50 text-emerald-900" : "bg-red-50 text-red-900"}`} role="status">{result.message}</p>}

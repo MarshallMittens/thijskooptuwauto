@@ -116,6 +116,14 @@ export type Database = {
         Args: { p_photo_id: string; p_status: "pending" | "approved" | "rejected" };
         Returns: undefined;
       };
+      admin_approve_and_publish_application: {
+        Args: { p_application_id: string };
+        Returns: Json;
+      };
+      admin_remove_application_photo: {
+        Args: { p_application_id: string; p_photo_id: string };
+        Returns: undefined;
+      };
       admin_publish_application: {
         Args: { p_application_id: string };
         Returns: Json;
