@@ -1,5 +1,9 @@
 # Ontwerpkeuzes en open punten
 
+## Besluit archiveren — 27 november 2026
+
+De gebruiker heeft expliciet gekozen voor: “Beheer: auto uit het aanbod halen / archiveren”. Daarom is het kruisje een adminactie met bevestiging en verplichte reden, zonder harde verwijdering. Archivering is een afzonderlijke markering; historische aanvraag- en verkoopstatussen blijven behouden. Het aanbod en actieve biedrondes stoppen, terwijl een archiefoverzicht de aanvraag bereikbaar houdt. Een lopende afspraak, koopafhandeling of geschil moet eerst worden afgerond. Gewone dealers en operators mogen niet archiveren. Herstellen uit het archief is geen onderdeel van deze opdracht.
+
 ## Eigenaarbesluit — 20 november 2026
 
 De volledige dealer- en beheeromgeving gebruikt alleen e-mail en wachtwoord. De eigenaar heeft het verhoogde risico door het ontbreken van een tweede factor expliciet geaccepteerd. De eerdere verplichte TOTP-/`aal2`-keuze en alle daarop gebaseerde MFA-aannames hieronder zijn vervangen; rollen, handmatige garagegoedkeuring, account- en bedrijfsblokkades, actieve lidmaatschappen en eigenaarschap blijven gehandhaafd.

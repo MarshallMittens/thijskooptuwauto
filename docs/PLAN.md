@@ -1,5 +1,13 @@
 # Bouwplan en voortgang
 
+## Archiveren van autoaanvragen — 27 november 2026
+
+- [x] Alleen admin krijgt een kruisje in het aanvragenoverzicht, op de thumbnail, bij lopende veilingen en op aanbodkaarten wanneer die admin ook dealer is.
+- [x] Een bevestiging en reden zijn verplicht. Archiveren stopt actieve/geplande rondes, haalt de auto uit dealer-aanbod en bewaart foto's, biedingen, dossiers en auditgegevens.
+- [x] Het archief is bereikbaar via `Bekijk archief`. Een lopende afspraak, koopafhandeling of geschil blokkeert archiveren; herpublicatie en nieuwe afhandeling van een gearchiveerde aanvraag worden database-side geweigerd.
+- [x] Lint, TypeScript, 69 unit-tests en build slagen. De volledige geïsoleerde SQL-suite slaagt met 429 controles in 12 bestanden; de gerichte lokale Playwright-proef slaagt voor thumbnail, rij, annuleren, archief en weigering voor gewone dealers.
+- Publicatiestatus wordt na de online controle vastgelegd in `docs/DEPLOYMENT.md`. Er is geen echte auto door deze tests gearchiveerd; mailbezorging is hiermee niet ingericht of getest.
+
 Update 27 november: de knop 'Klachten' is op verzoek uit de dealernavigatie verwijderd en staat online op alle drie de testadressen. Codeversie `bb6f1fd`; het actuele deploymentdoel staat bovenaan `DEPLOYMENT.md`. Lint, TypeScript, 69 unit-tests, build en repositorycontrole slagen. Health en loginredirect zijn op alle drie de adressen gecontroleerd; de ingelogde omgeving is niet met een echt account getest. SQL-tests zijn overgeslagen omdat Docker niet beschikbaar is; er is geen databasewijziging.
 
 Laatste testrelease op 26 november: `ea4a128`, met het herstelde taalmenu. Alle vier de talen zijn zichtbaar vóór de vaste header; gecontroleerd op vier schermbreedtes en op alle drie de webadressen. De zeven publieke browserproeven op `www` slagen opnieuw in 23,0 seconden. De echte Home-flow voor `05-pk-rb` haalt RDW-gegevens op met HTTP 200 en vult TOYOTA / TOYOTA RAV4 in. Er is geen aanvraag ingediend of e-mail verstuurd.

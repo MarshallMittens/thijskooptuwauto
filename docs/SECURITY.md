@@ -1,5 +1,11 @@
 # Beveiligingsmodel
 
+## Archiveren — 27 november 2026
+
+`admin_archive_application` vereist een geldige sessie, actief staff-lidmaatschap én rol admin; de serveractie controleert dezelfde rol. Dealer, operator, geblokkeerde admin en anonieme toegang worden database-side geweigerd. Reden, actor en tijd worden geaudit. Locks op aanvraag, rondes en winnaarreserveringen begrenzen gelijktijdige bied-/afspraakacties. Lopende afhandeling en geschillen blokkeren archiveren. Triggers weigeren herpublicatie, nieuwe actieve rondes en nieuwe verkoopdossiers voor gearchiveerde aanvragen.
+
+Actieve/geplande rondes worden geannuleerd; historische biedingen, gesloten uitslagen, foto's en afgeronde dossiers blijven bestaan. De dealer-aanbodfunctie filtert gearchiveerde aanvragen zonder historische dossierautorisatie te verruimen. Nog niet verzonden aanbodmeldingen krijgen status `cancelled`; reeds verzonden of verwerkte berichten worden niet teruggedraaid. De bestaande worker claimt deze geannuleerde berichten niet. Privéthumbnails worden alleen met de eigen staff-sessie en vijf minuten geldige Storage-links opgehaald. De volledige lokale SQL-suite bevat 31 nieuwe positieve en negatieve archiveringscontroles (429 totaal); de lokale browserproef controleert ook dat een gewone dealer geen archiveerknoppen ziet.
+
 ## Grenzen
 
 - Browserinvoer is altijd onbetrouwbaar.

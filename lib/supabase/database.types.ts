@@ -9,6 +9,7 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      listings: { Row: { id: string; application_id: string; vehicle_revision_id: string; status: "draft" | "published" | "withdrawn"; published_at: string | null; withdrawn_at: string | null; created_at: string }; Insert: never; Update: never; Relationships: [] };
       bids: {
         Row: {
           id: string;
@@ -61,6 +62,7 @@ export type Database = {
     };
     Views: Record<string, never>;
     Functions: {
+      admin_archive_application: { Args: { p_application_id: string; p_reason: string }; Returns: undefined };
       admin_handling_fees: { Args: { p_seller_cents?: number; p_buyer_cents?: number; p_vat_percent?: number }; Returns: Json };
       set_proxy_bid: { Args: { p_bid_round_id: string; p_maximum_cents: number }; Returns: Json };
       record_dealer_listing_view: { Args: { p_listing_id: string }; Returns: undefined };
