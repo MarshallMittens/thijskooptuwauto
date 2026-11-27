@@ -1,5 +1,9 @@
 # Ontwerpkeuzes en open punten
 
+## Eenvoudige herstart na afloop — 27 november 2026
+
+De gebruiker wil dat Thijs eenvoudig een afgelopen veiling opnieuw 24 uur laat lopen. Daarom hoeft de uitslag niet eerst met een aparte knop te worden vastgelegd. Eén bevestiging met een voorgestelde, aanpasbare reden start een nieuwe lege ronde; afsluiten en herstarten vormen één databasetransactie. De eerdere ronde, biedingen en audit blijven behouden. Een lopende afspraak, koopafhandeling, geschil of archivering blijft een blokkade; er wordt geen koop of afspraak automatisch ongedaan gemaakt.
+
 ## Besluit archiveren — 27 november 2026
 
 De gebruiker heeft expliciet gekozen voor: “Beheer: auto uit het aanbod halen / archiveren”. Daarom is het kruisje een adminactie met bevestiging en verplichte reden, zonder harde verwijdering. Archivering is een afzonderlijke markering; historische aanvraag- en verkoopstatussen blijven behouden. Het aanbod en actieve biedrondes stoppen, terwijl een archiefoverzicht de aanvraag bereikbaar houdt. Een lopende afspraak, koopafhandeling of geschil moet eerst worden afgerond. Gewone dealers en operators mogen niet archiveren. Herstellen uit het archief is geen onderdeel van deze opdracht.

@@ -1,5 +1,12 @@
 # Bouwplan en voortgang
 
+## Eenvoudige veilingherstart — 27 november 2026
+
+- [x] Na afloop verschijnt `Opnieuw starten voor 24 uur` direct in het aanvragenoverzicht en bij de biedronde in het dossier. De bevestiging bevat een aanpasbare voorgestelde reden.
+- [x] De nieuwe RPC `admin_reopen_auction_24h` rondt een verlopen ronde zo nodig af en roept de bestaande herstartfunctie aan in één transactie. Een fout draait beide stappen terug. Exact 86.400 seconden, lege nieuwe biedlijst, historische biedingen en bestaande blokkades blijven behouden.
+- [x] De lokale SQL-suite slaagt met 461 controles in 13 bestanden, waaronder 32 nieuwe controles voor toegang, tijdgrens, rollback, idempotentie, oude winnaar, archief en overzicht. Lint, TypeScript, 69 unit-tests en build slagen.
+- [x] De lokale browserproef slaagt: verlopen ronde vanuit het dossier, afgeronde ronde vanuit het overzicht, annuleren, voorgestelde reden, exacte nieuwe looptijd en nieuw actief dealeraanbod. Publicatiebewijs volgt in `docs/DEPLOYMENT.md`. Er wordt geen echte veiling door de tests herstart.
+
 ## Archiveren van autoaanvragen — 27 november 2026
 
 - [x] Alleen admin krijgt een kruisje in het aanvragenoverzicht, op de thumbnail, bij lopende veilingen en op aanbodkaarten wanneer die admin ook dealer is.

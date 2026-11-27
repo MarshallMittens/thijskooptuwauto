@@ -69,14 +69,16 @@ export async function restartBidRoundAction(input: z.input<typeof restartSchema>
   if (!parsed.success) return { ok: false, message: "Vul een duidelijke reden van minimaal 10 tekens in." };
 
   const supabase = await createClient();
-  const { error } = await supabase.rpc("admin_restart_bid_round", {
+  const { error } = await supabase.rpc("admin_reopen_auction_24h", {
     p_application_id: parsed.data.applicationId,
     p_reason: parsed.data.reason,
     p_idempotency_key: parsed.data.idempotencyKey,
   });
   if (error) {
     const known = [
-      ["bid_round_not_finalized", "Leg eerst de uitslag van de afgelopen ronde vast."],
+      ["application_archived", "Deze auto is gearchiveerd en kan niet opnieuw worden aangeboden."],
+      ["bid_round_still_active", "De huidige ronde is nog niet afgelopen. Je kunt pas na de eindtijd opnieuw starten."],
+      ["bid_round_not_finalized", "Deze veiling kan in de huidige status niet opnieuw worden gestart."],
       ["auction_followup_started", "Herstarten kan niet meer omdat de afspraak- of afhandelingsroute al is begonnen."],
       ["bid_round_disputed", "Deze biedronde heeft een geschilstatus en kan niet opnieuw worden gestart."],
       ["winner_reservation_disputed", "De winnaarreservering heeft een geschilstatus en kan niet worden ingetrokken."],

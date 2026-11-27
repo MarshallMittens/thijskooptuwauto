@@ -1,5 +1,9 @@
 # Beveiligingsmodel
 
+## Gecombineerde herstart — 27 november 2026
+
+`admin_reopen_auction_24h` verifieert geldige sessie en actief staff-lidmaatschap. De bestaande herstartautorisatie blijft behouden. De functie lockt aanvraag en huidige ronde, weigert archief en een nog niet verstreken deadline, en gebruikt vervolgens de bestaande afsluit- en herstartfuncties binnen dezelfde transactie. Hun controles op afspraak, koopdossier, geschil en winnaarreservering blijven leidend. Bij een fout blijven de oude uitslag, reserveringen, audit- en outboxgegevens ongewijzigd door rollback. Dezelfde idempotentiesleutel wordt bij retry hergebruikt. De overzichtsvlag is uitsluitend presentatie; RPC-controles blijven verplicht. Anonieme, dealer-, geblokkeerde en ongeldige JWT-toegang worden negatief getest.
+
 ## Archiveren — 27 november 2026
 
 `admin_archive_application` vereist een geldige sessie, actief staff-lidmaatschap én rol admin; de serveractie controleert dezelfde rol. Dealer, operator, geblokkeerde admin en anonieme toegang worden database-side geweigerd. Reden, actor en tijd worden geaudit. Locks op aanvraag, rondes en winnaarreserveringen begrenzen gelijktijdige bied-/afspraakacties. Lopende afhandeling en geschillen blokkeren archiveren. Triggers weigeren herpublicatie, nieuwe actieve rondes en nieuwe verkoopdossiers voor gearchiveerde aanvragen.

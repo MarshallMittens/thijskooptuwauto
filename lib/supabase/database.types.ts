@@ -124,6 +124,10 @@ export type Database = {
         Args: { p_bid_round_id: string };
         Returns: Json;
       };
+      admin_reopen_auction_24h: {
+        Args: { p_application_id: string; p_reason: string; p_idempotency_key: string };
+        Returns: Json;
+      };
       admin_restart_bid_round: {
         Args: { p_application_id: string; p_reason: string; p_idempotency_key: string };
         Returns: Json;
