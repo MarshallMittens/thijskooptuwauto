@@ -5,7 +5,7 @@
 - [x] Na afloop verschijnt `Opnieuw starten voor 24 uur` direct in het aanvragenoverzicht en bij de biedronde in het dossier. De bevestiging bevat een aanpasbare voorgestelde reden.
 - [x] De nieuwe RPC `admin_reopen_auction_24h` rondt een verlopen ronde zo nodig af en roept de bestaande herstartfunctie aan in één transactie. Een fout draait beide stappen terug. Exact 86.400 seconden, lege nieuwe biedlijst, historische biedingen en bestaande blokkades blijven behouden.
 - [x] De lokale SQL-suite slaagt met 461 controles in 13 bestanden, waaronder 32 nieuwe controles voor toegang, tijdgrens, rollback, idempotentie, oude winnaar, archief en overzicht. Lint, TypeScript, 69 unit-tests en build slagen.
-- [x] De lokale browserproef slaagt: verlopen ronde vanuit het dossier, afgeronde ronde vanuit het overzicht, annuleren, voorgestelde reden, exacte nieuwe looptijd en nieuw actief dealeraanbod. Publicatiebewijs volgt in `docs/DEPLOYMENT.md`. Er wordt geen echte veiling door de tests herstart.
+- [x] De lokale browserproef slaagt: verlopen ronde vanuit het dossier, afgeronde ronde vanuit het overzicht, annuleren, voorgestelde reden, exacte nieuwe looptijd en nieuw actief dealeraanbod. Acceptatiemigratie is toegepast en Preview `dpl_HbF7yfTrRvKVgw3g7uWbx57xzcMx` is `READY` met codecommit `3c80101`; alle drie aliases zijn bijgewerkt. HTTPS-health en gastredirects slagen op elk adres. Details staan in `docs/DEPLOYMENT.md`. Er is geen echte veiling door de tests herstart.
 
 ## Archiveren van autoaanvragen — 27 november 2026
 
