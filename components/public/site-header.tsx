@@ -31,18 +31,18 @@ export function SiteHeader({ inverse = false }: { inverse?: boolean }) {
         <div className="absolute inset-y-0 right-0 flex items-center bg-gradient-to-l from-[#1a1a1a] via-[#1a1a1a] to-transparent pl-5 pr-3 sm:pr-5"><LanguageSwitch /></div>
       </aside>
       <header className={inverse ? "sticky top-0 z-50 border-b border-white/10 bg-[#090909]/95 text-white backdrop-blur-sm" : "sticky top-0 z-50 border-b border-white/10 bg-[#090909] text-white"}>
-        <div className="mx-auto flex max-w-[1240px] flex-wrap items-center justify-between gap-4 px-5 py-3 sm:px-8 lg:px-10">
-          <Link href="/" className="inline-flex shrink-0 items-center" aria-label="Thijs koopt uw auto — startpagina">
+        <div className="mx-auto grid max-w-[1240px] grid-cols-[auto_minmax(0,1fr)] items-center gap-x-4 gap-y-3 px-5 py-3 sm:px-8 md:grid-rows-[auto_auto] lg:px-10 xl:grid-cols-[auto_minmax(0,1fr)_auto] xl:grid-rows-1">
+          <Link href="/" className="row-start-1 inline-flex shrink-0 items-center md:row-span-2 xl:row-span-1" aria-label="Thijs koopt uw auto — startpagina">
             <Image src="/tkua-logo.png" alt="" width={220} height={222} priority className="h-[4.5rem] w-auto sm:h-20" />
           </Link>
-          <nav aria-label="Hoofdnavigatie" className="order-3 flex w-full flex-wrap items-center gap-x-5 gap-y-2 text-sm font-semibold text-white/85 md:order-2 md:w-auto">
+          <nav aria-label="Hoofdnavigatie" className="col-span-2 row-start-2 flex min-w-0 flex-wrap items-center justify-end gap-x-5 gap-y-2 text-sm font-semibold text-white/85 md:col-span-1 md:col-start-2 md:row-start-1">
             {links.map(([label, href]) => <Link key={href} href={href} className="transition-colors hover:text-[#f7941e]">{label}</Link>)}
           </nav>
-          <div className="order-2 flex items-center gap-2 md:order-3">
-            <Link href="/inloggen?returnTo=%2Fdealer" className="inline-flex items-center gap-2 rounded-full border border-white/25 px-3 py-2.5 text-sm font-bold text-white transition-colors hover:border-[#f7941e] hover:text-[#ffb45a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f7941e]" aria-label="Voor bedrijven: inloggen">
+          <div className="col-start-2 row-start-1 flex min-w-0 flex-wrap items-center justify-end gap-2 md:row-start-2 xl:col-start-3 xl:row-start-1">
+            <Link href="/inloggen?returnTo=%2Fdealer" className="inline-flex items-center gap-2 whitespace-nowrap rounded-full border border-white/25 px-3 py-2.5 text-sm font-bold text-white transition-colors hover:border-[#f7941e] hover:text-[#ffb45a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f7941e]" aria-label="Voor bedrijven: inloggen">
               <span>Inloggen dealer</span>
             </Link>
-            <Link href="/auto-aanmelden" className="rounded-full bg-[#f7941e] px-4 py-2.5 text-sm font-black text-[#090909] transition-colors hover:bg-[#ffad45] sm:px-5">Meld je auto aan</Link>
+            <Link href="/auto-aanmelden" className="whitespace-nowrap rounded-full bg-[#f7941e] px-4 py-2.5 text-sm font-black text-[#090909] transition-colors hover:bg-[#ffad45] sm:px-5">Meld je auto aan</Link>
           </div>
         </div>
       </header>

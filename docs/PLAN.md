@@ -1,5 +1,12 @@
 # Bouwplan en voortgang
 
+## Rechteruitlijning hoofdmenu — 27 november 2026
+
+- [x] De openbare header gebruikt een vaste gridindeling: logo links, menulinks en actieknoppen rechts. Op staande middelgrote schermen staan de actieknoppen rechts onder de menulinks; op brede schermen staat alles op één rij.
+- [x] Browsercontroles op 390, 768, 850, 1080 en 1440 pixels bevestigen rechteruitlijning, geen horizontale overflow en een bruikbaar taalmenu boven de header. De header blijft sticky.
+- [x] Lint, TypeScript, 69 unit-tests en build slagen. SQL-tests zijn niet herhaald: alleen headerklassen veranderen; schema, RPC's en toegangscontrole blijven gelijk. De 508 eerdere SQL-controles blijven eerder bewijs, geen nieuwe run.
+- Publicatiebewijs en de bestaande publieke browserproef worden in `docs/DEPLOYMENT.md` vastgelegd.
+
 ## Eén handeling voor accepteren en fotokruisjes — 27 november 2026
 
 - [x] In het aanvraagdossier staat `Auto goedkeuren en aanbieden`: statusstappen, beoordeling van overgebleven pending foto's en publicatie gebeuren samen. De veiling begint direct voor 24 uur. Afgewezen of verwijderde foto's worden overgeslagen.

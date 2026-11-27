@@ -1,5 +1,9 @@
 # Ontwerpkeuzes en open punten
 
+## Hoofdmenu op staande schermen — 27 november 2026
+
+De gebruiker wil de knoppen van het openbare hoofdmenu rechts. De flex-wrap van drie losse blokken is vervangen door een expliciet grid: logo links, navigatie rechtsboven en de dealer-/aanmeldknoppen rechtsonder bij middelgrote schermen. Vanaf de brede desktopindeling staan navigatie en actieknoppen op één rij. Kleine schermen mogen binnen hun eigen rechterkolom doorlopen zonder horizontale overflow. Kleuren, teksten, bestemmingen, sticky gedrag en de taalkeuze blijven behouden.
+
 ## Eén keer accepteren; foto's weghalen — 27 november 2026
 
 De gebruiker wil dat Thijs een auto met één knop accepteert en aanbiedt aan dealers, en foto's met een kruisje weghaalt. Daarom combineert `admin_approve_and_publish_application` de bestaande status-, foto- en publicatiehandelingen transactioneel, zonder extra bevestigingsdialoog. De knop benoemt uitdrukkelijk dat alle overgebleven nog te controleren foto's samen worden goedgekeurd. Afgewezen foto's worden niet alsnog goedgekeurd. Basisgegevens en minimaal één bruikbare foto zijn vereist.
