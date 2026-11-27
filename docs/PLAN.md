@@ -6,7 +6,7 @@
 - [x] De expliciete eerdere keuze dat de particulier geen extra bevestiging hoeft te doen, is verwerkt: beheeracceptatie autoriseert publicatie. Het e-mailadres wordt niet als geverifieerd gemarkeerd en er ontstaat geen automatische toegang tot een verkopersdossier.
 - [x] Elke foto heeft een aanraakvriendelijk kruisje. De foto verdwijnt uit de aanvraagweergaven en dealer-aanbod; een afgeschermd historisch record blijft bewaard. De laatste goedgekeurde foto van een aangeboden, niet-gearchiveerde auto kan niet zomaar weg.
 - [x] Lint, TypeScript, 69 unit-tests en build slagen. De volledige lokale SQL-suite slaagt met 508 controles in 14 bestanden, waaronder 47 nieuwe controles op toegang, complete gegevens, publicatie, rollback, fotofilters, Storage en audit.
-- [x] De gerichte lokale browserproef slaagt: foto met één klik weghalen, aanvraag met één klik publiceren zonder verkopersverificatie, dealer ziet auto en alleen de bedoelde foto, laatste gepubliceerde foto blijft beschermd. Online publicatiebewijs volgt in `docs/DEPLOYMENT.md`. Tests wijzigen uitsluitend fictieve lokale aanvragen; mailbezorging wordt hiermee niet geactiveerd.
+- [x] De gerichte lokale browserproef slaagt: foto met één klik weghalen, aanvraag met één klik publiceren zonder verkopersverificatie, dealer ziet auto en alleen de bedoelde foto, laatste gepubliceerde foto blijft beschermd. Acceptatiemigratie is toegepast; Preview `dpl_6m2dg8yZuJsxEC6FchQ9vHEnwuy1` is `READY` met codecommit `595efb3` en alle drie aliases zijn bijgewerkt. HTTPS-health en gastredirects slagen op elk adres. Details staan in `docs/DEPLOYMENT.md`. Tests wijzigden uitsluitend fictieve lokale aanvragen; mailbezorging is hiermee niet geactiveerd.
 
 ## Eenvoudige veilingherstart — 27 november 2026
 
