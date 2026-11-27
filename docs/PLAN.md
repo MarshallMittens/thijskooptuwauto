@@ -6,7 +6,7 @@
 - [x] Een bevestiging en reden zijn verplicht. Archiveren stopt actieve/geplande rondes, haalt de auto uit dealer-aanbod en bewaart foto's, biedingen, dossiers en auditgegevens.
 - [x] Het archief is bereikbaar via `Bekijk archief`. Een lopende afspraak, koopafhandeling of geschil blokkeert archiveren; herpublicatie en nieuwe afhandeling van een gearchiveerde aanvraag worden database-side geweigerd.
 - [x] Lint, TypeScript, 69 unit-tests en build slagen. De volledige geïsoleerde SQL-suite slaagt met 429 controles in 12 bestanden; de gerichte lokale Playwright-proef slaagt voor thumbnail, rij, annuleren, archief en weigering voor gewone dealers.
-- Publicatiestatus wordt na de online controle vastgelegd in `docs/DEPLOYMENT.md`. Er is geen echte auto door deze tests gearchiveerd; mailbezorging is hiermee niet ingericht of getest.
+- [x] Acceptatiemigratie toegepast; Preview `dpl_7ov2sAAgv4NvrmUUgHugc1sbAFU2` is `READY` met codecommit `3d96b35`. Alle drie aliases zijn bijgewerkt en zeven publieke online proeven slagen. De releasegegevens staan in `docs/DEPLOYMENT.md`. Er is geen echte auto door deze tests gearchiveerd; mailbezorging is hiermee niet ingericht of getest.
 
 Update 27 november: de knop 'Klachten' is op verzoek uit de dealernavigatie verwijderd en staat online op alle drie de testadressen. Codeversie `bb6f1fd`; het actuele deploymentdoel staat bovenaan `DEPLOYMENT.md`. Lint, TypeScript, 69 unit-tests, build en repositorycontrole slagen. Health en loginredirect zijn op alle drie de adressen gecontroleerd; de ingelogde omgeving is niet met een echt account getest. SQL-tests zijn overgeslagen omdat Docker niet beschikbaar is; er is geen databasewijziging.
 
