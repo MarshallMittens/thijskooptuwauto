@@ -1,6 +1,6 @@
 # Bouwplan en voortgang
 
-Update 27 november: de knop 'Klachten' is op verzoek uit de dealernavigatie verwijderd.
+Update 27 november: de knop 'Klachten' is op verzoek uit de dealernavigatie verwijderd en staat online op alle drie de testadressen. Codeversie `bb6f1fd`; het actuele deploymentdoel staat bovenaan `DEPLOYMENT.md`. Lint, TypeScript, 69 unit-tests, build en repositorycontrole slagen. Health en loginredirect zijn op alle drie de adressen gecontroleerd; de ingelogde omgeving is niet met een echt account getest. SQL-tests zijn overgeslagen omdat Docker niet beschikbaar is; er is geen databasewijziging.
 
 Laatste testrelease op 26 november: `ea4a128`, met het herstelde taalmenu. Alle vier de talen zijn zichtbaar vóór de vaste header; gecontroleerd op vier schermbreedtes en op alle drie de webadressen. De zeven publieke browserproeven op `www` slagen opnieuw in 23,0 seconden. De echte Home-flow voor `05-pk-rb` haalt RDW-gegevens op met HTTP 200 en vult TOYOTA / TOYOTA RAV4 in. Er is geen aanvraag ingediend of e-mail verstuurd.
 

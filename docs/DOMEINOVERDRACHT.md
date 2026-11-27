@@ -1,5 +1,7 @@
 # Thijskooptuwauto — voorbereiding domeinovergang
 
+Update 27 november: acceptatiealias, hoofddomein en www zijn bijgewerkt naar de nieuwe testrelease zonder klachtenknop in het dealerportaal. Het actuele aliasdoel staat bovenaan `DEPLOYMENT.md`; de onderstaande releasegegevens van 26 november zijn de voorgaande momentopname. DNS, mailboxen en abonnement zijn bij deze update niet gewijzigd.
+
 Laatste testrelease op 26 november: `ea4a128`, met het herstelde taalmenu. Alle vier de talen zijn zichtbaar vóór de vaste header; gecontroleerd op vier schermbreedtes en op alle drie de webadressen. De zeven publieke browserproeven op `www` slagen opnieuw in 23,0 seconden. De echte Home-flow voor `05-pk-rb` haalt RDW-gegevens op met HTTP 200 en vult TOYOTA / TOYOTA RAV4 in. Er is geen aanvraag ingediend of e-mail verstuurd.
 
 ## Actuele stand — 26 november 2026

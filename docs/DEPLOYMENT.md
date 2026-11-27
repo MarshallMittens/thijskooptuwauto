@@ -1,5 +1,9 @@
 # Publicatie, migraties en herstel
 
+## Actuele testrelease — 27 november 2026
+
+Codeversie `bb6f1fd0a177179c4dc18a6a52ef6e86f1a99c63` verwijdert de knop 'Klachten' uit de dealernavigatie. Preview `dpl_7XKA1mgccYeaZivGYKtdK8SdPEA5` is `READY`: https://thijskooptuwauto-9u5d33mmr-jeroenderaef-6403.vercel.app. Alle drie de bestaande aliases (acceptatie, hoofddomein en www) wijzen nu naar deze deployment. Bij een volgende release alle drie bijwerken. Health en loginredirect slagen op elk adres. Dit blijft de bestaande testomgeving; er is geen abonnement of Production-configuratie gewijzigd. De onderstaande gegevens van 26 november beschrijven de voorgaande release.
+
 Laatste testrelease op 26 november: `ea4a128`, met het herstelde taalmenu. Alle vier de talen zijn zichtbaar vóór de vaste header; gecontroleerd op vier schermbreedtes en op alle drie de webadressen. De zeven publieke browserproeven op `www` slagen opnieuw in 23,0 seconden. De echte Home-flow voor `05-pk-rb` haalt RDW-gegevens op met HTTP 200 en vult TOYOTA / TOYOTA RAV4 in. Er is geen aanvraag ingediend of e-mail verstuurd.
 
 De eigenaar heeft op 26 november 2026 toestemming gegeven voor publicatie en vervolgens gevraagd of gratis testen mogelijk is. De huidige versie blijft uitsluitend een niet-commercieel prototype met fictieve gegevens op Vercel Preview. Dit prototype is nu ook via het hoofddomein en `www` bereikbaar als directe deploymentaliases. Hiervoor is geen Pro-keuze nodig en er is geen abonnement of nieuwe Production-build geactiveerd. De actuele domein- en hostingstatus staat in [DOMEINOVERDRACHT.md](DOMEINOVERDRACHT.md).
