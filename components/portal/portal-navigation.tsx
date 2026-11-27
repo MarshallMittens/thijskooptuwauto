@@ -19,7 +19,6 @@ const dealerItems: NavigationItem[] = [
   { href: "/dealer", label: "Aanbod", exact: true, activePrefix: "/dealer/aanbod/" },
   { href: "/dealer/biedingen", label: "Mijn biedingen" },
   { href: "/dealer/gewonnen", label: "Gewonnen dossiers" },
-  { href: "/dealer/klachten", label: "Klachten" },
 ];
 
 const base = "inline-flex min-h-11 items-center justify-center rounded-xl border px-4 py-2 text-center text-sm font-bold leading-5 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#a64b00]";

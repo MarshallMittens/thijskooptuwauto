@@ -1,5 +1,7 @@
 # Bouwplan en voortgang
 
+Update 27 november: de knop 'Klachten' is op verzoek uit de dealernavigatie verwijderd.
+
 Laatste testrelease op 26 november: `ea4a128`, met het herstelde taalmenu. Alle vier de talen zijn zichtbaar vóór de vaste header; gecontroleerd op vier schermbreedtes en op alle drie de webadressen. De zeven publieke browserproeven op `www` slagen opnieuw in 23,0 seconden. De echte Home-flow voor `05-pk-rb` haalt RDW-gegevens op met HTTP 200 en vult TOYOTA / TOYOTA RAV4 in. Er is geen aanvraag ingediend of e-mail verstuurd.
 
 Legenda: `[x]` gebouwd en lokaal geverifieerd, `[~]` gebouwd maar nog niet volledig end-to-end of extern gekoppeld, `[ ]` nog niet gebouwd.
