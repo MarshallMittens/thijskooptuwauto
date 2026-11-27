@@ -5,7 +5,7 @@
 - [x] De openbare header gebruikt een vaste gridindeling: logo links, menulinks en actieknoppen rechts. Op staande middelgrote schermen staan de actieknoppen rechts onder de menulinks; op brede schermen staat alles op één rij.
 - [x] Browsercontroles op 390, 768, 850, 1080 en 1440 pixels bevestigen rechteruitlijning, geen horizontale overflow en een bruikbaar taalmenu boven de header. De header blijft sticky.
 - [x] Lint, TypeScript, 69 unit-tests en build slagen. SQL-tests zijn niet herhaald: alleen headerklassen veranderen; schema, RPC's en toegangscontrole blijven gelijk. De 508 eerdere SQL-controles blijven eerder bewijs, geen nieuwe run.
-- Publicatiebewijs en de bestaande publieke browserproef worden in `docs/DEPLOYMENT.md` vastgelegd.
+- [x] Zeven publieke browserproeven slagen lokaal. Preview `dpl_2CGwm1o5UQUEqeQXaYppB9R1pbrT` is `READY` met codecommit `72c8e81`; alle drie aliases zijn bijgewerkt. Rechteruitlijning op 850 pixels en health HTTP 200 zijn online op elk adres gecontroleerd. Details staan in `docs/DEPLOYMENT.md`.
 
 ## Eén handeling voor accepteren en fotokruisjes — 27 november 2026
 
